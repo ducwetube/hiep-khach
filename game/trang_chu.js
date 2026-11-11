@@ -29,6 +29,7 @@ function renderHome() {
   combat = null;
   closeModalSilent();
   homeStyle();
+  homeNoDrag();
   const tb = el('topbar'); if (tb) tb.classList.add('hidden');
   if (hasSnd()) SND.music('village');
   const need = expNeed(P.lv), pct = P.lv >= MAX_LV ? 100 : Math.min(100, P.exp / need * 100);
@@ -91,6 +92,14 @@ function renderHome() {
     <div class="hm-ticker">${esc(last)}</div>
     <nav class="hm-nav">${nav}</nav>
   </div>`, 'home');
+}
+// Điện thoại (nhất là iPhone) vẫn kéo nảy cả trang dù không có gì để cuộn: chặn kéo trên Trang chủ, trừ dải chức năng vuốt ngang
+function homeNoDrag() {
+  if (window._hmNoDrag) return; window._hmNoDrag = 1;
+  document.addEventListener('touchmove', e => {
+    const t = e.target;
+    if (t.closest && t.closest('.home') && !t.closest('.hm-fscroll')) e.preventDefault();
+  }, { passive: false });
 }
 function homeMore() { const s = document.getElementById('hm-fscroll'); if (s) s.scrollBy({ left: s.clientWidth * 0.8, behavior: 'smooth' }); }
 // Hành Tẩu: vào bản đồ (về Thanh Vân nếu đang ở nơi không còn đi được)
