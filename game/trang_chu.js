@@ -32,54 +32,67 @@ function renderHome() {
   const tb = el('topbar'); if (tb) tb.classList.add('hidden');
   if (hasSnd()) SND.music('village');
   const need = expNeed(P.lv), pct = P.lv >= MAX_LV ? 100 : Math.min(100, P.exp / need * 100);
+  const herbs = invCount('vo_danh_thao') + invCount('nhan_sam') + invCount('tuyet_lien_km');
+  const srv = typeof curServer !== 'undefined' ? 'S' + curServer : 'S1';
   const cards = HOME_TEAM.map(h => `<button class="hm-card q-${HOME_Q[h.q]}" onclick="G.homeTeam()" aria-label="${h.name}">
       <img src="game/img/quai/${h.img}.png" alt="" draggable="false">
-      <span class="hm-role">${h.role}</span>
       <span class="hm-band"><span class="hm-lv">${h.lv}</span><span class="hm-star">${'<i></i>'.repeat(h.star)}</span></span></button>`).join('');
-  const herbs = invCount('vo_danh_thao') + invCount('nhan_sam') + invCount('tuyet_lien_km');
+  // Hàng nút nhanh: 6 ô, ô thứ 4 là bóng thoại (icon tạm)
   const quick = [
     ['G.menuQuests()', homePng('nhiem_vu'), 'Nhiệm Vụ'],
-    ['G.homeDaily()', homePng('thi_luyen'), 'Hằng Ngày'],
+    ["G.homeSoon('Hộp thư')", '[[dam_may]]', 'Hộp Thư'],
+    ['G.homeDaily()', homePng('thi_luyen'), 'Sự Kiện'],
+    null,
     ['G.beQuan()', '[[ruong]]', 'Bế Quan'],
     ['G.banDo()', homePng('thien_ha'), 'Thiên Hạ'],
-    ["G.homeSoon('Hộp thư')", '[[dam_may]]', 'Hộp Thư'],
-  ].map(([f, ic, t]) => `<button class="hm-q" onclick="${f}"><span class="hm-ic">${ic}</span><b>${t}</b></button>`).join('');
+  ].map(x => x ? `<button class="hm-q" onclick="${x[0]}"><span class="hm-ic">${x[1]}</span><b>${x[2]}</b></button>`
+    : `<button class="hm-q hm-chat" onclick="G.vungLog()"><span>Nhật Ký</span></button>`).join('');
+  // Dải chức năng: cuộn ngang, mũi tên bên phải cuộn tiếp
   const funcs = [
     ['G.homeTeam()', homePng('chinh_dien'), 'Đội Ngũ'],
+    ['G.menuSkills()', homePng('vo_hoc'), 'Võ Học'],
     ["G.menuChar('gear')", homePng('trang_bi'), 'Trang Bị'],
     ['G.menuInv()', homePng('hanh_trang'), 'Hành Trang'],
-    ['G.menuSkills()', homePng('vo_hoc'), 'Võ Học'],
-    ["G.menuChar('km')", '[[noi_cong]]', 'Kinh Mạch'],
     ["G.openShop('tho_ren_dc')", homePng('lo_ren'), 'Lò Rèn'],
+    ["G.menuChar('km')", '[[noi_cong]]', 'Kinh Mạch'],
+    ['G.menuChar()', menuIc('nhan_vat'), 'Nhân Vật'],
   ].map(([f, ic, t]) => `<button class="hm-f" onclick="${f}"><span class="hm-ic">${ic}</span><b>${t}</b></button>`).join('');
+  const nav = [
+    ['', homePng('chinh_dien'), 'Trang Chủ', true],
+    ['G.homeTeam()', menuIc('nhan_vat'), 'Hiệp Khách'],
+    ["G.homeSoon('Chiêu mộ')", homePng('truy_na'), 'Chiêu Mộ'],
+    ["G.homeSoon('Kỳ ngộ')", homePng('tu_dong'), 'Kỳ Ngộ'],
+    ['G.homeShops()', homePng('tiem_vu_khi'), 'Cửa Tiệm'],
+    ['G.menuSystem()', homePng('he_thong'), 'Hệ Thống'],
+  ].map(([f, ic, t, on]) => `<button class="${on ? 'on' : ''}" ${f ? `onclick="${f}"` : ''}><span class="hm-ic">${ic}</span><b>${t}</b></button>`).join('');
+  const last = (worldLog[worldLog.length - 1] || '').replace(/<[^>]+>/g, '').replace(/\[\[[a-z0-9_]+\]\]/g, '');
   show(`<div class="home">
     <div class="hm-bg"></div>
-    <header class="hm-top" onclick="G.menuChar()">
-      <span class="hm-lvl">Cấp ${P.lv}</span><b class="hm-name">${esc(P.name)}</b><span class="hm-sect">${sectName(P.sect)}</span>
+    <header class="hm-top">
+      <span class="hm-tl">[${srv}] [Cấp ${P.lv}]</span>
+      <button class="hm-plaque" onclick="G.menuChar()"><b>${esc(P.name)}</b></button>
+      <span class="hm-tr">${sectName(P.sect)}</span>
     </header>
-    <div class="hm-exp"><i style="width:${pct.toFixed(1)}%"></i></div>
+    <div class="hm-xp"><small>Kinh nghiệm</small><div class="hm-exp"><i style="width:${pct.toFixed(1)}%"></i></div></div>
     <div class="hm-res">
-      <div class="hm-col"><span>[[bac]]<b>${P.gold.toLocaleString('vi-VN')}</b></span><span>${homePng('manh_vo_so')}<b>${invCount('manh_vo_so')}</b></span></div>
-      <div class="hm-power"><small>Lực chiến</small><b>${lucChien().toLocaleString('vi-VN')}</b></div>
-      <div class="hm-col"><span><b>${invCount('manh_noi_so')}</b>${homePng('manh_noi_so')}</span><span><b>${herbs}</b>[[vo_danh_thao]]</span></div>
+      <div class="hm-col left"><span>[[bac]]<b>${P.gold.toLocaleString('vi-VN')}</b></span><span>${homePng('manh_vo_so')}<b>${invCount('manh_vo_so')}</b></span></div>
+      <div class="hm-power"><small>Lực Chiến</small><div class="hm-arc">Cấp ${P.lv}</div><b>${lucChien().toLocaleString('vi-VN')}</b></div>
+      <div class="hm-col right"><span><b>${invCount('manh_noi_so')}</b>${homePng('manh_noi_so')}</span><span><b>${herbs}</b>[[vo_danh_thao]]</span></div>
     </div>
     <div class="hm-team">${cards}</div>
     <div class="hm-quick">${quick}</div>
     <div class="hm-modes">
-      <button class="hm-mode side" onclick="G.homeChallenge()"><span class="hm-disc">${homePng('thi_luyen')}</span><b>Thử Thách</b></button>
-      <button class="hm-mode main" onclick="G.homeGo()"><span class="hm-disc">${homePng('thien_ha')}</span><b>Hành Tẩu</b></button>
-      <button class="hm-mode side" onclick="G.homeSoon('Luận Võ')"><span class="hm-disc">${homePng('kiem_duong')}</span><b>Luận Võ</b></button>
+      <button class="hm-mode l" onclick="G.homeChallenge()"><span class="hm-disc">${homePng('thi_luyen')}</span><b>Thử Thách</b></button>
+      <button class="hm-mode c" onclick="G.homeGo()"><span class="hm-disc">${homePng('thien_ha')}</span><b>Hành Tẩu</b></button>
+      <button class="hm-mode r" onclick="G.homeSoon('Luận Võ')"><span class="hm-disc">${homePng('kiem_duong')}</span><b>Luận Võ</b></button>
     </div>
-    <div class="hm-funcs">${funcs}</div>
-    <nav class="hm-nav">
-      <button class="on"><span class="hm-ic">${homePng('chinh_dien')}</span><b>Trang Chủ</b></button>
-      <button onclick="G.homeTeam()"><span class="hm-ic">${menuIc('nhan_vat')}</span><b>Hiệp Khách</b></button>
-      <button onclick="G.homeSoon('Chiêu mộ')"><span class="hm-ic">${homePng('truy_na')}</span><b>Chiêu Mộ</b></button>
-      <button onclick="G.homeShops()"><span class="hm-ic">${homePng('tiem_vu_khi')}</span><b>Cửa Tiệm</b></button>
-      <button onclick="G.menuSystem()"><span class="hm-ic">${homePng('he_thong')}</span><b>Hệ Thống</b></button>
-    </nav>
+    <div class="hm-funcs"><div class="hm-fscroll" id="hm-fscroll">${funcs}</div>
+      <button class="hm-more" onclick="G.homeMore()" aria-label="Xem thêm">&raquo;</button></div>
+    <div class="hm-ticker">${esc(last)}</div>
+    <nav class="hm-nav">${nav}</nav>
   </div>`, 'home');
 }
+function homeMore() { const s = document.getElementById('hm-fscroll'); if (s) s.scrollBy({ left: s.clientWidth * 0.8, behavior: 'smooth' }); }
 // Hành Tẩu: vào bản đồ (về Thanh Vân nếu đang ở nơi không còn đi được)
 function homeGo() { if (!LOCATIONS[P.loc]) P.loc = START_LOC; renderWorld(); }
 function homeTeam() { toast('Hệ hiệp khách đang được xây dựng: đội trên là đội mẫu'); }
@@ -108,76 +121,96 @@ function homeShops() {
   openModal(`<h3>Cửa Tiệm</h3><div class="hm-list">${ids.map(id => `<button class="hm-li" onclick="G.openShop('${id}')">[[${SHOPS[id].icon}]]<span><b>${SHOPS[id].name}</b></span></button>`).join('')}</div>`);
 }
 
+// Kích thước theo bản bố cục người dùng gửi (khung 1116 × 2000): 1 điểm ảnh mẫu = 0,0896 phần trăm bề ngang (cqw)
 function homeStyle() {
   if (document.getElementById('home-style')) return;
   const st = document.createElement('style');
   st.id = 'home-style';
   st.textContent = `
-  .home { box-sizing: border-box; position: relative; min-height: 100dvh; display: flex; flex-direction: column; gap: 8px; padding: max(8px, env(safe-area-inset-top)) 6px calc(84px + env(safe-area-inset-bottom)); color: #f3e7c9; overflow: hidden; }
-  .hm-bg { position: fixed; inset: 0; z-index: -1; background: linear-gradient(rgba(14,10,6,.55), rgba(14,10,6,.35) 40%, rgba(14,10,6,.8)), url(game/img/ban_do/tv_doc.jpg) center / cover; }
+  .home { box-sizing: border-box; container-type: inline-size; position: relative; min-height: 100dvh; display: flex; flex-direction: column; color: #f3e7c9; overflow: hidden;
+    padding: env(safe-area-inset-top) 0 calc(20cqw + env(safe-area-inset-bottom)); }
+  .hm-bg { position: fixed; inset: 0; z-index: -1; background: linear-gradient(rgba(10,14,10,.5), rgba(10,14,10,.25) 45%, rgba(10,14,10,.7)), url(game/img/ban_do/tv_doc.jpg) center / cover; }
   .home button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; padding: 0; }
   .hm-ic img, .hm-disc img { width: 100%; height: 100%; object-fit: contain; display: block; }
-  .hm-ic .ic { width: 100%; height: 100%; }
-  /* thanh trên: băng ngang Cấp · Tên · danh xưng, thanh kinh nghiệm, khối tài nguyên + Lực chiến giữa (tỷ lệ theo màn mẫu) */
-  .hm-top { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 10px; cursor: pointer;
-    background: linear-gradient(#f3e2b8, #d9bf86); border: 2px solid #b8893a; box-shadow: 0 3px 10px #0008; color: #3a2414; }
-  .hm-lvl { font-weight: 800; font-size: 14px; padding: 1px 8px; border-radius: 6px; background: #6b3d12; color: #ffe39a; }
-  .hm-name { font: 19px 'Pattaya', serif; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .hm-sect { font-size: 11.5px; font-weight: 700; max-width: 34vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .hm-exp { height: 7px; border-radius: 4px; background: #0009; border: 1px solid #c9a24a66; overflow: hidden; margin-top: -4px; }
-  .hm-exp i { display: block; height: 100%; background: linear-gradient(90deg, #4fbf3a, #c9f07a); }
-  .hm-res { display: grid; grid-template-columns: 1fr auto 1fr; gap: 6px; align-items: center; }
-  .hm-col { display: grid; gap: 5px; }
-  .hm-col span { display: flex; align-items: center; gap: 5px; padding: 2px 8px 2px 3px; border-radius: 8px; background: linear-gradient(#5a3a1a, #3a2410); border: 1px solid #c9a24a99; font-size: 14px; font-weight: 700; color: #fff4d0; min-width: 0; }
-  .hm-col:last-child span { justify-content: flex-end; padding: 2px 3px 2px 8px; }
-  .hm-col span > img, .hm-col .ic { width: 24px; height: 24px; flex: none; }
-  .hm-col b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .hm-power { text-align: center; padding: 3px 12px; border-radius: 999px; background: radial-gradient(#7a2a12, #2a0f06); border: 2px solid #e2bd62; box-shadow: 0 0 12px #ff9a3a66; }
-  .hm-power small { display: block; font-size: 10px; color: #f0c989; line-height: 1.1; }
-  .hm-power b { font: 24px/1.1 'Pattaya', serif; color: #fff1b8; text-shadow: 0 2px 0 #000, 0 0 10px #ff9a3a; }
-  /* hàng đội hình: thẻ cao gấp đôi bề rộng, nhân vật lấp kín thẻ */
-  .hm-team { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
-  .hm-card { position: relative; aspect-ratio: 1 / 2.05; border-radius: 8px; overflow: hidden; border: 3px solid var(--qc); background: radial-gradient(circle at 50% 30%, var(--qg), #120c06 85%); box-shadow: inset 0 0 12px #000a; }
-  .hm-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; transform: scaleX(-1) scale(1.05); }
-  .hm-card.q-thuong { --qc: #9aa3a8; --qg: #5a6267; } .hm-card.q-hiem { --qc: #4fa8ff; --qg: #2a5fa0; }
-  .hm-card.q-tuyet { --qc: #b77bff; --qg: #6a3aa8; } .hm-card.q-truyen { --qc: #ffbf3a; --qg: #a86a10; }
-  .hm-role { position: absolute; top: 3px; left: 3px; font-size: 9px; padding: 0 5px; border-radius: 6px; background: #000b; color: #ffe39a; }
-  .hm-band { position: absolute; left: 0; right: 0; bottom: 0; height: 24px; display: flex; align-items: center; justify-content: space-between; padding: 0 5px; background: linear-gradient(#0000, color-mix(in srgb, var(--qg) 70%, #000) 35%); }
-  .hm-lv { font-size: 15px; font-weight: 800; text-shadow: 0 1px 2px #000; }
-  .hm-star { display: flex; gap: 1px; }
-  .hm-star i { width: 11px; height: 11px; background: #ffd43b; clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
-  /* hàng nút nhanh, hàng chức năng */
-  .hm-quick, .hm-funcs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; }
-  .hm-funcs { grid-template-columns: repeat(6, 1fr); padding: 6px 2px; border-radius: 12px; background: #0a0705b3; border-top: 1px solid #c9a24a55; border-bottom: 1px solid #c9a24a55; }
-  .hm-q, .hm-f { display: flex; flex-direction: column; align-items: center; }
-  .hm-q .hm-ic { width: 50px; height: 50px; filter: drop-shadow(0 2px 3px #000a); }
-  .hm-f .hm-ic { width: 46px; height: 46px; filter: drop-shadow(0 2px 3px #000a); }
-  .hm-q b, .hm-f b { margin-top: -4px; font-size: 11.5px; font-weight: 800; color: #fff; text-shadow: 0 1px 0 #000, 0 0 3px #000, 0 0 3px #000; white-space: nowrap; }
-  /* ba nút lớn: gần bằng nhau, chữ đè mép dưới */
-  .hm-modes { display: flex; justify-content: space-evenly; align-items: center; margin: auto 0; padding: 4px 0; }
-  .hm-mode { display: flex; flex-direction: column; align-items: center; min-width: 0; }
-  .hm-disc { display: block; border-radius: 50%; padding: 11%; background: radial-gradient(circle at 50% 40%, #5a3412, #1d1008 70%); border: 3px solid #e2bd62; box-shadow: 0 0 0 2px #6b3d12, 0 0 14px #ffb84a77, inset 0 0 14px #000; }
-  .hm-mode.side .hm-disc { width: 24vw; max-width: 104px; height: 24vw; max-height: 104px; }
-  .hm-mode.main .hm-disc { width: 28vw; max-width: 122px; height: 28vw; max-height: 122px; animation: hmGlow 2.4s ease-in-out infinite alternate; }
-  .hm-mode b { margin-top: -16px; font: 19px 'Pattaya', serif; white-space: nowrap; color: #ffe39a; text-shadow: 0 2px 0 #3a1a00, 0 0 4px #000, 0 0 2px #000; }
-  .hm-mode.main b { font-size: 22px; }
+  .hm-ic .ic, .hm-ic svg { width: 100%; height: 100%; }
+  .home b, .home small, .home span { text-shadow: 0 .2cqw 0 #000, 0 0 .5cqw #000; }
+  /* băng trên: 130 */
+  .hm-top { height: 11.6cqw; display: grid; grid-template-columns: 1fr 37.6cqw 1fr; align-items: center; background: linear-gradient(#2f5a3a, #183222); border-bottom: .5cqw solid #c9a24a; font-size: 3.9cqw; font-weight: 700; color: #f0d48a; }
+  .hm-tl { padding-left: 2cqw; white-space: nowrap; } .hm-tr { padding-right: 2cqw; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hm-plaque { height: 100%; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 40%, #2a5a3a, #133020 70%) !important; border: .6cqw solid #c9a24a !important; border-top: 0 !important; border-radius: 0 0 6cqw 6cqw !important; }
+  .hm-plaque b { font: 4.8cqw 'Pattaya', serif; color: #f0d48a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 34cqw; }
+  /* kinh nghiệm: 160 → 245 */
+  .hm-xp { margin-top: 2.6cqw; padding: 0 2.2cqw; text-align: center; }
+  .hm-xp small { font-size: 3.4cqw; font-weight: 700; }
+  .hm-exp { height: 3.1cqw; margin-top: .6cqw; border-radius: 2cqw; background: #0a1a0c; border: .4cqw solid #8aa04a; overflow: hidden; }
+  .hm-exp i { display: block; height: 100%; background: linear-gradient(#a6e26a, #4c9a2a); }
+  /* tài nguyên: 255 → 440 */
+  .hm-res { margin-top: 1cqw; height: 16.5cqw; display: grid; grid-template-columns: 1fr 27cqw 1fr; align-items: center; padding: 0 2.5cqw; }
+  .hm-col { display: grid; gap: 1.6cqw; }
+  .hm-col span { height: 5.6cqw; display: flex; align-items: center; gap: 1.2cqw; font-size: 3cqw; font-weight: 700; color: #fff4d0; }
+  .hm-col span > img, .hm-col .ic, .hm-col svg { width: 6cqw; height: 6cqw; flex: none; filter: drop-shadow(0 .3cqw .4cqw #000); }
+  .hm-col b { flex: 1; height: 100%; display: flex; align-items: center; padding: 0 2cqw; border-radius: 1.4cqw; background: linear-gradient(#6a4a2a, #3e2814); border: .3cqw solid #a07a3a; white-space: nowrap; overflow: hidden; }
+  .hm-col.right b { justify-content: flex-end; }
+  .hm-power { display: flex; flex-direction: column; align-items: center; }
+  .hm-power small { font-size: 3.3cqw; font-weight: 700; }
+  .hm-arc { width: 26cqw; height: 4.2cqw; margin-top: .3cqw; display: grid; place-items: center; font-size: 2.8cqw; font-weight: 700; border-radius: 0 0 13cqw 13cqw / 0 0 4.2cqw 4.2cqw; background: linear-gradient(#6fbf4a, #2f6a22); border: .4cqw solid #c9e08a; }
+  .hm-power b { font: 6.3cqw/1.1 'Pattaya', serif; color: #ffd76a; text-shadow: 0 .3cqw 0 #6a2a00, 0 0 2.5cqw #ff3a1a, 0 0 1cqw #ff6a1a; }
+  /* thẻ nhân vật: 460 → 945, mỗi thẻ 212 × 485 */
+  .hm-team { margin-top: 1.4cqw; display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.1cqw; padding: 0 .4cqw; }
+  .hm-card { position: relative; height: 43.5cqw; border-radius: 1cqw; overflow: hidden; border: .6cqw solid var(--qc) !important; background: linear-gradient(var(--qg), color-mix(in srgb, var(--qg) 55%, #000)) !important; box-shadow: inset 0 0 2cqw #0008; }
+  .hm-card img { position: absolute; left: 0; top: 0; width: 100%; height: calc(100% - 5.8cqw); object-fit: cover; object-position: 50% 15%; transform: scaleX(-1); }
+  .hm-card.q-thuong { --qc: #4fbf5a; --qg: #1f6a2a; } .hm-card.q-hiem { --qc: #4f8aff; --qg: #1e3a8a; }
+  .hm-card.q-tuyet { --qc: #b77bff; --qg: #4b2a8a; } .hm-card.q-truyen { --qc: #ffbf3a; --qg: #8a5a10; }
+  .hm-band { position: absolute; left: 0; right: 0; bottom: 0; height: 5.8cqw; display: flex; align-items: center; justify-content: space-between; padding: 0 1.2cqw 0 .6cqw; background: color-mix(in srgb, var(--qc) 55%, #000); }
+  .hm-lv { width: 4.6cqw; height: 4.6cqw; border-radius: 50%; display: grid; place-items: center; background: #0008; font-size: 3.2cqw; font-weight: 800; }
+  .hm-star { display: flex; gap: .3cqw; }
+  .hm-star i { width: 3cqw; height: 3cqw; background: #ffd43b; clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+  /* hàng nút nhanh: 960 → 1135, icon ~130 */
+  .hm-quick { margin-top: 1.4cqw; display: grid; grid-template-columns: repeat(6, 1fr); align-items: end; }
+  .hm-q { display: flex; flex-direction: column; align-items: center; }
+  .hm-q .hm-ic { width: 11.6cqw; height: 11.6cqw; filter: drop-shadow(0 .4cqw .6cqw #000a); }
+  .hm-q b { margin-top: -1.2cqw; font-size: 3.3cqw; font-weight: 700; color: #ffe39a; white-space: nowrap; }
+  .hm-chat { align-self: center; }
+  .hm-chat span { display: grid; place-items: center; width: 13.5cqw; height: 9cqw; border-radius: 50%; background: #f2f2f2; color: #333; font-size: 2.6cqw; font-weight: 700; text-shadow: none; position: relative; }
+  .hm-chat span::after { content: ""; position: absolute; left: 1.5cqw; bottom: -1.6cqw; border: 1.6cqw solid transparent; border-top-color: #f2f2f2; border-left-color: #f2f2f2; }
+  /* ba nút lớn: 1170 → 1440; rộng 195 / 245 / 215 */
+  .hm-modes { margin: auto 0; display: grid; grid-template-columns: 1fr 1.2fr 1fr; align-items: end; justify-items: center; padding: 2cqw 6cqw; }
+  .hm-mode { display: flex; flex-direction: column; align-items: center; }
+  .hm-disc { display: block; border-radius: 50%; padding: 12%; box-sizing: border-box; background: radial-gradient(circle at 50% 40%, #6a3a12, #1d1008 70%); border: .6cqw solid #e2bd62; box-shadow: 0 0 2cqw #ffb84a88, inset 0 0 2cqw #000; }
+  .hm-mode.l .hm-disc { width: 17.5cqw; height: 17.5cqw; }
+  .hm-mode.c .hm-disc { width: 22cqw; height: 22cqw; animation: hmGlow 2.4s ease-in-out infinite alternate; }
+  .hm-mode.r .hm-disc { width: 19.3cqw; height: 19.3cqw; }
+  .hm-mode b { margin-top: -4.5cqw; font: 5cqw 'Pattaya', serif; white-space: nowrap; color: #ffe39a; text-shadow: 0 .4cqw 0 #5a2a00, 0 0 1cqw #000, 0 0 .5cqw #000; }
+  .hm-mode.c b { font-size: 5.6cqw; }
   .hm-mode:active .hm-disc { transform: scale(.95); }
-  @keyframes hmGlow { to { box-shadow: 0 0 0 2px #6b3d12, 0 0 26px #ffcf6aaa, inset 0 0 14px #000; } }
-  @media (prefers-reduced-motion: reduce) { .hm-mode.main .hm-disc { animation: none; } }
-  /* thanh dưới: icon tròn lớn, chữ đè mép dưới */
-  .hm-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: grid; grid-template-columns: repeat(5, 1fr); padding: 6px 4px calc(4px + env(safe-area-inset-bottom)); background: linear-gradient(#3a2814, #160f08); border-top: 2px solid #c9a24a; }
+  @keyframes hmGlow { to { box-shadow: 0 0 4cqw #ffcf6acc, inset 0 0 2cqw #000; } }
+  @media (prefers-reduced-motion: reduce) { .hm-mode.c .hm-disc { animation: none; } }
+  /* dải chức năng: 1480 → 1645, icon ~120, quầng sáng sau mỗi icon; mũi tên bên phải */
+  .hm-funcs { position: relative; height: 14.8cqw; background: linear-gradient(#ffffff2a, #ffffff14); border-top: .3cqw solid #ffffff33; border-bottom: .3cqw solid #ffffff22; }
+  .hm-fscroll { height: 100%; display: flex; overflow-x: auto; scrollbar-width: none; padding-right: 8cqw; scroll-snap-type: x mandatory; }
+  .hm-fscroll::-webkit-scrollbar { display: none; }
+  .hm-f { flex: 0 0 17.6cqw; scroll-snap-align: start; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: .8cqw !important; }
+  .hm-f::before { content: ""; position: absolute; top: 0; left: 50%; width: 15cqw; height: 100%; transform: translateX(-50%); background: linear-gradient(#ffe7a033, #ffe7a000); clip-path: polygon(30% 0, 70% 0, 100% 100%, 0 100%); }
+  .hm-f .hm-ic { position: relative; width: 10.8cqw; height: 10.8cqw; filter: drop-shadow(0 .4cqw .6cqw #000a); }
+  .hm-f b { position: relative; margin-top: -.8cqw; font-size: 3.2cqw; font-weight: 700; color: #fff; white-space: nowrap; }
+  .hm-more { position: absolute; right: 0; top: 0; bottom: 0; width: 7cqw; font-size: 8cqw !important; line-height: 1; color: #d8d0b0 !important; background: linear-gradient(90deg, #0000, #0008) !important; }
+  /* dải tối mỏng: 1650 → 1700 (dòng nhật ký mới nhất) */
+  .hm-ticker { height: 4.5cqw; margin-top: .5cqw; padding: 0 3cqw; display: flex; align-items: center; background: linear-gradient(#0f2a14cc, #08180ccc); font-size: 2.8cqw; color: #c9e0b0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* thanh dưới: 6 vòng tròn đường kính 165 */
+  .hm-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100cqw; z-index: 20; display: grid; grid-template-columns: repeat(6, 1fr); padding: 1.6cqw .8cqw calc(1.4cqw + env(safe-area-inset-bottom)); background: linear-gradient(#1c3a22, #0c1a10); }
   .hm-nav button { display: flex; flex-direction: column; align-items: center; }
-  .hm-nav .hm-ic { width: 58px; height: 58px; border-radius: 50%; overflow: hidden; border: 2px solid #c9a24a; background: radial-gradient(#5a3a1a, #1d1008); padding: 4px; box-sizing: border-box; }
-  .hm-nav button.on .hm-ic { border-color: #ffe39a; box-shadow: 0 0 10px #ffcf6a; }
-  .hm-nav b { margin-top: -12px; font: 13px 'Pattaya', serif; color: #ffe39a; text-shadow: 0 1px 0 #000, 0 0 3px #000, 0 0 3px #000; white-space: nowrap; }
+  .hm-nav .hm-ic { width: 14.8cqw; height: 14.8cqw; border-radius: 50%; overflow: hidden; border: .7cqw solid #d8b25a; background: radial-gradient(#5a3a1a, #1d1008); padding: 1.4cqw; box-sizing: border-box; box-shadow: 0 0 1.5cqw #0008; }
+  .hm-nav button.on .hm-ic { border-color: #ffe39a; box-shadow: 0 0 2.5cqw #ffcf6a; }
+  .hm-nav b { margin-top: -3.4cqw; font-size: 3cqw; font-weight: 800; color: #ffe39a; white-space: nowrap; letter-spacing: -.15cqw; }
   /* danh sách trong hộp thoại */
   .hm-list { display: grid; gap: 8px; }
   .hm-li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.04); color: inherit; font: inherit; text-align: left; cursor: pointer; }
   .hm-li > img, .hm-li > .ic, .hm-li > svg { width: 40px; height: 40px; flex: none; }
   .hm-li span { display: flex; flex-direction: column; } .hm-li small { color: var(--muted); font-size: 12px; }
   .hm-li.off { opacity: .5; cursor: default; }
-  @media (min-width: 600px) { .home { max-width: 480px; margin: 0 auto; } .hm-nav { max-width: 480px; margin: 0 auto; } }
+  @media (min-width: 600px) { .home { max-width: 480px; margin: 0 auto; } }
   `;
   document.head.appendChild(st);
 }
-const TRANG_CHU_G = { home: renderHome, homeGo, homeTeam, homeChallenge, homeDaily, homeShops, homeSoon };
+
+const TRANG_CHU_G = { home: renderHome, homeGo, homeTeam, homeChallenge, homeDaily, homeShops, homeSoon, homeMore };
