@@ -5,34 +5,51 @@
    các nút chưa có chức năng hiện "Sắp mở". Nút nối vào những gì game đã có (bản đồ, tháp, thí luyện, cấm địa, đồ, võ học...).
    Engine: continueGame / startNew vào renderHome; renderTop ẩn thanh trên khi đang ở trang chủ (screenKey 'home').
    ===================================================================== */
-// Đội mẫu (5 ô) cho tới khi có hệ hiệp khách thật; hình chibi cao thủ có sẵn trong game
-const HOME_TEAM = [
-  { name: 'Lãnh Nguyệt', img: 'tm_nu_kiem_lam', role: 'cong_kich', q: 3, lv: 1, star: 2, hanh: 'thuy', tuChat: 14,
+// Kho hiệp khách (mã → dữ liệu). 2026-11-12: người dùng chốt tạo nhân vật được tặng Đoàn Diên Khánh;
+// 4 hiệp khách còn lại là mẫu cũ (số liệu tạm), chưa ai có, chờ chiêu mộ / ghép mảnh.
+const HIEP_KHACH = {
+  lanh_nguyet: { name: 'Lãnh Nguyệt', img: 'tm_nu_kiem_lam', role: 'cong_kich', q: 3, lv: 1, star: 2, hanh: 'thuy', tuChat: 14,
     st: { hp: 2030, atk: 2034, def: 1297, hoi: 401, spd: 51, mi: 100 },
     skill: { grade: 'S', name: 'Cửu Kiếm Quyết', desc: 'Tấn công toàn địch và tăng Chuẩn toàn đội 2 hiệp' },
-    duyen: [{ name: 'Sư Đồ', desc: 'Cùng ra trận Thủ +250%', with: [3], ok: true }, { name: 'Đồng Môn', desc: 'Cùng ra trận Công +15%', with: [1, 4], ok: false }] },
-  { name: 'Hàn Sơn', img: 'tm_cuong_khach', role: 'ho_ve', q: 2, lv: 1, star: 1, hanh: 'tho', tuChat: 12,
+    duyen: [{ name: 'Sư Đồ', desc: 'Cùng ra trận Thủ +250%', with: [], ok: true }, { name: 'Đồng Môn', desc: 'Cùng ra trận Công +15%', with: [], ok: false }] },
+
+  han_son: { name: 'Hàn Sơn', img: 'tm_cuong_khach', role: 'ho_ve', q: 2, lv: 1, star: 1, hanh: 'tho', tuChat: 12,
     st: { hp: 4120, atk: 980, def: 2210, hoi: 350, spd: 38, mi: 300 },
     skill: { grade: 'A', name: 'Thiết Bích Quyết', desc: 'Khiêu khích toàn địch, giảm 30% sát thương nhận 2 hiệp' },
-    duyen: [{ name: 'Huynh Đệ', desc: 'Cùng ra trận Khí huyết +20%', with: [0], ok: true }] },
-  { name: 'Thanh Liên', img: 'tm_bach_lien_nu', role: 'tri_lieu', q: 3, lv: 1, star: 1, hanh: 'moc', tuChat: 13,
+    duyen: [{ name: 'Huynh Đệ', desc: 'Cùng ra trận Khí huyết +20%', with: [], ok: true }] },
+
+  thanh_lien: { name: 'Thanh Liên', img: 'tm_bach_lien_nu', role: 'tri_lieu', q: 3, lv: 1, star: 1, hanh: 'moc', tuChat: 13,
     st: { hp: 2450, atk: 1120, def: 1180, hoi: 860, spd: 46, mi: 80 },
     skill: { grade: 'S', name: 'Thanh Liên Hóa Vũ', desc: 'Hồi khí huyết toàn đội, giải hiệu ứng xấu' },
-    duyen: [{ name: 'Tri Kỷ', desc: 'Cùng ra trận Hồi +20%', with: [4], ok: true }] },
+    duyen: [{ name: 'Tri Kỷ', desc: 'Cùng ra trận Hồi +20%', with: [], ok: true }] },
   // Hiệp khách thật đầu tiên (2026-11-12, người dùng chốt): ảnh Gemini art (tranh có nền), chỉ số cấp 1 + tăng mỗi cấp (grow),
-  // suy từ ảnh mẫu cấp 16 (HP 2365, Công 932, Thủ 394, Hồi 401, mỗi cấp +53,3 / 23,8 / 8,4 / 8,6)
-  { name: 'Đoàn Diên Khánh', img: 'tm_thanh_kiem', art: 'game/img/hk/doan_dien_khanh.jpg', sprite: 'game/img/hk/doan_dien_khanh_sd.png', hand: [0.93, 0.46], role: 'ky_nang', q: 4, lv: 1, star: 1, hanh: 'kim', tuChat: 14,
+  // suy từ ảnh mẫu cấp 16 (HP 2365, Công 932, Thủ 394, Hồi 401, mỗi cấp +53,3 / 23,8 / 8,4 / 8,6),
+
+  doan_dien_khanh: { name: 'Đoàn Diên Khánh', img: 'tm_thanh_kiem', art: 'game/img/hk/doan_dien_khanh.jpg', sprite: 'game/img/hk/doan_dien_khanh_sd.png', hand: [0.93, 0.46], role: 'ky_nang', q: 4, lv: 1, star: 1, hanh: 'kim', tuChat: 14,
     st: { hp: 1565, atk: 575, def: 268, hoi: 272, spd: 43, mi: 100 },
     grow: { hp: 53.3, atk: 23.8, def: 8.4, hoi: 8.6 },
     ex: { crit: 10, critDmg: 150, acc: 100, dodge: 5 },
     skill: { grade: 'S', name: 'Đoàn Thị Chỉ Pháp', desc: 'Bắn chỉ lực vào toàn địch, mỗi kẻ trúng 3 tia (tổng 70% công), gây chảy máu 2 hiệp (mỗi hiệp mất máu bằng 10% công)' },
     ult: { kind: 'all', pow: 0.7, bleed: { pct: 0.1, turns: 2 }, fx: 'chi' },
     duyen: [{ name: 'Phụ Tử', desc: 'Cùng ra trận Công +150%', with: [], ok: false }] },
-  { name: 'Hoàng Y Nữ', img: 'tm_hoang_y_kiem_nu', role: 'ho_tro', q: 2, lv: 1, star: 1, hanh: 'hoa', tuChat: 11,
+
+  hoang_y_nu: { name: 'Hoàng Y Nữ', img: 'tm_hoang_y_kiem_nu', role: 'ho_tro', q: 2, lv: 1, star: 1, hanh: 'hoa', tuChat: 11,
     st: { hp: 2100, atk: 1350, def: 1100, hoi: 500, spd: 55, mi: 90 },
     skill: { grade: 'A', name: 'Phượng Minh Khúc', desc: 'Tăng 20% Công toàn đội 2 hiệp' },
-    duyen: [{ name: 'Tri Kỷ', desc: 'Cùng ra trận Hồi +20%', with: [2], ok: true }] },
-];
+    duyen: [{ name: 'Tri Kỷ', desc: 'Cùng ra trận Hồi +20%', with: [], ok: true }] },
+};
+const HK_START = 'doan_dien_khanh';
+// Hiệp khách đã có (P.hk[mã] = {lv, star}) + đội ra trận 5 ô (P.doi, null = ô trống). Bản lưu chưa có thì tặng Đoàn Diên Khánh.
+function hkEnsure() {
+  if (!P) return;
+  if (!P.hk || !Object.keys(P.hk).length) P.hk = { [HK_START]: { lv: 1, star: 1 } };
+  if (!Array.isArray(P.doi)) P.doi = [HK_START, null, null, null, null];
+  P.doi = P.doi.slice(0, 5).map(id => (id && P.hk[id] && HIEP_KHACH[id] ? id : null));
+  while (P.doi.length < 5) P.doi.push(null);
+}
+const hkGet = id => (id && HIEP_KHACH[id] && P.hk[id] ? Object.assign({ id }, HIEP_KHACH[id], P.hk[id]) : null);
+function hkTeam() { hkEnsure(); return P.doi.map(hkGet); }        // 5 ô, có thể null
+function hkMembers() { return hkTeam().filter(Boolean); }         // chỉ người có mặt
 const HOME_Q = ['', 'thuong', 'hiem', 'tuyet', 'truyen']; // màu khung theo phẩm cấp (tạm)
 
 // Ảnh thân hiệp khách: tranh riêng (art, có nền) nếu có, không thì hình cao thủ tạm
@@ -44,12 +61,9 @@ function heroSt(h) {
   return o;
 }
 const homePng = n => `<img src="game/img/icon/${n}.png" alt="" draggable="false">`;
-// Lực chiến: một con số tổng sức mạnh (tạm tính từ chỉ số nhân vật hiện tại; có đội thật thì cộng cả đội)
-function lucChien() {
-  if (!P) return 0;
-  const s = getStats();
-  return Math.round(s.hp * 0.2 + s.mp * 0.1 + s.atk * 3 + s.def * 2 + s.spd * 4 + ((s.crit || 0) + (s.dodge || 0)) * 20);
-}
+// Lực chiến: tổng sức mạnh đội ra trận
+const heroPower = h => { const s = heroSt(h); return Math.round(s.hp * 0.2 + s.atk * 3 + s.def * 2 + s.hoi + s.spd * 4); };
+function lucChien() { return P ? hkMembers().reduce((a, h) => a + heroPower(h), 0) : 0; }
 const homeSoon = what => toast(`${what}: sắp mở`);
 
 // Phần đầu dùng chung (Trang chủ, màn chi tiết hiệp khách): băng tên, kinh nghiệm, tài nguyên + Lực Chiến
@@ -71,13 +85,14 @@ function homeHead() {
 }
 function renderHome() {
   if (!P) return renderTitle();
+  if (!P.hk) { hkEnsure(); if (typeof saveGame === 'function') saveGame(); } // tạo nhân vật: tặng Đoàn Diên Khánh
   combat = null;
   closeModalSilent();
   homeStyle();
   homeNoDrag();
   const tb = el('topbar'); if (tb) tb.classList.add('hidden');
   if (hasSnd()) SND.music('village');
-  const cards = HOME_TEAM.map((h, i) => `<button class="hm-card q-${HOME_Q[h.q]}" onclick="G.heroView(${i})" aria-label="${h.name}">
+  const cards = hkTeam().map((h, i) => !h ? `<button class="hm-card empty" onclick="G.homeSoon('Chiêu mộ thêm hiệp khách')" aria-label="Ô trống"><i>+</i></button>` : `<button class="hm-card q-${HOME_Q[h.q]}" onclick="G.heroView('${h.id}')" aria-label="${h.name}">
       <img class="${h.art ? 'art' : ''}" src="${heroImg(h)}" alt="" draggable="false">
       <span class="hm-band"><span class="hm-lv">${h.lv}</span><span class="hm-star">${'<i></i>'.repeat(h.star)}</span></span></button>`).join('');
   // Hàng nút nhanh: 4 ô (người dùng chốt 2026-11-12), icon ảnh Gemini nhanh_<mã>.png
@@ -131,12 +146,13 @@ function homeMore() { const s = document.getElementById('hm-fscroll'); if (s) s.
 /* ---------- MÀN CHI TIẾT HIỆP KHÁCH (2026-11-12, theo bản phác người dùng, khung 1116 × 2000) ----------
    Phần đầu giữ như Trang chủ (homeHead). Phần thân đặt tuyệt đối theo tọa độ bản phác (đơn vị cqw = điểm ảnh mẫu × 0,0896,
    gốc y = 390 của bản phác), phần dưới (chỉ số, tuyệt chiêu, duyên) xếp dọc và cuộn được. Không có thanh nút dưới.
-   Số liệu đang là đội mẫu HOME_TEAM; Nâng Cấp, Bảo Vật, Trang bị, Linh chưa có chức năng. */
-let heroSel = 0;
+   Số liệu lấy từ HIEP_KHACH + P.hk (cấp, sao); Nâng Cấp, Bảo Vật, Trang bị, Linh chưa có chức năng. */
+let heroSel = null; // mã hiệp khách đang xem
 function heroView(i) {
   if (!P) return renderTitle();
-  heroSel = Math.max(0, Math.min(HOME_TEAM.length - 1, i | 0));
-  const h = HOME_TEAM[heroSel], R = HERO_ROLES[h.role] || {}, H = NGU_HANH[h.hanh] || { name: '?', color: '#888' };
+  const mem = hkMembers();
+  heroSel = typeof i === 'string' && P.hk[i] ? i : (mem[i | 0] || mem[0]).id;
+  const h = hkGet(heroSel), R = HERO_ROLES[h.role] || {}, H = NGU_HANH[h.hanh] || { name: '?', color: '#888' };
   closeModalSilent(); homeStyle(); heroStyle(); homeNoDrag();
   const tb = el('topbar'); if (tb) tb.classList.add('hidden');
   const u = v => (v * 0.0896).toFixed(2) + 'cqw';
@@ -149,7 +165,8 @@ function heroView(i) {
     `<button class="hd-eq" style="${box(885, 572 + k * 152, 137, 137)}" onclick="G.homeSoon('Trang bị')"><span class="hd-eqi">[[${ic}]]</span><b>${t}</b></button>`).join('');
   const ST = [['hp', 'Khí huyết'], ['atk', 'Công'], ['def', 'Thủ'], ['hoi', 'Hồi'], ['spd', 'Tốc'], ['mi', 'Mị']];
   const hs = heroSt(h), sts = ST.map(([k, t]) => `<span><small>${t}</small><b>${(hs[k] || 0).toLocaleString('vi-VN')}</b></span>`).join('');
-  const ava = j => { const o = HOME_TEAM[j]; return o ? `<button class="hd-ava" onclick="G.heroView(${j})" title="${o.name}"><img class="${o.art ? 'art' : ''}" src="${heroImg(o)}" alt="" draggable="false"></button>` : ''; };
+  // chân dung trong duyên: mã hiệp khách; chưa có thì mờ (vẫn hiện hình)
+  const ava = id => { const o = HIEP_KHACH[id]; return o ? `<button class="hd-ava ${P.hk[id] ? '' : 'off'}" ${P.hk[id] ? `onclick="G.heroView('${id}')"` : ''} title="${o.name}"><img class="${o.art ? 'art' : ''}" src="${heroImg(o)}" alt="" draggable="false"></button>` : ''; };
   const duyen = (h.duyen || []).map(d => `<div class="hd-bar hd-duyen"><b>Duyên: ${d.name}</b><span>${d.desc}</span><em class="${d.ok ? 'ok' : ''}">${d.ok ? 'Đạt' : 'Chưa đạt'}</em></div>
     <div class="hd-avas">${ava(heroSel)}${(d.with || []).map(ava).join('')}</div>`).join('');
   show(`<div class="home hd">
@@ -166,7 +183,7 @@ function heroView(i) {
         ${bao}
         <div class="hd-art q-${HOME_Q[h.q]}" style="${box(360, 620, 440, 690, true)}"><img class="${h.art ? 'art' : ''}" src="${heroImg(h)}" alt="" draggable="false"></div>
         ${eq}
-        <div class="hd-power" style="${box(362, 1338, 436, 74)}"><span>Chiến Lực:</span><b>${Object.values(hs).reduce((a, b) => a + b, 0).toLocaleString('vi-VN')}</b></div>
+        <div class="hd-power" style="${box(362, 1338, 436, 74)}"><span>Chiến Lực:</span><b>${heroPower(h).toLocaleString('vi-VN')}</b></div>
         <button class="hd-linh" style="${box(895, 1325, 117, 117)}" onclick="G.homeSoon('Linh thú')">Linh</button>
       </div>
       <div class="hd-bar hd-stats">${sts}</div>
@@ -244,6 +261,7 @@ function heroStyle() {
   .hd-duyen em.ok { color: #ffcf3a; }
   .hd-avas { display: flex; gap: .4cqw; margin: 1.2cqw 7.3cqw 0; }
   .hd-ava { width: 12.5cqw; height: 12.5cqw; border-radius: 1.2cqw !important; overflow: hidden; background: #2a2018 !important; border: .5cqw solid #9a7a4a !important; }
+  .hd-ava.off { filter: grayscale(1) brightness(.6); }
   .hd-ava img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 12%; transform: scaleX(-1) scale(1.4); transform-origin: 50% 20%; }
   `;
   document.head.appendChild(st);
@@ -316,6 +334,8 @@ function homeStyle() {
   .hm-card { position: relative; height: max(43.5cqw, calc(43.5cqw + (100dvh - 179.2cqw) * .4)); border-radius: 1cqw; overflow: hidden; border: .6cqw solid var(--qc) !important; background: linear-gradient(var(--qg), color-mix(in srgb, var(--qg) 55%, #000)) !important; box-shadow: inset 0 0 2cqw #0008; }
   .hm-card img { position: absolute; left: 0; top: 0; width: 100%; height: calc(100% - 5.8cqw); object-fit: cover; object-position: 50% 15%; transform: scaleX(-1); }
   .hm-card img.art { transform: none; object-position: 50% 22%; }
+  .hm-card.empty { display: grid; place-items: center; border: .5cqw dashed #c9a24a88 !important; background: #0005 !important; box-shadow: none; }
+  .hm-card.empty i { font: normal 10cqw/1 sans-serif; color: #c9a24aaa; }
   .hm-card.q-thuong { --qc: #4fbf5a; --qg: #1f6a2a; } .hm-card.q-hiem { --qc: #4f8aff; --qg: #1e3a8a; }
   .hm-card.q-tuyet { --qc: #b77bff; --qg: #4b2a8a; } .hm-card.q-truyen { --qc: #ffbf3a; --qg: #8a5a10; }
   .hm-band { position: absolute; left: 0; right: 0; bottom: 0; height: 5.8cqw; display: flex; align-items: center; justify-content: space-between; padding: 0 1.2cqw 0 .6cqw; background: color-mix(in srgb, var(--qc) 55%, #000); }

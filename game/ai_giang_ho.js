@@ -21,7 +21,9 @@ const AI_CHUONG = [
     ],
   },
 ];
-const AI = { tlMax: 200, tlMin: 6, tlCost: 5, tlBoss: 10, bossPerDay: 3, bac: 60 };
+const AI = { tlMax: 200, tlMin: 6, tlCost: 5, tlBoss: 10, bossPerDay: 3, bac: 60,
+  // địch cấp 1 của ải (đặt cho Đoàn Diên Khánh cấp 1 một mình qua được ải 1; mỗi tầng sau mạnh thêm 5%)
+  mob: { hp: 650, atk: 240, def: 150, hoi: 100, spd: 40, mi: 100 } };
 
 // Thể Lực: P.theLuc + P.tlAt (mốc thời gian đã tính hồi)
 function aiTL() {
@@ -121,7 +123,7 @@ function aiFight(t) {
   const c = aiCur, a = aiSel, A = AI_CHUONG[c].ai[a], g = aiIdx(c, a, t), boss = aiIsBoss(c, a, t);
   tdStart({
     name: `${A.name} ${t + 1}`, mobs: AI_CHUONG[c].mobs, boss: boss ? A.boss : null,
-    mob: TD_TEST.mob, waveN: boss ? [3, 4, 4] : [2, 3, 3], pow: 0.75 + g * 0.03,
+    mob: AI.mob, waveN: boss ? [2, 3, 3] : [2, 2, 3], pow: 1 + g * 0.05,
     onEnd(win, stars) {
       if (!win) return;
       const S = aiState(), k = aiKey(c, a, t);

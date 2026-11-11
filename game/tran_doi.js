@@ -71,7 +71,7 @@ function tdStart(def) {
   if (!P) return renderTitle();
   closeModalSilent();
   const front = ['ho_ve', 'cong_kich', 'ky_nang'];
-  const team = HOME_TEAM.map((h, k) => ({ h, k })).sort((a, b) => (front.includes(b.h.role) - front.includes(a.h.role)) || a.k - b.k);
+  const team = hkMembers().map((h, k) => ({ h, k })).sort((a, b) => (front.includes(b.h.role) - front.includes(a.h.role)) || a.k - b.k);
   tdS = {
     def: def || TD_TEST, wave: 0, round: 1, phase: 'ta', busy: false, target: 0, deaths: 0,
     auto: !!(tdS && tdS.auto), fast: !!(tdS && tdS.fast), loot: { bac: 0, luong: 0, manh: 0 }, over: null,
