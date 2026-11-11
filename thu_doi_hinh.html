@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thử Đội Hình</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pattaya&display=swap">
+<style>
+/* Bản thử lối chơi đội hình (2026-11-12): nhân vật chính + 2 đồng đội đánh 3 quái, đội tự đánh, người chơi bấm Nộ.
+   Trang tách riêng, không đụng game. Ảnh lấy từ game/img (đăng cùng bản GitHub). Số liệu là số thử, chưa cân bằng. */
+:root { --ink: #f3e7c9; --muted: #b8a888; --gold: #f0d48a; --red: #d6503c; --line: rgba(240,212,138,.3); --bg: #15100b; --card: #241b12; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+#app { max-width: 480px; margin: 0 auto; min-height: 100vh; padding: max(10px, env(safe-area-inset-top)) 12px 16px; }
+h1 { font: 30px 'Pattaya', serif; color: var(--gold); margin: 4px 0 2px; text-align: center; }
+.sub { color: var(--muted); font-size: 13px; text-align: center; margin: 0 0 12px; }
+button { font: inherit; cursor: pointer; }
+.btn { border: 1px solid var(--line); background: #3a2c1c; color: var(--ink); border-radius: 10px; padding: 9px 14px; }
+.btn.go { background: linear-gradient(#c99a3a, #8c6420); color: #1b130a; font-weight: 700; border-color: #e9c46a; }
+.btn:disabled { opacity: .45; cursor: default; }
+.tag { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 99px; background: rgba(255,255,255,.08); color: var(--muted); margin-right: 4px; }
+.tag.am { color: #b9a6ff; } .tag.duong { color: #ffad6b; } .tag.tc { color: #e9e4d6; }
+
+/* ---------- Chọn đội ---------- */
+.hero { display: flex; gap: 10px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px; margin-bottom: 10px; }
+.hero.pick { cursor: pointer; transition: transform .12s, border-color .12s; }
+.hero.pick.on { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset, 0 0 16px rgba(240,212,138,.25); }
+.hero.pick:active { transform: scale(.98); }
+.face { flex: none; width: 64px; height: 64px; border-radius: 50%; border: 2px solid var(--line); background-repeat: no-repeat; background-color: #3a2c1c; }
+.hero b { color: var(--gold); font-size: 16px; }
+.hero .d { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.hero .n { font-size: 12.5px; margin-top: 3px; } .hero .n i { color: #ff9a6b; font-style: normal; }
+.chk { margin-left: auto; flex: none; width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; color: #1b130a; font-weight: 700; }
+.on .chk { background: var(--gold); border-color: var(--gold); }
+.sec { font: 18px 'Pattaya', serif; color: var(--gold); margin: 14px 0 6px; }
+.duyen { font-size: 13px; padding: 6px 10px; border-radius: 8px; background: rgba(255,255,255,.04); margin-bottom: 6px; color: var(--muted); border: 1px solid transparent; }
+.duyen.on { color: var(--ink); border-color: var(--gold); background: rgba(240,212,138,.08); }
+.duyen b { color: var(--gold); }
+.bottom { position: sticky; bottom: 0; padding: 10px 0 4px; background: linear-gradient(transparent, var(--bg) 30%); display: flex; gap: 8px; justify-content: center; }
+
+/* ---------- Trận ---------- */
+.arena { position: relative; width: 100%; aspect-ratio: 4 / 5; border-radius: 12px; overflow: hidden; container-type: size; background: #000 center 60% / cover no-repeat; border: 1px solid var(--line); }
+.arena::after { content: ""; position: absolute; inset: 0; background: linear-gradient(rgba(10,6,20,.35), rgba(10,6,20,.15) 40%, rgba(10,6,20,.45)); pointer-events: none; }
+.turn { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); z-index: 50; font-size: 12px; padding: 3px 12px; border-radius: 99px; background: rgba(0,0,0,.55); border: 1px solid var(--line); color: var(--gold); white-space: nowrap; }
+.unit { position: absolute; transform: translate(-50%, -100%); z-index: 10; pointer-events: none; }
+.mv { position: relative; height: 22cqh; }
+.mv img.body { height: 100%; max-width: 30cqw; object-fit: contain; object-position: bottom; display: block; filter: drop-shadow(0 4px 4px rgba(0,0,0,.5)); }
+.unit.ally:not(.main) img.body { transform: scaleX(-1); }
+.unit.boss .mv { height: 28cqh; }
+.shadow { position: absolute; left: 50%; bottom: -6px; width: 70%; height: 12px; transform: translateX(-50%); background: radial-gradient(rgba(0,0,0,.55), transparent 70%); }
+.hb { position: absolute; left: 50%; top: -14px; transform: translateX(-50%); width: 70px; height: 6px; border-radius: 4px; background: rgba(0,0,0,.6); overflow: hidden; border: 1px solid rgba(0,0,0,.6); }
+.hb i { display: block; height: 100%; background: linear-gradient(#ff7a5c, #c0392b); transition: width .25s; }
+.ally .hb i { background: linear-gradient(#8fe07a, #3d9a33); }
+.hb u { position: absolute; left: 0; top: 0; height: 100%; background: rgba(150,210,255,.85); }
+.st { position: absolute; left: 50%; top: -30px; transform: translateX(-50%); font-size: 11px; color: #ffe08a; white-space: nowrap; text-shadow: 0 1px 2px #000; }
+.dead .mv { opacity: 0; transition: opacity .6s, transform .6s; transform: translateY(10px); }
+.hurt img.body { filter: brightness(1.8) sepia(1) hue-rotate(-30deg) saturate(4) drop-shadow(0 0 6px red); }
+/* nhân vật chính: hình động nhiều khung */
+.spr { position: relative; height: 100%; aspect-ratio: 240 / 320; }
+.spr div { position: absolute; background-repeat: no-repeat; }
+.spr .idle { left: -12.9%; top: -1.6%; width: 133.3%; height: 100%; background-image: url(game/img/vdm_idle.png); background-size: 1600% 100%; animation: sprIdle 1.6s steps(15, jump-none) infinite; }
+.spr .atk { display: none; left: -46.7%; top: -26.6%; width: 200.8%; height: 150.6%; background-image: url(game/img/vdm_atk.png); background-size: 1100% 100%; }
+.spr.attacking .idle { display: none; }
+.spr.attacking .atk { display: block; animation: sprAtk var(--atk, .75s) steps(10, jump-none) forwards; }
+@keyframes sprIdle { from { background-position: 0 0; } to { background-position: 100% 0; } }
+@keyframes sprAtk { from { background-position: 0 0; } to { background-position: 100% 0; } }
+.pop { position: absolute; z-index: 200; transform: translate(-50%, -50%); font-weight: 800; font-size: 18px; color: #fff; text-shadow: 0 2px 0 #000, 0 0 6px #000; pointer-events: none; white-space: nowrap; }
+.pop.crit { color: #ffd43b; font-size: 26px; }
+.pop.heal { color: #8fff7a; }
+.pop.info { color: #9fd3ff; font-size: 14px; }
+.fx { position: absolute; z-index: 60; pointer-events: none; transform: translate(-50%, -50%); }
+.ghost { position: absolute; z-index: 9; pointer-events: none; opacity: .45; filter: brightness(1.6) saturate(.4); }
+.dim { position: absolute; inset: 0; z-index: 70; background: rgba(5,2,10,.75); pointer-events: none; }
+.cine { position: absolute; z-index: 80; pointer-events: none; left: 0; right: 0; top: 18%; display: flex; flex-direction: column; align-items: center; }
+.cine img { height: 46cqh; filter: drop-shadow(0 0 18px rgba(240,212,138,.6)); }
+.cine b { font: 9cqw 'Pattaya', serif; color: #ffe39a; text-shadow: 0 0 14px #c05a00, 0 3px 0 #000; margin-top: -6cqh; white-space: nowrap; }
+.shake { animation: shk .35s; }
+@keyframes shk { 20% { transform: translate(-4px, 2px); } 40% { transform: translate(4px, -2px); } 60% { transform: translate(-3px, 1px); } 80% { transform: translate(2px, 0); } }
+
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+.card { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 8px 6px 7px; text-align: center; }
+.card .face { width: 52px; height: 52px; margin: 0 auto 4px; }
+.card .nm { font-size: 12.5px; font-weight: 700; color: var(--gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar { height: 6px; border-radius: 4px; background: rgba(0,0,0,.5); overflow: hidden; margin-top: 4px; }
+.bar i { display: block; height: 100%; transition: width .25s; }
+.bar.hp i { background: linear-gradient(#8fe07a, #3d9a33); }
+.bar.no i { background: linear-gradient(#ffe08a, #e09a2a); }
+.card.full { border-color: #ffd43b; box-shadow: 0 0 14px rgba(255,212,59,.55); cursor: pointer; animation: glow 1s infinite alternate; }
+.card.full::after { content: "NỘ"; position: absolute; top: 4px; right: 6px; font: 15px 'Pattaya', serif; color: #ffd43b; }
+.card.queued { border-color: #ff7a3a; }
+.card.dead { opacity: .4; }
+@keyframes glow { to { box-shadow: 0 0 22px rgba(255,212,59,.9); } }
+.ctrl { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; justify-content: center; }
+.ctrl .btn { padding: 7px 10px; font-size: 13px; }
+.ctrl .btn.on { border-color: var(--gold); color: var(--gold); }
+.log { margin-top: 8px; font-size: 12px; color: var(--muted); min-height: 36px; }
+.result { position: absolute; inset: 0; z-index: 300; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(0,0,0,.7); }
+.result b { font: 15cqw 'Pattaya', serif; color: var(--gold); text-shadow: 0 0 20px #a06000; }
+.result.lose b { color: #ff8a7a; text-shadow: 0 0 20px #800; }
+.note { font-size: 12px; color: var(--muted); text-align: center; margin-top: 12px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+'use strict';
+/* ---------------- Dữ liệu thử ---------------- */
+const IMG = n => `game/img/quai/${n}.png`;
+const ELEM = { duong: 'Dương', am: 'Âm', tc: 'Thái Cực' };
+const MAIN = { id: 'main', name: 'Ngươi', hieu: 'Đệ tử đường Chưởng', role: 'Chủ lực', elem: 'duong', sprite: true, face: 'game/img/vdm.png', head: [0.2, 0.0, 0.42],
+  hp: 2000, atk: 230, def: 110, spd: 13, crit: 15,
+  basic: { name: 'Vô Danh Quyền', kind: 'fist', mul: 1.0 },
+  no: { name: 'Cuồng Long Loạn Vũ', kind: 'dragon', mul: 1.7, desc: 'Rồng thần hiện thân, quật cả đội địch 170% công' } };
+const MATES = {
+  han_son: { name: 'Hàn Sơn', hieu: 'Sư huynh · đường Côn', role: 'Đỡ đòn', elem: 'duong', img: IMG('tm_cuong_khach'), head: [0.37, 0.06, 0.34],
+    hp: 3000, atk: 150, def: 170, spd: 9, crit: 5, tank: true,
+    basic: { name: 'Côn Quét', kind: 'jump', mul: 1.0 },
+    no: { name: 'Kim Cương Hộ Thể', kind: 'shield', desc: 'Chuông vàng trùm cả đội, giáp ảo 25% khí huyết' },
+    desc: 'Đứng hàng trước, địch nhắm vào trước. Bị đánh tích Nộ nhanh.' },
+  thanh_lien: { name: 'Thanh Liên', hieu: 'Sư tỷ · y thuật', role: 'Hồi máu', elem: 'am', img: IMG('tm_bach_lien_nu'), head: [0.33, 0.06, 0.2],
+    hp: 1500, atk: 140, def: 80, spd: 12, crit: 5, healer: true,
+    basic: { name: 'Liên Hoa Chưởng', kind: 'orb', mul: 0.9 },
+    no: { name: 'Bạch Liên Hồi Xuân', kind: 'healAll', desc: 'Sen nở khắp đội, hồi 35% khí huyết, giải choáng' },
+    desc: 'Đồng đội nào dưới 70% máu thì tự hồi cho người yếu nhất thay vì đánh.' },
+  lanh_nguyet: { name: 'Lãnh Nguyệt', hieu: 'Sư tỷ · đường Kiếm', role: 'Sát thương', elem: 'am', img: IMG('tm_nu_kiem_lam'), head: [0.3, 0.0, 0.24],
+    hp: 1400, atk: 270, def: 70, spd: 15, crit: 25,
+    basic: { name: 'Nguyệt Ảnh Kiếm', kind: 'dash', mul: 1.1 },
+    no: { name: 'Nguyệt Ảnh Liên Trảm', kind: 'dashAll', mul: 1.5, desc: 'Lướt chém qua cả ba kẻ địch, mỗi kẻ 150% công' },
+    desc: 'Nhanh, bạo kích cao, nhưng mỏng máu: đặt hàng sau.' },
+  mo_thanh: { name: 'Mộ Thanh', hieu: 'Đại sư huynh · đường Kiếm', role: 'Khống chế', elem: 'tc', img: IMG('tm_thanh_kiem'), head: [0.37, 0.12, 0.27],
+    hp: 1900, atk: 200, def: 110, spd: 11, crit: 10,
+    basic: { name: 'Thái Cực Kiếm', kind: 'dash', mul: 1.0 },
+    no: { name: 'Thái Cực Phong Ấn', kind: 'stunAll', mul: 0.9, desc: 'Pháp trận dưới chân địch: 90% công, choáng cả đội địch 1 lượt' },
+    desc: 'Choáng làm địch mất lượt, cứu đội khi địch sắp tung chiêu lớn.' },
+};
+// Duyên: hai đồng đội cùng ra trận thì cả đội được thêm
+const DUYEN = [
+  { a: ['lanh_nguyet', 'mo_thanh'], name: 'Song Kiếm Đồng Môn', desc: 'Cả đội bạo kích +15%', fx: t => t.forEach(u => { u.crit += 15; }) },
+  { a: ['han_son', 'thanh_lien'], name: 'Cương Nhu Tương Tế', desc: 'Hồi máu và giáp ảo +30%', fx: t => t.forEach(u => { u.healUp = 1.3; }) },
+  { a: ['han_son', 'lanh_nguyet'], name: 'Tiền Thủ Hậu Công', desc: 'Lãnh Nguyệt công +20%', fx: t => t.forEach(u => { if (u.id === 'lanh_nguyet') u.atk *= 1.2; }) },
+  { a: ['thanh_lien', 'mo_thanh'], name: 'Tĩnh Tâm Định Ý', desc: 'Mọi người bắt đầu trận với 40 Nộ', fx: t => t.forEach(u => { u.no = 40; }) },
+  { a: ['han_son', 'mo_thanh'], name: 'Thiết Bích', desc: 'Cả đội thủ +20%', fx: t => t.forEach(u => { u.def *= 1.2; }) },
+  { a: ['thanh_lien', 'lanh_nguyet'], name: 'Hoa Nguyệt', desc: 'Cả đội tốc độ +3, ra tay sớm hơn', fx: t => t.forEach(u => { u.spd += 3; }) },
+];
+const FOES = [
+  { name: 'Đệ Tử Thất Sát', elem: 'am', img: IMG('de_tu_that_sat'), head: [0.15, 0.05, 0.55], hp: 1900, atk: 205, def: 90, spd: 10, crit: 10, basic: { name: 'Thất Sát Đao', kind: 'dash', mul: 1.0 } },
+  { name: 'Thất Sát Hương Chủ', boss: true, elem: 'am', img: IMG('that_sat_huong_chu'), head: [0.25, 0.08, 0.38], hp: 5600, atk: 245, def: 130, spd: 12, crit: 10,
+    basic: { name: 'Hắc Sát Chưởng', kind: 'dash', mul: 1.0 }, no: { name: 'Huyết Sát Phá Thiên', kind: 'slamAll', mul: 1.25 } },
+  { name: 'Sát Thủ Giang Hồ', elem: 'am', img: IMG('sat_thu'), head: [0.27, 0.03, 0.45], hp: 1500, atk: 240, def: 70, spd: 16, crit: 25, basic: { name: 'Ám Ảnh Đột Kích', kind: 'jump', mul: 1.0 } },
+];
+// Ô đứng (theo % sân): 0 = hàng trước, 1 / 2 = hàng sau trên / dưới; bên địch lật ngang
+const SLOTS = [[30, 66], [12, 45], [12, 89]];
+
+/* ---------------- Trạng thái ---------------- */
+let picked = [], S = null, speed = 1, autoNo = false;
+const app = document.getElementById('app');
+const wait = ms => new Promise(r => setTimeout(r, ms / speed));
+// Hoạt cảnh + đồng hồ dự phòng: trình duyệt không báo xong (chạy nền, máy yếu) thì vẫn đi tiếp, trận không bao giờ kẹt
+const anim = (el, kf, ms, o = {}) => {
+  if (!el || !el.animate) return Promise.resolve();
+  const a = el.animate(kf, Object.assign({ duration: ms / speed, easing: 'ease-out', fill: 'forwards' }, o));
+  return Promise.race([a.finished.catch(() => {}), new Promise(r => setTimeout(r, ms / speed + 120))]);
+};
+const faceCss = (src, head) => {
+  const [x, y, s] = head;
+  return `background-image:url(${src});background-size:${(100 / s).toFixed(1)}% auto;background-position:${(x / Math.max(0.01, 1 - s) * 100).toFixed(1)}% ${(y * 100 / Math.max(0.01, 1 - s)).toFixed(1)}%`;
+};
+
+/* ---------------- Màn chọn đội ---------------- */
+function renderPick() {
+  S = null;
+  const card = (id, h, isMain) => `<div class="hero ${isMain ? '' : 'pick'} ${picked.includes(id) ? 'on' : ''}" ${isMain ? '' : `onclick="togglePick('${id}')"`}>
+    <div class="face" style="${faceCss(h.sprite ? h.face : h.img, h.head)}"></div>
+    <div><b>${h.name}</b> <span class="tag">${h.role}</span><span class="tag ${h.elem}">${ELEM[h.elem]}</span>
+      <div class="d">${h.hieu}${h.desc ? ' · ' + h.desc : ''}</div>
+      <div class="n">Nộ: <i>${h.no.name}</i> · ${h.no.desc}</div></div>
+    ${isMain ? '' : `<div class="chk">${picked.includes(id) ? '✓' : ''}</div>`}</div>`;
+  app.innerHTML = `<h1>Thử Đội Hình</h1>
+    <p class="sub">Chọn 2 đồng đội đi cùng. Đội tự đánh, ngươi bấm thẻ khi Nộ đầy để tung tuyệt chiêu.</p>
+    <div class="sec">Nhân vật chính</div>${card('main', MAIN, true)}
+    <div class="sec">Đồng đội (chọn 2)</div>${Object.entries(MATES).map(([id, h]) => card(id, h)).join('')}
+    <div class="sec">Duyên phối hợp</div>${DUYEN.map(d => `<div class="duyen ${d.a.every(x => picked.includes(x)) ? 'on' : ''}"><b>${d.name}</b> (${d.a.map(x => MATES[x].name).join(' + ')}): ${d.desc}</div>`).join('')}
+    <div class="bottom"><button class="btn go" ${picked.length === 2 ? '' : 'disabled'} onclick="startBattle()">Vào trận (${picked.length}/2)</button></div>
+    <p class="note">Bản thử tách riêng, số liệu chưa cân bằng. Không ảnh hưởng game chính.</p>`;
+}
+function togglePick(id) {
+  picked = picked.includes(id) ? picked.filter(x => x !== id) : picked.length < 2 ? [...picked, id] : [picked[1], id];
+  renderPick();
+}
+
+/* ---------------- Dựng trận ---------------- */
+function mk(base, side, id) {
+  const u = Object.assign({}, base, { id, side, ult: base.no || null, maxHp: base.hp, no: 0, shield: 0, stun: 0, dead: false, healUp: 1, crit: base.crit || 0 });
+  return u;
+}
+function startBattle() {
+  const allies = [mk(MAIN, 'ally', 'main'), ...picked.map(id => mk(MATES[id], 'ally', id))];
+  // Đỡ đòn đứng hàng trước; không có thì nhân vật chính đứng trước
+  const front = allies.find(u => u.tank) || allies[0];
+  const order = [front, ...allies.filter(u => u !== front)];
+  order.forEach((u, i) => { u.slot = i; });
+  const foes = FOES.map((f, i) => Object.assign(mk(f, 'foe', 'foe' + i), { slot: f.boss ? 0 : i === 0 ? 1 : 2 }));
+  const duyen = DUYEN.filter(d => d.a.every(x => picked.includes(x)));
+  duyen.forEach(d => d.fx(allies));
+  S = { allies, foes, all: [...allies, ...foes], round: 0, over: false, queue: [], log: [], duyen };
+  const bg = ['bo_song', 'dam_lay', 'kinh_thanh', 'truc_dem'][Math.floor(Math.random() * 4)];
+  app.innerHTML = `<div class="arena" id="arena" style="background-image:url(game/img/san_dau/${bg}.jpg)"><div class="turn" id="turn">Chuẩn bị</div></div>
+    <div class="cards" id="cards"></div>
+    <div class="ctrl"><button class="btn ${autoNo ? 'on' : ''}" id="b-auto" onclick="toggleAuto()">Tự tung Nộ: ${autoNo ? 'Bật' : 'Tắt'}</button>
+      <button class="btn" id="b-spd" onclick="toggleSpeed()">Tốc độ x${speed}</button>
+      <button class="btn" onclick="leave()">Đổi đội</button></div>
+    <div class="log" id="log">${duyen.length ? 'Duyên: ' + duyen.map(d => d.name).join(', ') : 'Đội chưa có duyên nào.'}</div>`;
+  const ar = document.getElementById('arena');
+  S.all.forEach(u => {
+    const [x, y] = SLOTS[u.slot], left = u.side === 'ally' ? x : 100 - x;
+    const el = document.createElement('div');
+    el.className = `unit ${u.side} ${u.id === 'main' ? 'main' : ''} ${u.boss ? 'boss' : ''}`;
+    el.style.left = left + '%'; el.style.top = y + '%'; el.style.zIndex = 10 + Math.round(y);
+    el.innerHTML = `<div class="mv"><div class="shadow"></div>${u.sprite ? '<div class="spr"><div class="idle"></div><div class="atk"></div></div>' : `<img class="body" src="${u.img}" alt="">`}
+      <div class="hb"><i style="width:100%"></i><u style="width:0"></u></div><div class="st"></div></div>`;
+    ar.appendChild(el);
+    u.el = el; u.home = { x: left, y };
+  });
+  renderCards();
+  loop();
+}
+function renderCards() {
+  const box = document.getElementById('cards');
+  if (!box || !S) return;
+  box.innerHTML = S.allies.map((u, i) => `<div class="card ${u.dead ? 'dead' : u.no >= 100 ? 'full' : ''} ${S.queue.includes(u) ? 'queued' : ''}" onclick="tapNo(${i})">
+    <div class="face" style="${faceCss(u.sprite ? u.face : u.img, u.head)}"></div><div class="nm">${u.name}</div>
+    <div class="bar hp"><i style="width:${Math.max(0, u.hp / u.maxHp * 100)}%"></i></div><div class="bar no"><i style="width:${u.no}%"></i></div></div>`).join('');
+}
+function upd(u) {
+  if (!u.el) return;
+  u.el.querySelector('.hb i').style.width = Math.max(0, u.hp / u.maxHp * 100) + '%';
+  u.el.querySelector('.hb u').style.width = Math.min(100, u.shield / u.maxHp * 100) + '%';
+  u.el.querySelector('.st').textContent = u.stun > 0 ? 'Choáng' : '';
+  if (u.side === 'ally') renderCards();
+}
+function say(t) { const el = document.getElementById('log'); if (el) el.textContent = t; }
+function toggleAuto() { autoNo = !autoNo; const b = document.getElementById('b-auto'); b.textContent = 'Tự tung Nộ: ' + (autoNo ? 'Bật' : 'Tắt'); b.classList.toggle('on', autoNo); }
+function toggleSpeed() { speed = speed === 1 ? 2 : speed === 2 ? 3 : 1; document.getElementById('b-spd').textContent = 'Tốc độ x' + speed; }
+function leave() { if (S) S.over = true; renderPick(); }
+function tapNo(i) {
+  const u = S && S.allies[i];
+  if (!u || u.dead || u.no < 100 || S.queue.includes(u) || S.over) return;
+  S.queue.push(u); renderCards();
+}
+
+/* ---------------- Tính toán ---------------- */
+const alive = side => S.all.filter(u => !u.dead && (!side || u.side === side));
+const foesOf = u => alive(u.side === 'ally' ? 'foe' : 'ally');
+const frontOf = list => list.slice().sort((a, b) => a.slot - b.slot || a.hp - b.hp)[0];
+function dmgOf(a, d, mul) {
+  const crit = Math.random() * 100 < a.crit;
+  let v = a.atk * mul * a.atk / (a.atk + d.def) * (0.9 + Math.random() * 0.2) * (crit ? 1.6 : 1);
+  return { v: Math.round(v), crit };
+}
+function hurt(t, v, crit) {
+  if (t.dead) return;
+  let left = v;
+  if (t.shield > 0) { const s = Math.min(t.shield, left); t.shield -= s; left -= s; }
+  t.hp -= left;
+  t.no = Math.min(100, t.no + (t.tank ? 20 : 12));
+  pop(t, crit ? v + '!' : v, crit ? 'crit' : '');
+  t.el.classList.add('hurt'); setTimeout(() => t.el && t.el.classList.remove('hurt'), 160 / speed);
+  anim(t.el.querySelector('.mv'), [{ transform: 'translateX(0)' }, { transform: `translateX(${t.side === 'ally' ? -10 : 10}px)` }, { transform: 'translateX(0)' }], 220);
+  if (t.hp <= 0) { t.hp = 0; t.dead = true; t.el.classList.add('dead'); }
+  upd(t);
+}
+function heal(t, v) { if (t.dead) return; t.hp = Math.min(t.maxHp, t.hp + Math.round(v)); pop(t, '+' + Math.round(v), 'heal'); upd(t); }
+function pos(u) { // tâm thân người theo px trong sân
+  const ar = document.getElementById('arena'), r = ar.getBoundingClientRect(), b = u.el.getBoundingClientRect();
+  return { x: b.left - r.left + b.width / 2, y: b.top - r.top + b.height * 0.55, top: b.top - r.top, w: b.width, h: b.height };
+}
+function pop(u, text, cls) {
+  const ar = document.getElementById('arena'); if (!ar) return;
+  const p = pos(u), el = document.createElement('div');
+  el.className = 'pop ' + (cls || ''); el.textContent = text;
+  el.style.left = p.x + (Math.random() * 24 - 12) + 'px'; el.style.top = p.top + 10 + 'px';
+  ar.appendChild(el);
+  anim(el, [{ transform: 'translate(-50%,-50%) scale(.6)', opacity: 0 }, { transform: 'translate(-50%,-90%) scale(1.15)', opacity: 1, offset: .25 }, { transform: 'translate(-50%,-200%) scale(1)', opacity: 0 }], 900).then(() => el.remove());
+}
+function fxImg(src, x, y, w, extra = '') {
+  const ar = document.getElementById('arena'), im = document.createElement('img');
+  im.className = 'fx'; im.src = src; im.style.left = x + 'px'; im.style.top = y + 'px'; im.style.width = w + 'px'; im.style.cssText += extra;
+  ar.appendChild(im); return im;
+}
+function ring(x, y, w, color) {
+  const ar = document.getElementById('arena'), el = document.createElement('div');
+  el.className = 'fx'; el.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${w * 0.4}px;border-radius:50%;border:3px solid ${color};box-shadow:0 0 14px ${color}`;
+  ar.appendChild(el);
+  anim(el, [{ transform: 'translate(-50%,-50%) scale(.2)', opacity: 1 }, { transform: 'translate(-50%,-50%) scale(1.4)', opacity: 0 }], 500).then(() => el.remove());
+}
+function slash(x, y, color, flip) {
+  const ar = document.getElementById('arena'), el = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  el.setAttribute('viewBox', '0 0 100 100'); el.setAttribute('class', 'fx'); el.style.cssText = `left:${x}px;top:${y}px;width:120px;height:120px;overflow:visible`;
+  el.innerHTML = `<path d="M10 85 Q50 ${flip ? 70 : 10} 92 15" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round" style="filter:drop-shadow(0 0 6px ${color})"/>`;
+  ar.appendChild(el);
+  anim(el, [{ opacity: 1, transform: 'translate(-50%,-50%) scale(.6) rotate(-20deg)' }, { opacity: 0, transform: 'translate(-50%,-50%) scale(1.25) rotate(10deg)' }], 380).then(() => el.remove());
+}
+// Bóng mờ đuổi theo khi lướt
+function ghosts(u, n) {
+  const ar = document.getElementById('arena'), src = u.el.querySelector('img.body');
+  if (!src) return;
+  const p = pos(u);
+  for (let i = 0; i < n; i++) setTimeout(() => {
+    if (!u.el) return;
+    const q = pos(u), g = document.createElement('img');
+    g.className = 'ghost'; g.src = src.src;
+    g.style.cssText = `left:${q.x - q.w / 2}px;top:${q.top}px;height:${q.h}px;${u.side === 'ally' && u.id !== 'main' ? 'transform:scaleX(-1);' : ''}`;
+    ar.appendChild(g);
+    anim(g, [{ opacity: .5 }, { opacity: 0 }], 350).then(() => g.remove());
+  }, i * 45 / speed);
+}
+
+/* ---------------- Động tác ---------------- */
+// Lao tới trước mặt mục tiêu, chém, quay về
+async function dashTo(u, t, onHit, color) {
+  const a = pos(u), b = pos(t), mv = u.el.querySelector('.mv');
+  const dx = (b.x - a.x) - (u.side === 'ally' ? 1 : -1) * b.w * 0.55, dy = b.y - a.y;
+  ghosts(u, 5);
+  await anim(mv, [{ transform: 'translate(0,0)' }, { transform: `translate(${dx}px,${dy}px)` }], 260, { easing: 'cubic-bezier(.3,.8,.4,1)' });
+  slash(b.x, b.y - b.h * 0.1, color || '#fff2c0', Math.random() < .5);
+  onHit();
+  await wait(160);
+  await anim(mv, [{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'translate(0,0)' }], 300);
+}
+// Nhảy vọt lên rồi giáng xuống mục tiêu
+async function jumpTo(u, t, onHit, color) {
+  const a = pos(u), b = pos(t), mv = u.el.querySelector('.mv');
+  const dx = (b.x - a.x) - (u.side === 'ally' ? 1 : -1) * b.w * 0.45, dy = b.y - a.y;
+  await anim(mv, [{ transform: 'translate(0,0) rotate(0)' }, { transform: `translate(${dx * 0.5}px,${dy * 0.5 - 70}px) rotate(${u.side === 'ally' ? 12 : -12}deg)` }, { transform: `translate(${dx}px,${dy}px) rotate(0)` }], 420, { easing: 'ease-in' });
+  ring(b.x, b.y + b.h * 0.4, b.w * 1.4, color || '#ffd27a');
+  document.getElementById('arena').classList.add('shake'); setTimeout(() => { const ar = document.getElementById('arena'); if (ar) ar.classList.remove('shake'); }, 350);
+  onHit();
+  await wait(150);
+  await anim(mv, [{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'translate(0,0)' }], 320);
+}
+// Bắn một vật (quyền ảnh, cầu khí) từ người ra chiêu tới mục tiêu
+async function shoot(u, t, src, w, onHit, flip) {
+  const a = pos(u), b = pos(t);
+  const im = fxImg(src, a.x, a.y, w, flip ? 'transform:translate(-50%,-50%) scaleX(-1)' : '');
+  await anim(im, [{ left: a.x + 'px', top: a.y + 'px', opacity: .3 }, { left: b.x + 'px', top: b.y + 'px', opacity: 1 }], 380, { easing: 'ease-in' });
+  im.remove(); ring(b.x, b.y, b.w, '#ffe08a'); onHit();
+}
+async function mainSwing(u) { // hình động ra đòn của nhân vật chính
+  const spr = u.el.querySelector('.spr');
+  if (!spr) return;
+  spr.style.setProperty('--atk', (750 / speed) + 'ms');
+  spr.classList.remove('attacking'); void spr.offsetWidth; spr.classList.add('attacking');
+  await wait(330);
+  setTimeout(() => spr.classList.remove('attacking'), 500 / speed);
+}
+
+/* ---------------- Lượt đánh ---------------- */
+async function basic(u) {
+  const tgts = foesOf(u);
+  if (!tgts.length) return;
+  // Thầy thuốc: đồng đội dưới 70% máu thì hồi người yếu nhất
+  if (u.healer) {
+    const weak = alive(u.side).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
+    if (weak && weak.hp / weak.maxHp < 0.7) {
+      say(`${u.name} dùng y thuật chữa cho ${weak.name}.`);
+      const p = pos(weak), im = fxImg('game/img/fx_sen.png', p.x, p.y, p.w * 0.9);
+      await anim(im, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.3)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)' }, { opacity: 0, transform: 'translate(-50%,-80%) scale(1.1)' }], 700);
+      im.remove(); heal(weak, weak.maxHp * 0.13 * u.healUp); u.no = Math.min(100, u.no + 25); return;
+    }
+  }
+  const t = u.basic.kind === 'jump' || u.basic.kind === 'dash' ? frontOf(tgts) : frontOf(tgts);
+  say(`${u.name}: ${u.basic.name}`);
+  const hit = () => { const r = dmgOf(u, t, u.basic.mul); hurt(t, r.v, r.crit); };
+  if (u.basic.kind === 'fist') { mainSwing(u); await wait(250); await shoot(u, t, 'game/img/fx_vdq.png', pos(u).w * 0.9, hit); }
+  else if (u.basic.kind === 'orb') await shoot(u, t, 'game/img/fx_sen.png', pos(u).w * 0.45, hit);
+  else if (u.basic.kind === 'jump') await jumpTo(u, t, hit);
+  else await dashTo(u, t, hit, u.side === 'foe' ? '#ff8a8a' : '#d6f0ff');
+  u.no = Math.min(100, u.no + 25);
+}
+// Cảnh tung tuyệt chiêu: tối sân, chân dung + tên chiêu
+async function cinematic(u, name) {
+  const ar = document.getElementById('arena');
+  const dim = document.createElement('div'); dim.className = 'dim'; ar.appendChild(dim);
+  const c = document.createElement('div'); c.className = 'cine';
+  c.innerHTML = `<img src="${u.sprite ? u.face : u.img}" style="${u.side === 'ally' && !u.sprite ? 'transform:scaleX(-1)' : ''}"><b>${name}</b>`;
+  ar.appendChild(c);
+  const fromX = u.side === 'ally' ? -60 : 60;
+  await anim(c, [{ transform: `translateX(${fromX}%)`, opacity: 0 }, { transform: 'translateX(0)', opacity: 1, offset: .3 }, { transform: 'translateX(0)', opacity: 1, offset: .8 }, { transform: `translateX(${-fromX / 3}%)`, opacity: 0 }], 1300);
+  c.remove();
+  return dim;
+}
+async function ultimate(u) {
+  const info = u.ult || {};
+  u.no = 0; upd(u);
+  say(`${u.name} tung tuyệt chiêu: ${info.name}!`);
+  const dim = await cinematic(u, info.name || '');
+  const foes = foesOf(u), mates = alive(u.side);
+  if (info.kind === 'dragon') {
+    mainSwing(u);
+    const a = pos(u), ar = document.getElementById('arena').getBoundingClientRect();
+    const god = fxImg('game/img/fx_than_long.png', a.x + 30, a.y - a.h * 0.4, ar.width * 0.55, 'z-index:65');
+    await anim(god, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.7)' }, { opacity: .95, transform: 'translate(-50%,-50%) scale(1)' }], 500);
+    for (const t of foes) {
+      const b = pos(t), d = fxImg('game/img/fx_rong.png', a.x, a.y, a.w * 1.6, 'z-index:66');
+      await anim(d, [{ left: a.x + 'px', top: a.y + 'px', opacity: .4 }, { left: b.x + 'px', top: b.y + 'px', opacity: 1 }], 330, { easing: 'ease-in' });
+      d.remove(); ring(b.x, b.y, b.w * 1.3, '#ffd43b');
+      const r = dmgOf(u, t, info.mul); hurt(t, r.v, r.crit);
+    }
+    anim(god, [{ opacity: .95 }, { opacity: 0 }], 400).then(() => god.remove());
+  } else if (info.kind === 'shield') {
+    for (const m of mates) {
+      const p = pos(m), bell = fxImg('game/img/fx_minh_vuong.png', p.x, p.top, p.w * 1.3, 'z-index:65');
+      anim(bell, [{ top: p.top - 80 + 'px', opacity: 0 }, { top: p.y + 'px', opacity: .85 }, { top: p.y + 'px', opacity: 0 }], 900).then(() => bell.remove());
+      m.shield += m.maxHp * 0.25 * u.healUp; upd(m); pop(m, 'Giáp ảo', 'info');
+      await wait(150);
+    }
+    await wait(500);
+  } else if (info.kind === 'healAll') {
+    for (const m of mates) {
+      const p = pos(m), l = fxImg('game/img/fx_sen.png', p.x, p.top, p.w * 0.9, 'z-index:65');
+      anim(l, [{ top: p.top - 60 + 'px', opacity: 0, transform: 'translate(-50%,-50%) scale(.4)' }, { top: p.y + 'px', opacity: 1, transform: 'translate(-50%,-50%) scale(1.1)' }, { opacity: 0 }], 900).then(() => l.remove());
+      await wait(150); heal(m, m.maxHp * 0.35 * u.healUp); m.stun = 0; upd(m);
+    }
+    await wait(500);
+  } else if (info.kind === 'dashAll') {
+    for (const t of foes) await dashTo(u, t, () => { const r = dmgOf(u, t, info.mul); hurt(t, r.v, r.crit); }, '#c8b6ff');
+  } else if (info.kind === 'stunAll') {
+    const circles = foes.map(t => { const p = pos(t); return fxImg('game/img/fx_phaptran.png', p.x, p.top + p.h * 0.95, p.w * 1.5, 'z-index:8'); });
+    circles.forEach(c => anim(c, [{ transform: 'translate(-50%,-50%) scaleY(.36) rotate(0) scale(.3)', opacity: 0 }, { transform: 'translate(-50%,-50%) scaleY(.36) rotate(180deg) scale(1)', opacity: .9 }], 700));
+    await wait(700);
+    foes.forEach(t => { const r = dmgOf(u, t, info.mul); hurt(t, r.v, r.crit); if (!t.dead) { t.stun = 1; upd(t); pop(t, 'Choáng', 'info'); } });
+    await wait(400); circles.forEach(c => anim(c, [{ opacity: .9 }, { opacity: 0 }], 400).then(() => c.remove()));
+  } else if (info.kind === 'slamAll') {
+    const mv = u.el.querySelector('.mv'), ar = document.getElementById('arena').getBoundingClientRect(), a = pos(u);
+    const dx = ar.width * 0.5 - a.x;
+    await anim(mv, [{ transform: 'translate(0,0)' }, { transform: `translate(${dx * 0.6}px,-90px) scale(1.15)` }, { transform: `translate(${dx}px,0) scale(1.1)` }], 500, { easing: 'ease-in' });
+    ring(ar.width * 0.5, a.y + a.h * 0.3, ar.width * 0.9, '#ff4a3a');
+    document.getElementById('arena').classList.add('shake');
+    foes.forEach(t => { const r = dmgOf(u, t, info.mul); hurt(t, r.v, r.crit); });
+    await wait(350); document.getElementById('arena').classList.remove('shake');
+    await anim(mv, [{ transform: `translate(${dx}px,0)` }, { transform: 'translate(0,0)' }], 350);
+  }
+  dim.remove();
+}
+async function act(u) {
+  if (u.dead || S.over) return;
+  document.querySelectorAll('.unit').forEach(e => e.style.filter = '');
+  if (u.stun > 0) { u.stun--; upd(u); pop(u, 'Mất lượt', 'info'); await wait(450); return; }
+  const full = u.no >= 100 && !!u.ult;
+  if (u.side === 'foe' && full) return ultimate(u);
+  if (u.side === 'ally' && full && autoNo) return ultimate(u);
+  await basic(u);
+}
+async function flushQueue() {
+  while (S && !S.over && S.queue.length) {
+    const u = S.queue.shift();
+    if (!u.dead && u.no >= 100) { await ultimate(u); renderCards(); await wait(200); checkEnd(); }
+  }
+}
+function checkEnd() {
+  if (S.over) return true;
+  const a = alive('ally').length, f = alive('foe').length;
+  if (a && f) return false;
+  S.over = true;
+  const ar = document.getElementById('arena'), r = document.createElement('div');
+  r.className = 'result ' + (a ? '' : 'lose');
+  r.innerHTML = `<b>${a ? 'Thắng trận' : 'Thất bại'}</b><div style="display:flex;gap:8px"><button class="btn go" onclick="startBattle()">Đánh lại</button><button class="btn" onclick="leave()">Đổi đội</button></div>`;
+  ar.appendChild(r);
+  return true;
+}
+async function loop() {
+  const me = S;
+  await wait(500);
+  while (S === me && !S.over) {
+    S.round++;
+    const order = alive().sort((a, b) => b.spd - a.spd);
+    for (const u of order) {
+      if (S !== me || S.over) return;
+      await flushQueue();
+      if (S !== me || checkEnd()) return;
+      if (u.dead) continue;
+      const t = document.getElementById('turn'); if (t) t.textContent = `Hiệp ${S.round} · ${u.name}`;
+      await act(u);
+      renderCards();
+      if (checkEnd()) return;
+      await wait(220);
+    }
+  }
+}
+renderPick();
+</script>
+</body>
+</html>
