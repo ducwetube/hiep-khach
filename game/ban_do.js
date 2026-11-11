@@ -280,6 +280,7 @@ function renderVung() {
     <button class="vg-world" onclick="G.banDo()" aria-label="Bản đồ thiên hạ">${menuIc('thien_ha')}<span>Thiên hạ</span></button>
     ${last ? `<button class="vg-log" onclick="G.vungLog()" aria-label="Xem nhật ký">${last}</button>` : ''}
     <nav class="vg-menu">
+      ${typeof renderHome === 'function' ? `<button onclick="G.home()">${menuIc('chinh_dien')}<span>Trang chủ</span></button>` : ''}
       <button onclick="G.menuChar()">${menuIc('nhan_vat')}<span>Nhân vật</span></button>
       <button onclick="G.menuInv()">${menuIc('hanh_trang')}<span>Hành trang</span></button>
       <button onclick="G.menuSkills()">${menuIc('vo_hoc')}<span>Võ học</span></button>

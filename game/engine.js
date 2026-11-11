@@ -899,7 +899,7 @@ function doImport() {
 function renderTop() {
   const tb = el('topbar');
   // Trong trận thì ẩn thanh nhân vật trên cùng: bảng thông tin của sân đấu đã có máu, nội lực (người dùng chốt)
-  if (!P || combat) { tb.classList.add('hidden'); return; }
+  if (!P || combat || screenKey === 'home') { tb.classList.add('hidden'); return; } // trang chủ có thanh trên riêng
   tb.classList.remove('hidden');
   const s = getStats();
   setHtml(tb, `
@@ -994,7 +994,7 @@ function continueGame() {
   if (!d) return renderTitle();
   loadPlayer(d);
   worldLog = [fmt('Chào mừng {title} {name} trở lại giang hồ!')];
-  renderWorld();
+  if (typeof renderHome === 'function') renderHome(); else renderWorld(); // màn chính kiểu game xếp đội (trang_chu.js)
   if (typeof bqCheck === 'function') bqCheck(); // Bế quan: thưởng thời gian vắng mặt (thi_luyen.js)
 }
 
@@ -1123,7 +1123,7 @@ function startNew(force) {
   // Chương 1 kể bằng tranh rồi mới vào game: vào Thanh Vân Môn (mã duong_chau)
   playTruyen('c1', () => {
     log(fmt('<b>{name}</b> đặt chân lên <b>Thanh Vân Môn</b>. Bốn ngọn núi quanh sơn môn là nơi luyện công, bắt đầu từ <b>Tiểu Trúc Phong</b>.'));
-    renderWorld();
+    if (typeof renderHome === 'function') renderHome(); else renderWorld();
   });
 }
 
@@ -1206,6 +1206,7 @@ function worldScreen(L, acts) {
     <div class="section-title">Đi đến${typeof BAN_DO_G !== 'undefined' ? ` <button class="btn small map-btn" onclick="G.banDo()">[[ban_do]] Bản đồ</button>` : ''}</div>
     <div class="actions">${travel}</div>
     <div class="menubar">
+      ${typeof renderHome === 'function' ? `<button onclick="G.home()">${mIc('chinh_dien')}<span>Trang chủ</span></button>` : ''}
       <button onclick="G.menuChar()">${mIc('nhan_vat')}<span>Nhân vật</span></button>
       <button onclick="G.menuInv()">${mIc('hanh_trang')}<span>Hành trang</span></button>
       <button onclick="G.menuSkills()">${mIc('vo_hoc')}<span>Võ học</span></button>
@@ -3746,6 +3747,7 @@ window.G = {
   useItem, equip, unequip, learnBook, useSkill, dropSkill, chieuPick, chieuSet, chieuOff, chieuCard, chieuBo, chieuClose, ghepManh, dgTabSet, dgElemSet, dgOpen, setFxSpeed, toggleSnd, setSndVol,
   act, cmenu, toggleLog, leaveCombat, pickTarget, enemyInfo, eqPick, eqClose, forgeUp, forgeTabSet, forgePick, cuongHoa, mfn, closeModal, practice,
   ...(typeof THAP_G !== 'undefined' ? THAP_G : {}), // Thí Luyện Tháp (thap.js)
+  ...(typeof TRANG_CHU_G !== 'undefined' ? TRANG_CHU_G : {}), // trang chủ (trang_chu.js)
   ...(typeof TAI_KHOAN_G !== 'undefined' ? TAI_KHOAN_G : {}), // đăng nhập Google, lưu Firebase (tai_khoan.js)
   ...(typeof MON_PHAI_G !== 'undefined' ? MON_PHAI_G : {}), // Thanh Vân: thi tuyển, khảo hạch, sư môn (mon_phai.js)
   ...(typeof TRUY_NA_G !== 'undefined' ? TRUY_NA_G : {}), // Truy Nã Hiệp Khách (truy_na.js)

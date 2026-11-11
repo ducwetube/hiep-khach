@@ -268,7 +268,7 @@ function bqCheck() {
     P.bq = Math.min(BE_QUAN.maxMin, (P.bq || 0) + gap);
     saveGame(true);
   }
-  if ((P.bq || 0) >= BE_QUAN.minMin && !(combat && !combat.over) && el('modal').classList.contains('hidden') && el('screen').querySelector('.world')) beQuan();
+  if ((P.bq || 0) >= BE_QUAN.minMin && !(combat && !combat.over) && el('modal').classList.contains('hidden') && el('screen').querySelector('.world, .home')) beQuan();
 }
 function beQuan() {
   const min = P.bq || 0;
