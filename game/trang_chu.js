@@ -127,7 +127,8 @@ function homeStyle() {
   const st = document.createElement('style');
   st.id = 'home-style';
   st.textContent = `
-  .home { box-sizing: border-box; container-type: inline-size; position: relative; min-height: 100dvh; display: flex; flex-direction: column; color: #f3e7c9; overflow: hidden;
+  html:has(.home), body:has(.home) { overflow: hidden; overscroll-behavior: none; height: 100%; }
+  .home { box-sizing: border-box; container-type: inline-size; position: fixed; inset: 0; margin: 0 auto; overscroll-behavior: none; display: flex; flex-direction: column; color: #f3e7c9; overflow: hidden;
     padding: env(safe-area-inset-top) 0 calc(24.5cqw + env(safe-area-inset-bottom)); }
   .hm-bg { position: fixed; inset: 0; z-index: -1; background: linear-gradient(rgba(10,14,10,.5), rgba(10,14,10,.25) 45%, rgba(10,14,10,.7)), url(game/img/ban_do/tv_doc.jpg) center / cover; }
   .home button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; padding: 0; }
