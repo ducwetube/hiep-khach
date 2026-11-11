@@ -26,11 +26,11 @@ const TD_ULT = {
 // Vị trí chân (% bề ngang, % bề cao sân) theo số người một bên; hàng trước sát đối phương, hàng sau lùi lại, so le để không đè nhau
 // (đội hình 6 ô cũ của san_dau.js quá sát cho 5 người: người dùng thấy đè lên nhau; theo mẫu: người nhỏ ~13% bề ngang, rải rộng)
 const TD_FORM = {
-  1: [[30, 76]],
-  2: [[36, 66], [26, 88]],
-  3: [[40, 60], [34, 78], [18, 70]],
-  4: [[40, 58], [34, 78], [16, 64], [12, 84]],
-  5: [[40, 58], [36, 76], [32, 94], [16, 62], [12, 80]],
+  1: [[26, 76]],
+  2: [[30, 66], [22, 88]],
+  3: [[33, 60], [29, 78], [12, 70]],
+  4: [[33, 58], [29, 78], [12, 64], [9, 84]],
+  5: [[33, 58], [30, 76], [27, 94], [12, 62], [9, 80]],
 };
 function tdSlot(u) {
   const n = Math.min(5, tdS[u.side].length), [x, y] = (TD_FORM[n] || TD_FORM[5])[u.i] || [50, 80];
