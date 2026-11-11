@@ -32,11 +32,11 @@ function renderHome() {
   const tb = el('topbar'); if (tb) tb.classList.add('hidden');
   if (hasSnd()) SND.music('village');
   const need = expNeed(P.lv), pct = P.lv >= MAX_LV ? 100 : Math.min(100, P.exp / need * 100);
-  const cards = HOME_TEAM.map(h => `<button class="hm-card q-${HOME_Q[h.q]}" onclick="G.homeTeam()">
+  const cards = HOME_TEAM.map(h => `<button class="hm-card q-${HOME_Q[h.q]}" onclick="G.homeTeam()" aria-label="${h.name}">
       <img src="game/img/quai/${h.img}.png" alt="" draggable="false">
       <span class="hm-role">${h.role}</span>
-      <span class="hm-lv">${h.lv}</span><span class="hm-star">${'<i></i>'.repeat(h.star)}</span>
-      <span class="hm-nm">${h.name}</span></button>`).join('');
+      <span class="hm-band"><span class="hm-lv">${h.lv}</span><span class="hm-star">${'<i></i>'.repeat(h.star)}</span></span></button>`).join('');
+  const herbs = invCount('vo_danh_thao') + invCount('nhan_sam') + invCount('tuyet_lien_km');
   const quick = [
     ['G.menuQuests()', homePng('nhiem_vu'), 'Nhiệm Vụ'],
     ['G.homeDaily()', homePng('thi_luyen'), 'Hằng Ngày'],
@@ -54,16 +54,14 @@ function renderHome() {
   ].map(([f, ic, t]) => `<button class="hm-f" onclick="${f}"><span class="hm-ic">${ic}</span><b>${t}</b></button>`).join('');
   show(`<div class="home">
     <div class="hm-bg"></div>
-    <header class="hm-top">
-      <button class="hm-ava" onclick="G.menuChar()">${menuIc('nhan_vat')}</button>
-      <div class="hm-who"><div class="hm-row"><b class="hm-name">${esc(P.name)}</b><span class="hm-lvl">Cấp ${P.lv}</span></div>
-        <div class="hm-exp"><i style="width:${pct.toFixed(1)}%"></i></div><small>${sectName(P.sect)}</small></div>
-      <div class="hm-power"><small>Lực chiến</small><b>${lucChien().toLocaleString('vi-VN')}</b></div>
+    <header class="hm-top" onclick="G.menuChar()">
+      <span class="hm-lvl">Cấp ${P.lv}</span><b class="hm-name">${esc(P.name)}</b><span class="hm-sect">${sectName(P.sect)}</span>
     </header>
+    <div class="hm-exp"><i style="width:${pct.toFixed(1)}%"></i></div>
     <div class="hm-res">
-      <span>[[bac]]<b>${P.gold.toLocaleString('vi-VN')}</b></span>
-      <span>${homePng('manh_vo_so')}<b>${invCount('manh_vo_so')}</b></span>
-      <span>${homePng('manh_noi_so')}<b>${invCount('manh_noi_so')}</b></span>
+      <div class="hm-col"><span>[[bac]]<b>${P.gold.toLocaleString('vi-VN')}</b></span><span>${homePng('manh_vo_so')}<b>${invCount('manh_vo_so')}</b></span></div>
+      <div class="hm-power"><small>Lực chiến</small><b>${lucChien().toLocaleString('vi-VN')}</b></div>
+      <div class="hm-col"><span><b>${invCount('manh_noi_so')}</b>${homePng('manh_noi_so')}</span><span><b>${herbs}</b>[[vo_danh_thao]]</span></div>
     </div>
     <div class="hm-team">${cards}</div>
     <div class="hm-quick">${quick}</div>
@@ -115,66 +113,63 @@ function homeStyle() {
   const st = document.createElement('style');
   st.id = 'home-style';
   st.textContent = `
-  .home { box-sizing: border-box; position: relative; min-height: 100dvh; display: flex; flex-direction: column; gap: 10px; padding: max(8px, env(safe-area-inset-top)) 10px calc(76px + env(safe-area-inset-bottom)); color: #f3e7c9; overflow: hidden; }
+  .home { box-sizing: border-box; position: relative; min-height: 100dvh; display: flex; flex-direction: column; gap: 8px; padding: max(8px, env(safe-area-inset-top)) 6px calc(84px + env(safe-area-inset-bottom)); color: #f3e7c9; overflow: hidden; }
   .hm-bg { position: fixed; inset: 0; z-index: -1; background: linear-gradient(rgba(14,10,6,.55), rgba(14,10,6,.35) 40%, rgba(14,10,6,.8)), url(game/img/ban_do/tv_doc.jpg) center / cover; }
   .home button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; padding: 0; }
   .hm-ic img, .hm-disc img { width: 100%; height: 100%; object-fit: contain; display: block; }
   .hm-ic .ic { width: 100%; height: 100%; }
-  /* thanh trên */
-  .hm-top { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: linear-gradient(#3a2a18f0, #241a10f0); border: 1px solid #c9a24a88; box-shadow: 0 4px 14px #0008; }
-  .hm-ava { flex: none; width: 54px; height: 54px; border-radius: 50%; border: 2px solid #e2bd62; overflow: hidden; background: #1b130a; }
-  .hm-ava img { width: 100%; height: 100%; object-fit: cover; }
-  .hm-who { flex: 1; min-width: 0; }
-  .hm-row { display: flex; align-items: baseline; gap: 8px; }
-  .hm-name { font: 20px 'Pattaya', serif; color: #ffe39a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .hm-lvl { font-size: 12px; padding: 1px 8px; border-radius: 99px; background: #6b3d12; border: 1px solid #c9a24a; color: #ffe39a; white-space: nowrap; }
-  .hm-exp { height: 6px; border-radius: 4px; background: #0008; margin: 4px 0 2px; overflow: hidden; }
-  .hm-exp i { display: block; height: 100%; background: linear-gradient(90deg, #6fcf5a, #c9f07a); }
-  .hm-who small { font-size: 11.5px; color: #c9b894; }
-  .hm-power { flex: none; text-align: center; padding: 4px 10px; border-radius: 10px; background: radial-gradient(#7a2a12, #3a140a); border: 1px solid #e2bd62; }
-  .hm-power small { display: block; font-size: 10.5px; color: #f0c989; }
-  .hm-power b { font: 22px 'Pattaya', serif; color: #fff1b8; text-shadow: 0 2px 0 #000, 0 0 10px #ff9a3a; }
-  /* tài nguyên */
-  .hm-res { display: flex; gap: 8px; justify-content: space-between; }
-  .hm-res span { flex: 1; display: flex; align-items: center; gap: 6px; padding: 3px 10px 3px 4px; border-radius: 99px; background: #0009; border: 1px solid #c9a24a55; font-size: 13.5px; min-width: 0; }
-  .hm-res span > img, .hm-res .ic { width: 24px; height: 24px; flex: none; }
-  .hm-res b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  /* hàng đội hình */
-  .hm-team { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
-  .hm-card { position: relative; aspect-ratio: 3 / 5; border-radius: 10px; overflow: hidden; border: 2px solid var(--qc); background: radial-gradient(circle at 50% 35%, var(--qg), #160f08 75%); box-shadow: 0 0 10px var(--qg); }
-  .hm-card img { position: absolute; inset: 6% 4% 18%; width: 92%; height: 76%; object-fit: contain; object-position: bottom; transform: scaleX(-1); }
-  .hm-card.q-thuong { --qc: #9aa3a8; --qg: #4a5257; } .hm-card.q-hiem { --qc: #4fa8ff; --qg: #1d4a7a; }
-  .hm-card.q-tuyet { --qc: #b77bff; --qg: #4b2a7a; } .hm-card.q-truyen { --qc: #ffbf3a; --qg: #7a4d10; }
+  /* thanh trên: băng ngang Cấp · Tên · danh xưng, thanh kinh nghiệm, khối tài nguyên + Lực chiến giữa (tỷ lệ theo màn mẫu) */
+  .hm-top { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 10px; cursor: pointer;
+    background: linear-gradient(#f3e2b8, #d9bf86); border: 2px solid #b8893a; box-shadow: 0 3px 10px #0008; color: #3a2414; }
+  .hm-lvl { font-weight: 800; font-size: 14px; padding: 1px 8px; border-radius: 6px; background: #6b3d12; color: #ffe39a; }
+  .hm-name { font: 19px 'Pattaya', serif; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hm-sect { font-size: 11.5px; font-weight: 700; max-width: 34vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hm-exp { height: 7px; border-radius: 4px; background: #0009; border: 1px solid #c9a24a66; overflow: hidden; margin-top: -4px; }
+  .hm-exp i { display: block; height: 100%; background: linear-gradient(90deg, #4fbf3a, #c9f07a); }
+  .hm-res { display: grid; grid-template-columns: 1fr auto 1fr; gap: 6px; align-items: center; }
+  .hm-col { display: grid; gap: 5px; }
+  .hm-col span { display: flex; align-items: center; gap: 5px; padding: 2px 8px 2px 3px; border-radius: 8px; background: linear-gradient(#5a3a1a, #3a2410); border: 1px solid #c9a24a99; font-size: 14px; font-weight: 700; color: #fff4d0; min-width: 0; }
+  .hm-col:last-child span { justify-content: flex-end; padding: 2px 3px 2px 8px; }
+  .hm-col span > img, .hm-col .ic { width: 24px; height: 24px; flex: none; }
+  .hm-col b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hm-power { text-align: center; padding: 3px 12px; border-radius: 999px; background: radial-gradient(#7a2a12, #2a0f06); border: 2px solid #e2bd62; box-shadow: 0 0 12px #ff9a3a66; }
+  .hm-power small { display: block; font-size: 10px; color: #f0c989; line-height: 1.1; }
+  .hm-power b { font: 24px/1.1 'Pattaya', serif; color: #fff1b8; text-shadow: 0 2px 0 #000, 0 0 10px #ff9a3a; }
+  /* hàng đội hình: thẻ cao gấp đôi bề rộng, nhân vật lấp kín thẻ */
+  .hm-team { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+  .hm-card { position: relative; aspect-ratio: 1 / 2.05; border-radius: 8px; overflow: hidden; border: 3px solid var(--qc); background: radial-gradient(circle at 50% 30%, var(--qg), #120c06 85%); box-shadow: inset 0 0 12px #000a; }
+  .hm-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; transform: scaleX(-1) scale(1.05); }
+  .hm-card.q-thuong { --qc: #9aa3a8; --qg: #5a6267; } .hm-card.q-hiem { --qc: #4fa8ff; --qg: #2a5fa0; }
+  .hm-card.q-tuyet { --qc: #b77bff; --qg: #6a3aa8; } .hm-card.q-truyen { --qc: #ffbf3a; --qg: #a86a10; }
   .hm-role { position: absolute; top: 3px; left: 3px; font-size: 9px; padding: 0 5px; border-radius: 6px; background: #000b; color: #ffe39a; }
-  .hm-lv { position: absolute; left: 4px; bottom: 15px; font-size: 13px; font-weight: 800; text-shadow: 0 1px 2px #000; }
-  .hm-star { position: absolute; right: 3px; bottom: 16px; display: flex; gap: 1px; }
-  .hm-star i { width: 9px; height: 9px; background: #ffd43b; clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
-  .hm-nm { position: absolute; left: 0; right: 0; bottom: 0; padding: 2px 0; font-size: 10px; text-align: center; background: linear-gradient(transparent, #000d 40%); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hm-band { position: absolute; left: 0; right: 0; bottom: 0; height: 24px; display: flex; align-items: center; justify-content: space-between; padding: 0 5px; background: linear-gradient(#0000, color-mix(in srgb, var(--qg) 70%, #000) 35%); }
+  .hm-lv { font-size: 15px; font-weight: 800; text-shadow: 0 1px 2px #000; }
+  .hm-star { display: flex; gap: 1px; }
+  .hm-star i { width: 11px; height: 11px; background: #ffd43b; clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
   /* hàng nút nhanh, hàng chức năng */
-  .hm-quick, .hm-funcs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
-  .hm-funcs { grid-template-columns: repeat(6, 1fr); padding: 8px 4px; border-radius: 14px; background: #0a0705b3; border: 1px solid #c9a24a44; }
-  .hm-q, .hm-f { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-  .hm-q .hm-ic { width: 44px; height: 44px; filter: drop-shadow(0 2px 3px #000a); }
-  .hm-f .hm-ic { width: 40px; height: 40px; }
-  .hm-q b, .hm-f b { font-size: 11px; font-weight: 700; text-shadow: 0 1px 2px #000, 0 0 4px #000; white-space: nowrap; }
-  /* ba nút lớn */
-  .hm-modes { display: flex; justify-content: center; align-items: flex-end; gap: 4px; margin: auto 0; padding: 6px 0; }
+  .hm-quick, .hm-funcs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; }
+  .hm-funcs { grid-template-columns: repeat(6, 1fr); padding: 6px 2px; border-radius: 12px; background: #0a0705b3; border-top: 1px solid #c9a24a55; border-bottom: 1px solid #c9a24a55; }
+  .hm-q, .hm-f { display: flex; flex-direction: column; align-items: center; }
+  .hm-q .hm-ic { width: 50px; height: 50px; filter: drop-shadow(0 2px 3px #000a); }
+  .hm-f .hm-ic { width: 46px; height: 46px; filter: drop-shadow(0 2px 3px #000a); }
+  .hm-q b, .hm-f b { margin-top: -4px; font-size: 11.5px; font-weight: 800; color: #fff; text-shadow: 0 1px 0 #000, 0 0 3px #000, 0 0 3px #000; white-space: nowrap; }
+  /* ba nút lớn: gần bằng nhau, chữ đè mép dưới */
+  .hm-modes { display: flex; justify-content: space-evenly; align-items: center; margin: auto 0; padding: 4px 0; }
   .hm-mode { display: flex; flex-direction: column; align-items: center; min-width: 0; }
-  .hm-disc { display: block; border-radius: 50%; padding: 12%; background: radial-gradient(circle at 50% 40%, #5a3412, #1d1008 70%); border: 3px solid #e2bd62; box-shadow: 0 0 0 3px #6b3d12, 0 0 18px #ffb84a88, inset 0 0 14px #000; }
-  .hm-mode.side .hm-disc { width: 23vw; max-width: 100px; height: 23vw; max-height: 100px; }
-  .hm-mode.main .hm-disc { width: 33vw; max-width: 140px; height: 33vw; max-height: 140px; animation: hmGlow 2.4s ease-in-out infinite alternate; }
-  .hm-mode b { margin-top: -10px; font: 18px 'Pattaya', serif; white-space: nowrap; color: #ffe39a; text-shadow: 0 2px 0 #3a1a00, 0 0 6px #000, 0 0 2px #000; }
-  .hm-mode.main b { font-size: 25px; }
+  .hm-disc { display: block; border-radius: 50%; padding: 11%; background: radial-gradient(circle at 50% 40%, #5a3412, #1d1008 70%); border: 3px solid #e2bd62; box-shadow: 0 0 0 2px #6b3d12, 0 0 14px #ffb84a77, inset 0 0 14px #000; }
+  .hm-mode.side .hm-disc { width: 24vw; max-width: 104px; height: 24vw; max-height: 104px; }
+  .hm-mode.main .hm-disc { width: 28vw; max-width: 122px; height: 28vw; max-height: 122px; animation: hmGlow 2.4s ease-in-out infinite alternate; }
+  .hm-mode b { margin-top: -16px; font: 19px 'Pattaya', serif; white-space: nowrap; color: #ffe39a; text-shadow: 0 2px 0 #3a1a00, 0 0 4px #000, 0 0 2px #000; }
+  .hm-mode.main b { font-size: 22px; }
   .hm-mode:active .hm-disc { transform: scale(.95); }
-  @keyframes hmGlow { to { box-shadow: 0 0 0 3px #6b3d12, 0 0 30px #ffcf6aaa, inset 0 0 14px #000; } }
+  @keyframes hmGlow { to { box-shadow: 0 0 0 2px #6b3d12, 0 0 26px #ffcf6aaa, inset 0 0 14px #000; } }
   @media (prefers-reduced-motion: reduce) { .hm-mode.main .hm-disc { animation: none; } }
-  /* thanh dưới */
-  .hm-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: grid; grid-template-columns: repeat(5, 1fr); padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); background: linear-gradient(#2c1f12, #160f08); border-top: 2px solid #c9a24a; }
-  .hm-nav button { display: flex; flex-direction: column; align-items: center; gap: 1px; opacity: .85; }
-  .hm-nav button.on { opacity: 1; }
-  .hm-nav button.on .hm-ic { filter: drop-shadow(0 0 6px #ffcf6a); }
-  .hm-nav .hm-ic { width: 38px; height: 38px; border-radius: 50%; overflow: hidden; }
-  .hm-nav b { font-size: 11px; color: #ffe39a; }
+  /* thanh dưới: icon tròn lớn, chữ đè mép dưới */
+  .hm-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: grid; grid-template-columns: repeat(5, 1fr); padding: 6px 4px calc(4px + env(safe-area-inset-bottom)); background: linear-gradient(#3a2814, #160f08); border-top: 2px solid #c9a24a; }
+  .hm-nav button { display: flex; flex-direction: column; align-items: center; }
+  .hm-nav .hm-ic { width: 58px; height: 58px; border-radius: 50%; overflow: hidden; border: 2px solid #c9a24a; background: radial-gradient(#5a3a1a, #1d1008); padding: 4px; box-sizing: border-box; }
+  .hm-nav button.on .hm-ic { border-color: #ffe39a; box-shadow: 0 0 10px #ffcf6a; }
+  .hm-nav b { margin-top: -12px; font: 13px 'Pattaya', serif; color: #ffe39a; text-shadow: 0 1px 0 #000, 0 0 3px #000, 0 0 3px #000; white-space: nowrap; }
   /* danh sách trong hộp thoại */
   .hm-list { display: grid; gap: 8px; }
   .hm-li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.04); color: inherit; font: inherit; text-align: left; cursor: pointer; }
