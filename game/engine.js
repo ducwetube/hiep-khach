@@ -690,33 +690,58 @@ async function pushCloud() {
   }
   cloud.busy = false;
 }
+// Chỗ lưu trên mạng: trên claude.ai dùng tài khoản claude.ai; trên bản GitHub dùng Firebase + đăng nhập Google (game/tai_khoan.js)
 async function initCloud() {
-  if (!window.claude || typeof window.claude.use !== 'function') return;
-  try {
-    const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
-    if (!db || !user) return;
-    const uid = await user.id();
-    if (!uid) return;
-    const col = db.collection('data/users/' + uid);
-    // Tải sẵn bản trên tài khoản của cả 3 máy chủ một lần (song song), để đổi máy chủ không phải chờ mạng
-    await Promise.all(SERVERS.map(async s => {
-      try {
-        const sn = await col.doc(cloudDocName(s.id)).get();
-        const r = sn.exists ? sn.data() : null;
-        if (r && typeof r.game === 'string') cloud.remote[s.id] = r.game;
-      } catch (e) { /* máy chủ này đọc lỗi thì thôi */ }
-    }));
-    for (const s of SERVERS) {
-      const r = cloud.remote[s.id], l = readLocal(s.id);
-      if (s.id !== curServer && r && (!l || (l.savedAt || 0) < remoteAt(r))) { try { localStorage.setItem(saveKey(s.id), r); } catch (e) { /* bỏ qua */ } }
+  if (window.claude && typeof window.claude.use === 'function') {
+    try {
+      const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+      if (!db || !user) return;
+      const uid = await user.id();
+      if (!uid) return;
+      await cloudAttach(db.collection('data/users/' + uid));
+    } catch (e) {
+      cloud.state = 'error';
     }
-    cloud.col = col;
-    bindCloud(curServer);
-    cloud.state = 'on';
-    refreshTitle();
-  } catch (e) {
-    cloud.state = 'error';
+    return;
   }
+  if (typeof fbInit === 'function') fbInit(); // bản GitHub: chờ người chơi đăng nhập Google rồi mới gắn (cloudAttach)
+}
+// Gắn thư mục lưu của một tài khoản. col.doc(tên) có get() / set() / delete() (claude.ai db hoặc Firestore đều vậy).
+// owner (Firebase): tài khoản đã đăng nhập; bản lưu trên máy thuộc tài khoản khác thì thay bằng bản của tài khoản này,
+// không đẩy nhân vật của người khác lên. Bản lưu chưa từng gắn tài khoản nào thì gộp vào tài khoản (bản mới hơn thắng).
+async function cloudAttach(col, owner) {
+  const OWNER_KEY = SAVE_KEY + '_owner';
+  let prev = null;
+  try { prev = localStorage.getItem(OWNER_KEY); } catch (e) { /* bỏ qua */ }
+  const other = !!owner && !!prev && prev !== owner;
+  cloud.remote = {};
+  // Tải sẵn bản trên tài khoản của cả 3 máy chủ một lần (song song), để đổi máy chủ không phải chờ mạng
+  await Promise.all(SERVERS.map(async s => {
+    try {
+      const sn = await col.doc(cloudDocName(s.id)).get();
+      const r = sn.exists ? sn.data() : null;
+      if (r && typeof r.game === 'string') cloud.remote[s.id] = r.game;
+    } catch (e) { /* máy chủ này đọc lỗi thì thôi */ }
+  }));
+  for (const s of SERVERS) {
+    const r = cloud.remote[s.id], l = readLocal(s.id);
+    try {
+      if (other) { if (r) localStorage.setItem(saveKey(s.id), r); else localStorage.removeItem(saveKey(s.id)); }
+      else if (s.id !== curServer && r && (!l || (l.savedAt || 0) < remoteAt(r))) localStorage.setItem(saveKey(s.id), r);
+    } catch (e) { /* bỏ qua */ }
+  }
+  if (owner) { try { localStorage.setItem(OWNER_KEY, owner); } catch (e) { /* bỏ qua */ } }
+  cloud.col = col;
+  bindCloud(curServer);
+  cloud.state = 'on';
+  refreshTitle();
+}
+// Đăng xuất: thôi lưu lên mạng, bản trên máy giữ nguyên
+function cloudDetach() {
+  if (cloud.doc && cloud.save !== cloud.pushed) pushCloud();
+  clearTimeout(cloud.timer);
+  Object.assign(cloud, { doc: null, col: null, remote: {}, state: 'off', save: null, pushed: null });
+  refreshTitle();
 }
 const remoteAt = r => { try { return JSON.parse(r).savedAt || 0; } catch (e) { return 0; } };
 // Gắn tài liệu trên tài khoản của máy chủ n (dùng bản đã tải sẵn, không chờ mạng): bản nào mới hơn (máy hay tài khoản) thì thắng
@@ -940,6 +965,7 @@ function heroCard(sv) {
     <button class="srvp-x" onclick="${close}" aria-label="Đóng">×</button>
     <div class="srvp-head"><i></i><b>Nhân vật</b><i></i></div>
     <p>${serverLabel()}</p>${body}
+    ${typeof fbLine === 'function' ? fbLine() : ''}
     <div class="hero-links"><button onclick="G.help()">Hướng dẫn chơi</button><span>·</span><button onclick="G.importSave()">Nhập mã lưu</button></div>
   </div>`;
 }
@@ -2055,11 +2081,13 @@ function menuQuests() {
     ${rows || '<p class="muted">Chưa có nhiệm vụ nào.</p>'}`);
 }
 function menuSystem() {
+  const fbName = typeof fbUserName === 'function' ? fbUserName() : '';
   const where = cloud.doc
-    ? '[[dam_may]] Game đang được lưu vào tài khoản claude.ai của ngươi. Mở link này trên máy khác là chơi tiếp được.'
+    ? (fbName ? `[[dam_may]] Game đang được lưu vào tài khoản Google <b>${esc(fbName)}</b>. Đăng nhập cùng tài khoản trên máy khác là chơi tiếp được.`
+      : '[[dam_may]] Game đang được lưu vào tài khoản claude.ai của ngươi. Mở link này trên máy khác là chơi tiếp được.')
     : cloud.state === 'error'
       ? '[[canh_bao]] Không kết nối được chỗ lưu trên tài khoản, game chỉ lưu trong trình duyệt này.'
-      : '[[ruong]] Game đang được lưu trong trình duyệt này.';
+      : `[[ruong]] Game đang được lưu trong trình duyệt này.${typeof fbInit === 'function' && !window.claude ? ' Muốn lưu lên mạng thì về màn vào game, bấm Đăng nhập Google.' : ''}`;
   const speed = fxSpeed();
   const fxRow = hasFx() ? `<h4>Hiệu ứng chiêu thức</h4>
     <div class="row-btns left">${FX_SPEEDS.map(([k, t]) => `<button class="btn small ${speed === k ? 'primary' : ''}" onclick="G.setFxSpeed('${k}')">${t}</button>`).join('')}</div>
@@ -3718,6 +3746,7 @@ window.G = {
   useItem, equip, unequip, learnBook, useSkill, dropSkill, chieuPick, chieuSet, chieuOff, chieuCard, chieuBo, chieuClose, ghepManh, dgTabSet, dgElemSet, dgOpen, setFxSpeed, toggleSnd, setSndVol,
   act, cmenu, toggleLog, leaveCombat, pickTarget, enemyInfo, eqPick, eqClose, forgeUp, forgeTabSet, forgePick, cuongHoa, mfn, closeModal, practice,
   ...(typeof THAP_G !== 'undefined' ? THAP_G : {}), // Thí Luyện Tháp (thap.js)
+  ...(typeof TAI_KHOAN_G !== 'undefined' ? TAI_KHOAN_G : {}), // đăng nhập Google, lưu Firebase (tai_khoan.js)
   ...(typeof MON_PHAI_G !== 'undefined' ? MON_PHAI_G : {}), // Thanh Vân: thi tuyển, khảo hạch, sư môn (mon_phai.js)
   ...(typeof TRUY_NA_G !== 'undefined' ? TRUY_NA_G : {}), // Truy Nã Hiệp Khách (truy_na.js)
   ...(typeof THI_LUYEN_G !== 'undefined' ? THI_LUYEN_G : {}), // Thí Luyện hằng ngày: Tàng Bảo Khố, Ngộ Đạo Đài (thi_luyen.js)

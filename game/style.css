@@ -735,6 +735,14 @@ svg.en-hurt image { filter: brightness(1.15) sepia(.35) saturate(2.2) hue-rotate
 .hero-links { display: flex; justify-content: center; gap: 8px; margin-top: 14px; font-size: 13px; color: #8a7a60; }
 .hero-links button { border: 0; background: none; padding: 0; font: inherit; color: #6b5c45; cursor: pointer; }
 .hero-links button:hover { color: #1c1a17; text-decoration: underline; }
+/* Dòng tài khoản Google trong khung nhân vật (game/tai_khoan.js, bản GitHub) */
+.fb-line { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 12px; font-size: 13px; color: #6b5c45; text-align: center; }
+.fb-btn { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(138,106,53,.6); background: #fffaf0; color: #3a2a18; font: inherit; font-size: 14px; cursor: pointer; }
+.fb-btn:hover { background: #fff3da; }
+.fb-g { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 1px solid #ddd; font-style: normal; font-weight: 700; color: #4285f4; font-family: Arial, sans-serif; }
+.fb-st.on { color: #2c6e3c; }
+.fb-st.warn { color: #7a2a20; }
+.fb-link { border: 0; background: none; padding: 0; font: inherit; color: #6b5c45; text-decoration: underline; cursor: pointer; }
 .ts-foot { position: absolute; left: 0; right: 0; bottom: calc(8px + env(safe-area-inset-bottom, 0px)); z-index: 4; text-align: center; font-size: 11px; color: rgba(40,40,35,.55); }
 /* Điện thoại (màn dọc): tranh phủ kín, tên game ở khoảng trời phía trên */
 @media (max-aspect-ratio: 4/5) { .ts-art.pc { display: none; } .ts-art.mb { display: block; } }
