@@ -121,7 +121,6 @@ const VUNG = {
   duong_chau: {
     name: 'Thanh Vân Môn', sub: 'Núi Thiên Tuyệt',
     doc: { src: 'game/img/ban_do/tv_doc.jpg', w: 1072, h: 1920 },
-    ngang: { src: 'game/img/ban_do/tv_ngang.jpg', w: 1920, h: 1072 },
     pins: {
       duong_chau: { mark: 'mon', doc: [50, 43], ngang: [50, 41] },
       hac_phong: { mark: 'lac_ha', doc: [24, 24], ngang: [21, 25] },
@@ -139,7 +138,6 @@ const VUNG = {
     name: 'Sa Mạc Man Hoang', sub: 'Sào huyệt Trường Sinh Đường',
     // 2026-11-08: bản dọc làm lại theo bản ngang (giữa là sào huyệt Trường Sinh Đường, gốc luu_tru/man_hoang/ban_do_doc_2.png)
     doc: { src: 'game/img/ban_do/mh_doc.jpg', w: 1072, h: 1920 },
-    ngang: { src: 'game/img/ban_do/mh_ngang.jpg', w: 1920, h: 1072 },
     canh: { van_truong_coc: 'hoang_sa', tuyet_son: 'luu_sa', tu_qua_nhai: 'lau_lan', hoa_son: 'huyet_tri' },
     canhDoc: true,
     hub: { name: 'Trường Sinh Đường', tag: 'Sào huyệt tà phái',
@@ -157,7 +155,6 @@ const VUNG = {
   tuong_duong: {
     name: 'Đầm Lầy Hiệp Xuyên', sub: 'Sào huyệt Vạn Độc Môn',
     doc: { src: 'game/img/ban_do/hx_doc.jpg', w: 1072, h: 1920 },
-    ngang: { src: 'game/img/ban_do/hx_ngang.jpg', w: 1920, h: 1072 },
     canh: { hai_long_dong: 'chuong_khi', rung_sau_coc: 'hac_thuy', mat_dao: 'van_doc_trai', huyet_ma_dan: 'doc_long' },
     canhDoc: true, // mới có tranh cảnh bản dọc
     hub: { name: 'Vạn Độc Môn', tag: 'Sào huyệt tà phái',
@@ -430,7 +427,6 @@ function vungStyle() {
       width: min(100%, calc((100dvh - var(--vg-top, 0px)) * var(--r))); }
     .vg-art > img { display: block; width: 100%; height: 100%; user-select: none; -webkit-user-drag: none; }
     .vg-art.ngang, .vg-bg.ngang { display: none; }
-    @media (orientation: landscape) { .vg-art.doc, .vg-bg.doc, .vg-pan.doc { display: none; } .vg-art.ngang, .vg-bg.ngang { display: block; } }
     .vg-pan { position: absolute; left: 0; right: 0; top: 76px; bottom: 84px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior-x: contain; }
     .vg-pan::-webkit-scrollbar { display: none; }
     .vg-pan > .vg-art { position: relative; left: 0; top: 0; transform: none; height: 100%; width: auto; }
@@ -538,8 +534,9 @@ const canhHere = () => !!P && vungOn() && !!canhKey(P.loc);
 // Ảnh nền sân đấu ở nơi đang đứng (bản ngang), không có thì null
 // Vùng chỉ có tranh cảnh dọc (VUNG[x].canhDoc): màn ngang dùng tạm tranh dọc, sân đấu không lấy tranh cảnh
 const canhDocOnly = loc => { const M = typeof MAPS !== 'undefined' && MAPS[loc]; return !!(M && VUNG[M.city] && VUNG[M.city].canhDoc); };
-const canhSrc = (loc, o) => `game/img/canh/${canhKey(loc)}_${o === 'ngang' && canhDocOnly(loc) ? 'doc' : o}.jpg`;
-const canhArt = loc => (vungOn() && canhKey(loc) && !canhDocOnly(loc) ? canhSrc(loc, 'ngang') : null);
+// Chỉ dành cho điện thoại (người dùng chốt 2026-11-12): luôn dùng tranh dọc, tranh ngang đã gỡ
+const canhSrc = loc => `game/img/canh/${canhKey(loc)}_doc.jpg`;
+const canhArt = () => null; // sân đấu dùng ảnh SAN_DAU, không lấy tranh cảnh
 function renderCanh() {
   const id = P.loc, k = canhKey(id), L = locView(id), M = MAPS[id], city = M.city;
   renderTop();
@@ -553,7 +550,6 @@ function renderCanh() {
   const auto = typeof autoHere === 'function' && autoHere() && !(AUTO && AUTO.on);
   show(`<div class="world cn" id="cn">
     <img class="cn-art doc" src="${canhSrc(id, 'doc')}" alt="" draggable="false">
-    <img class="cn-art ngang" src="${canhSrc(id, 'ngang')}" alt="" draggable="false">
     <div class="cn-shade"></div>
     ${typeof tnSceneHtml === 'function' ? tnSceneHtml(id) : ''}
     <div class="cn-top">
@@ -587,7 +583,6 @@ function canhStyle() {
     .cn { position: fixed; left: 0; right: 0; top: var(--vg-top, 0px); bottom: 0; z-index: 5; overflow: hidden; background: #141616; }
     .cn-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; user-select: none; -webkit-user-drag: none; }
     .cn-art.ngang { display: none; object-position: center; }
-    @media (orientation: landscape) { .cn-art.doc { display: none; } .cn-art.ngang { display: block; } }
     .cn-shade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(rgba(10,12,12,.35), transparent 22%, transparent 40%, rgba(10,12,12,.55)); }
     .cn-top { position: absolute; left: 10px; right: 10px; top: 10px; z-index: 3; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
     .cn-back { display: flex; align-items: center; gap: 8px; padding: 5px 12px 6px 8px; border-radius: 6px; cursor: pointer; font: inherit; color: #f3efe2; text-align: left;
@@ -641,7 +636,7 @@ function canhStyle() {
    ================================================================= */
 const THIEN_HA = {
   doc: { src: 'game/img/ban_do/th_doc.jpg', w: 1072, h: 1920 },
-  ngang: { src: 'game/img/ban_do/th_ngang.jpg', w: 1920, h: 1072 },
+  ngang: { src: 'game/img/ban_do/th_doc.jpg', w: 1072, h: 1920 }, // chỉ điện thoại: tranh ngang đã gỡ, giữ khóa cho mã cũ
   vung: [
     { id: 'duong_chau', name: 'Núi Thiên Tuyệt', short: 'Thiên Tuyệt', sub: 'Thanh Vân Môn', lv: [1, 20], img: 'game/img/ban_do/vung_thien_tuyet.png', mark: 'mon', doc: [80, 37], ngang: [64, 39],
       desc: 'Dãy núi hiểm trở phía đông, mây phủ quanh năm. Trên đỉnh là Thanh Vân Môn, sơn môn của ngươi; bốn ngọn Tiểu Trúc, Đại Trúc, Lạc Hà, Thông Thiên là nơi đệ tử rèn luyện.' },
@@ -725,7 +720,6 @@ function thStyle() {
     #bando.th .th-stage { position: absolute; left: 0; right: 0; top: 0; bottom: var(--th-b); }
     #bando.th .th-art { width: min(100%, calc((100dvh - var(--th-b)) * var(--r))); box-shadow: 0 0 40px rgba(0,0,0,.45); }
     #bando.th .th-bg.ngang, #bando.th .th-art.ngang { display: none; }
-    @media (orientation: landscape) { #bando.th .th-bg.doc, #bando.th .th-art.doc { display: none; } #bando.th .th-bg.ngang, #bando.th .th-art.ngang { display: block; } }
     #bando.th .th-art { container-type: inline-size; }
     #bando.th .th-pin.has-img { gap: 0; }
     #bando.th .th-lm { position: relative; display: block; width: 25cqw; }

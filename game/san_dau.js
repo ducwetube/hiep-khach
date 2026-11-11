@@ -117,12 +117,12 @@ const SD_SLOTS = new Proxy([], { get: (t, k) => (sdPhone() ? SD_SLOTS_MB : SD_SL
 const SAN_DAU = {
   mode: 'random',
   sets: {
-    loi_dai: { mb: { src: 'game/img/san_dau/ngay.jpg', dim: true }, pc: { src: 'game/img/san_dau/dem_169.jpg' } },
-    rung_truc: { mb: { src: 'game/img/san_dau/truc_dem.jpg' }, pc: { src: 'game/img/san_dau/dem_169.jpg' } },
+    loi_dai: { mb: { src: 'game/img/san_dau/ngay.jpg', dim: true } },
+    rung_truc: { mb: { src: 'game/img/san_dau/truc_dem.jpg' } },
     // người dùng duyệt trên trang thử 2026-11-05
-    dam_lay: { mb: { src: 'game/img/san_dau/dam_lay.jpg' }, pc: { src: 'game/img/san_dau/dem_169.jpg' } },
-    bo_song: { mb: { src: 'game/img/san_dau/bo_song.jpg' }, pc: { src: 'game/img/san_dau/dem_169.jpg' } },
-    kinh_thanh: { mb: { src: 'game/img/san_dau/kinh_thanh.jpg' }, pc: { src: 'game/img/san_dau/dem_169.jpg' } },
+    dam_lay: { mb: { src: 'game/img/san_dau/dam_lay.jpg' } },
+    bo_song: { mb: { src: 'game/img/san_dau/bo_song.jpg' } },
+    kinh_thanh: { mb: { src: 'game/img/san_dau/kinh_thanh.jpg' } },
   },
   // các kiểu dùng trên trang thử để so (không bốc ngẫu nhiên)
   modes: { dem: { mb: { src: 'game/img/san_dau/dem.jpg' } }, ngay: { mb: { src: 'game/img/san_dau/ngay.jpg' } }, vang: { mb: { src: 'game/img/san_dau/ngay.jpg', dim: true } },
@@ -144,7 +144,7 @@ function sanDauHtml() {
   const s = sanDauArt();
   if (!s) return '';
   const one = (m, cls) => (m ? `<div class="sd-bgset ${cls}"><img class="sd-bgimg" src="${m.src}" alt="">${m.dim ? '<div class="sd-dusk"></div>' : ''}</div>` : '');
-  return one(s.mb, 'mb') + one(s.pc || s.mb, 'pc');
+  return one(s.mb, 'mb') + one(s.mb, 'pc'); // chỉ điện thoại: ảnh 16:9 đã gỡ, khung rộng cũng dùng ảnh 4:3
 }
 const SD_FILL = { 1: [2], 2: [2, 3], 3: [2, 3, 5], 4: [2, 0, 4, 3], 5: [2, 0, 4, 3, 5], 6: [0, 1, 2, 3, 4, 5] };
 const sdSlot = (n, i, right) => { const [x, y] = SD_SLOTS[SD_FILL[n][i]]; return [right ? 100 - x : x, y]; };

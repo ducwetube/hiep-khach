@@ -925,11 +925,10 @@ function renderTitle(open) {
   snd('music', 'village');
   const sv = readSave();
   // Màn vào game kiểu tranh thủy mặc (người dùng chọn 2026-11-04): hai ảnh nền người dùng tạo bằng Gemini, đã có sẵn tên game
-  // "Hiệp Khách Giang Hồ" + con dấu (game/img/title_pc.jpg ngang, title_mobile.jpg dọc; gốc ở luu_tru/anh_nen).
+  // "Hiệp Khách Giang Hồ" + con dấu (game/img/title_mobile.jpg dọc; bản ngang title_pc.jpg đã gỡ 2026-11-12 vì chỉ chơi trên điện thoại; gốc ở luu_tru/anh_nen).
   // Chạm một lần thì hiện bảng chọn (lớp .open); mây trôi, cánh hoa rơi chạy bằng CSS khối "Màn vào game" cuối style.css
   const petals = Array.from({ length: 14 }, (_, i) => `<i style="left:${(i * 37 + 11) % 100}%;animation-delay:${-(i * 1.7) % 12}s;animation-duration:${9 + (i % 5) * 1.6}s"></i>`).join('');
   show(`<div class="ts">
-    <img class="ts-art pc" src="game/img/title_pc.jpg" alt="Hiệp Khách Giang Hồ">
     <img class="ts-art mb" src="game/img/title_mobile.jpg" alt="Hiệp Khách Giang Hồ">
     <div class="ts-mist m1"></div><div class="ts-mist m2"></div>
     <div class="ts-petals">${petals}</div>
@@ -1004,7 +1003,6 @@ function continueGame() {
 // khung giấy ngà như khung nhân vật; hình nhân vật to ở giữa, chọn Nam / Nữ ngay dưới hình, ô tên, nút Bắt đầu hành trình.
 function renderCreate() {
   show(`<div class="ts ts-create">
-    <img class="ts-art pc" src="game/img/title_pc.jpg" alt="">
     <img class="ts-art mb" src="game/img/title_mobile.jpg" alt="">
     <div class="ts-mist m1"></div>
     <div class="cr-wrap"><div class="hero-card cr-card">
@@ -1149,6 +1147,7 @@ function locTag(locId) {
 
 function renderWorld() {
   combat = null;
+  if (typeof bgPreload === 'function') bgPreload(); // tải nền ảnh chiêu, quái, cảnh (tai_truoc.js)
   // Vùng có tranh bản đồ (VUNG trong ban_do.js, người dùng chốt 2026-11-04): đứng ở thành của vùng thì màn chính là bản đồ vùng
   if (typeof vungHere === 'function' && vungHere()) return renderVung();
   // Nơi luyện cấp có tranh cảnh (VUNG[..].canh): màn chuẩn bị kiểu ảnh mẫu, Khởi hành = thám hiểm (ban_do.js)
@@ -2214,6 +2213,7 @@ const aliveEns = () => combat.ens.filter(e => e.hp > 0);
 // Mục tiêu gục thì tự chọn con còn sống kế tiếp
 function retarget() { if (combat.en.hp <= 0) combat.en = aliveEns()[0] || combat.en; }
 function startCombat(enemyId, opts = {}) {
+  if (typeof bgPreload === 'function') bgPreload();
   const list = Array.isArray(enemyId) ? enemyId : [enemyId], A = opts.actor;
   const s = A || getStats();
   const pl = A
@@ -3772,8 +3772,9 @@ function boot(data) {
       }
     } catch (e) { /* bắt đầu lại từ màn hình chính */ }
   }
-  renderTitle();
-  initCloud();
+  // Màn chờ tải ảnh cần ngay (tai_truoc.js); trong lúc chờ mà đã có màn khác (vd. bot) thì không vẽ đè màn vào game
+  const go = () => { if (!screenKey) renderTitle(); initCloud(); };
+  if (typeof bootLoad === 'function') bootLoad(go); else go();
 }
 const hot = window.claude && window.claude.hot;
 if (hot && typeof hot.snapshot === 'function') hot.snapshot(() => ({ save: P && !combat ? JSON.stringify(P) : null }));

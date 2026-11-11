@@ -661,7 +661,8 @@ svg.en-hurt image { filter: brightness(1.15) sepia(.35) saturate(2.2) hue-rotate
 .ts { position: fixed; inset: 0; z-index: 40; overflow: hidden; background: #f2f1e8; color: #1c1a17; }
 .ts::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; background: linear-gradient(to top, rgba(242,241,232,.6), rgba(242,241,232,0) 18%); }
 .ts-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; user-select: none; -webkit-user-drag: none; }
-.ts-art.mb { display: none; object-position: 30% top; }
+.ts-art.mb { display: block; object-position: 30% top; } /* chỉ điện thoại: luôn dùng tranh dọc */
+.ts-art.pc { display: none; }
 .ts-mist { position: absolute; left: -30%; width: 160%; height: 32%; z-index: 1; pointer-events: none; background: radial-gradient(ellipse at 50% 50%, rgba(255,255,255,.85), rgba(255,255,255,0) 62%); animation: tsDrift 46s ease-in-out infinite alternate; }
 .ts-mist.m1 { bottom: -6%; }
 .ts-mist.m2 { bottom: 16%; opacity: .45; animation-duration: 60s; animation-direction: alternate-reverse; }
