@@ -78,7 +78,7 @@ function ttArena() {
 function bootLoad(done) {
   let sv = null;
   try { sv = readSave(); } catch (e) { /* chưa đọc được bản lưu thì thôi */ }
-  const list = ['game/img/title_mobile.jpg', 'game/img/nen_trang_chu.jpg', ...['bac', 'vang', 'luong_thuc', 'cong_hien'].map(k => 'game/img/icon/khung_' + k + '.png'), ...Object.keys(typeof HERO_ROLES === 'object' ? HERO_ROLES : {}).map(k => 'game/img/icon/loai_' + k + '.png'), ...(sv ? ttAvatar(sv.title) : [...ttAvatar(''), ...ttAvatar('Nữ hiệp')]), ...ttMenu(), ...(sv ? ttPlace(sv.loc) : [])];
+  const list = ['game/img/title_mobile.jpg', 'game/img/nen_trang_chu.jpg', ...['trang_chu', 'hiep_khach', 'chieu_mo', 'ky_ngo', 'cua_tiem'].map(k => 'game/img/icon/nav_' + k + '.png'), ...['doi_ngu', 'tang_cap', 'trang_bi', 'bao_vat', 'tui_do'].map(k => 'game/img/icon/cn_' + k + '.png'), ...['pve', 'giang_ho', 'ti_vo'].map(k => 'game/img/icon/mode_' + k + '.png'), ...['nhiem_vu', 'su_kien', 'li_xi', 'qua_tang'].map(k => 'game/img/icon/nhanh_' + k + '.png'), ...['bac', 'vang', 'luong_thuc', 'cong_hien'].map(k => 'game/img/icon/khung_' + k + '.png'), ...Object.keys(typeof HERO_ROLES === 'object' ? HERO_ROLES : {}).map(k => 'game/img/icon/loai_' + k + '.png'), ...(sv ? ttAvatar(sv.title) : [...ttAvatar(''), ...ttAvatar('Nữ hiệp')]), ...ttMenu(), ...(sv ? ttPlace(sv.loc) : [])];
   const box = document.getElementById('screen');
   if (box) box.innerHTML = `<div class="tt-load"><div class="tt-name">Hiệp Khách Giang Hồ</div>
     <div class="tt-bar"><i id="tt-fill"></i></div><div class="tt-pct" id="tt-pct">Đang tải 0%</div></div>`;
