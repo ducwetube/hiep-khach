@@ -10,6 +10,9 @@
    ===================================================================== */
 const TD = {
   orbNo: 15,          // cục xanh: +Nộ
+  // rơi cục (người dùng chốt 2026-11-12): mỗi đòn trúng cứ mất 10% máu tối đa rơi 1 cục (ít nhất 1, nhiều nhất 5);
+  // kẻ chết rơi thêm 3 cục + chiến lợi phẩm; mỗi cục 65% xanh (Nộ), 35% đỏ (máu)
+  dropPct: 0.1, dropMax: 5, deathOrbs: 3, blueRate: 0.65,
   noMax: 100,
   crit: 0.1, critMul: 1.5,
   waves: 3,
@@ -191,16 +194,65 @@ function tdBanner(u, name) {
   fx.appendChild(d); setTimeout(() => d.remove(), 1300);
 }
 // cục khí bay từ kẻ bị đánh về người nhận (phe ta: về thẻ dưới; phe địch: về người trên sân)
-function tdOrbFly(from, to, kind) {
-  const fx = document.getElementById('td-fx'); if (!fx) return;
-  const a = tdPos(from), b = to.side === 'ta' ? tdPos(to, 'card') : tdPos(to);
-  const d = document.createElement('div');
-  d.className = 'td-orbf ' + kind;
-  d.style.left = (a.x + (Math.random() - 0.5) * 30) + 'px'; d.style.top = (a.y + (Math.random() - 0.5) * 30) + 'px';
-  fx.appendChild(d);
-  requestAnimationFrame(() => requestAnimationFrame(() => { d.style.left = b.x + 'px'; d.style.top = b.y + 'px'; d.style.opacity = .9; }));
-  setTimeout(() => d.remove(), tdS && tdS.fast ? 400 : 700);
+// Hình cục rơi (người dùng yêu cầu như game mẫu): giọt nước xanh = Nộ, trái tim đỏ = máu; vẽ bằng SVG, có vệt sáng
+const TD_ORB_SVG = {
+  blue: `<svg viewBox="0 0 40 52"><defs><radialGradient id="tdgB" cx="38%" cy="62%" r="70%"><stop offset="0" stop-color="#d8f6ff"/><stop offset=".45" stop-color="#3fb6ff"/><stop offset="1" stop-color="#0b4fb8"/></radialGradient></defs>
+    <path d="M20 2 C20 2 4 24 4 34 A16 16 0 0 0 36 34 C36 24 20 2 20 2 Z" fill="url(#tdgB)" stroke="#073a7a" stroke-width="2"/>
+    <ellipse cx="13" cy="34" rx="3.5" ry="7" fill="#fff" opacity=".75" transform="rotate(-18 13 34)"/></svg>`,
+  red: `<svg viewBox="0 0 48 44"><defs><radialGradient id="tdgR" cx="35%" cy="35%" r="75%"><stop offset="0" stop-color="#ffd0d0"/><stop offset=".4" stop-color="#ff3b3b"/><stop offset="1" stop-color="#9a0010"/></radialGradient></defs>
+    <path d="M24 41 C10 31 3 23 3 14 A10.5 10.5 0 0 1 24 9 A10.5 10.5 0 0 1 45 14 C45 23 38 31 24 41 Z" fill="url(#tdgR)" stroke="#6a0010" stroke-width="2"/>
+    <ellipse cx="13" cy="14" rx="4" ry="3" fill="#fff" opacity=".8" transform="rotate(-30 13 14)"/></svg>`,
+};
+function tdDrop(a, t, kind, val) {
+  const s = tdS, fx = document.getElementById('td-fx'); if (!s) return;
+  const p = tdPos(t), cq = fx ? fx.clientWidth / 100 : 4;
+  // điểm rơi: dưới chân kẻ bị đánh, lệch ngẫu nhiên
+  const g = { x: p.x + (Math.random() - 0.5) * 16 * cq, y: p.y + (6 + Math.random() * 8) * cq };
+  const o = { side: a.side, kind, hoi: Math.round(a.hoi), val, el: null };
+  const LOOT_IMG = { bac: 'game/img/icon/bac.png', luong: 'game/img/icon/khung_luong_thuc.png', manh: 'game/img/icon/manh_vo_so.png' };
+  if (fx) {
+    const d = document.createElement('div');
+    d.className = 'td-orbf ' + kind + (LOOT_IMG[kind] ? ' loot' : ''); d.style.left = p.x + 'px'; d.style.top = p.y + 'px';
+    if (LOOT_IMG[kind]) d.innerHTML = `<img src="${LOOT_IMG[kind]}" alt="">`;
+    else d.innerHTML = TD_ORB_SVG[kind] || '';
+    fx.appendChild(d); o.el = d;
+    requestAnimationFrame(() => requestAnimationFrame(() => { d.style.left = g.x + 'px'; d.style.top = g.y + 'px'; d.classList.add('ground'); }));
+  }
+  (s.ground = s.ground || []).push(o);
 }
+// hết lượt một phe: các cục của phe đó bay về người nhận. Cục xanh +Nộ (không cho Kỹ Năng, vì Nộ luôn đầy),
+// cục đỏ hồi máu = chỉ số Hồi của người đã đánh rơi ra cục đó (số hiện là lượng máu thực hồi được)
+async function tdCollect(side) {
+  const s = tdS; if (!s || !s.ground) return;
+  const mine = s.ground.filter(o => o.side === side); if (!mine.length) return;
+  s.ground = s.ground.filter(o => o.side !== side);
+  const fast = s.fast;
+  mine.forEach((o, k) => setTimeout(() => {
+    if (o.val != null) { // chiến lợi phẩm: bay lên ô đếm
+      const box = document.getElementById('td-l-' + o.kind), root = document.querySelector('.td');
+      if (o.el && box && root) {
+        const R = root.getBoundingClientRect(), r = box.getBoundingClientRect();
+        o.el.classList.remove('ground'); o.el.classList.add('fly');
+        o.el.style.left = (r.left - R.left + r.width * 0.2) + 'px'; o.el.style.top = (r.top - R.top + r.height / 2) + 'px';
+      }
+      setTimeout(() => { if (o.el) o.el.remove(); s.loot[o.kind] += o.val; tdSync(); }, fast ? 300 : 520);
+      return;
+    }
+    const pool = o.kind === 'blue' ? tdAlive(side).filter(u => u.role !== 'ky_nang') : tdAlive(side);
+    if (!pool.length || !o.el) { if (o.el) o.el.remove(); return; }
+    const r = tdRand(pool), b = r.side === 'ta' ? tdPos(r, 'card') : tdPos(r);
+    o.el.classList.remove('ground'); o.el.classList.add('fly');
+    o.el.style.left = b.x + 'px'; o.el.style.top = b.y + 'px';
+    setTimeout(() => {
+      o.el.remove();
+      if (o.kind === 'blue') r.no = Math.min(TD.noMax, r.no + TD.orbNo);
+      else if (!r.dead && r.hp < r.maxHp) { const h = Math.min(o.hoi, Math.round(r.maxHp - r.hp)); r.hp += h; tdPop(r, '+' + h, 'heal'); }
+      tdSync();
+    }, fast ? 300 : 520);
+  }, k * (fast ? 40 : 70)));
+  await tdWait(mine.length * 70 + 650);
+}
+function tdClearGround() { if (tdS && tdS.ground) { tdS.ground.forEach(o => o.el && o.el.remove()); tdS.ground = []; } }
 function tdLunge(u, tgt) {
   const e = document.getElementById(`td-${u.side}-${u.i}`); if (!e) return;
   const a = tdPos(u), b = tdPos(tgt);
@@ -285,24 +337,24 @@ function tdHurt(a, t, dmg, crit, noOrb) {
   t.hp = Math.max(0, t.hp - dmg);
   tdPop(t, (crit ? 'Bạo ' : '') + dmg.toLocaleString('vi-VN'), crit ? 'crit' : '');
   tdHitFx(t);
-  // rơi cục: sát thương càng lớn rơi càng nhiều (1–3 cục), mỗi cục xanh hoặc đỏ, về ngẫu nhiên người cùng phe người đánh
-  const n = noOrb ? 0 : Math.min(3, 1 + Math.floor(dmg / t.maxHp * 4));
-  for (let k = 0; k < n; k++) {
-    const mates = tdAlive(a.side); if (!mates.length) break;
-    const r = tdRand(mates), blue = Math.random() < 0.5;
-    tdOrbFly(t, r, blue ? 'blue' : 'red');
-    if (blue) { if (r.role !== 'ky_nang') r.no = Math.min(TD.noMax, r.no + TD.orbNo); }
-    else if (r.hp < r.maxHp) { const h = Math.round(a.hoi); r.hp = Math.min(r.maxHp, r.hp + h); setTimeout(() => tdPop(r, '+' + h, 'heal'), 350); }
-  }
-  if (t.hp <= 0 && !t.dead) tdKill(t);
+  // rơi cục xuống đất cạnh kẻ bị đánh (người dùng chốt 2026-11-12): sát thương càng lớn rơi càng nhiều (1–3 cục),
+  // nằm đó tới hết lượt của phe người đánh rồi mới bay về ngẫu nhiên một người cùng phe (tdCollect)
+  const n = noOrb ? 0 : Math.max(1, Math.min(TD.dropMax, Math.floor(dmg / t.maxHp / TD.dropPct)));
+  for (let k = 0; k < n; k++) tdDrop(a, t, tdOrbKind());
+  if (t.hp <= 0 && !t.dead) tdKill(t, a);
 }
-function tdKill(t) {
+const tdOrbKind = () => (Math.random() < TD.blueRate ? 'blue' : 'red');
+// a = người hạ (không có khi chết vì chảy máu: coi như phe đối diện, Hồi trung bình phe đó)
+function tdKill(t, a) {
   t.dead = true; t.no = 0;
+  if (!a) { const f = tdAlive(tdFoe(t)); a = { side: tdFoe(t), hoi: f.length ? f.reduce((x, u) => x + u.hoi, 0) / f.length : 0 }; }
+  for (let k = 0; k < TD.deathOrbs; k++) tdDrop(a, t, tdOrbKind());
   if (t.side === 'ta') tdS.deaths++;
   else {
-    tdS.loot.bac += 20 + Math.floor(Math.random() * 20) + (t.boss ? 100 : 0);
-    if (Math.random() < 0.4) tdS.loot.luong++;
-    if (t.boss || Math.random() < 0.1) tdS.loot.manh++;
+    // chiến lợi phẩm rơi xuống đất, hết lượt mới bay lên ô đếm trên cùng
+    tdDrop(a, t, 'bac', 20 + Math.floor(Math.random() * 20) + (t.boss ? 100 : 0));
+    if (Math.random() < 0.4) tdDrop(a, t, 'luong', 1);
+    if (t.boss || Math.random() < 0.1) tdDrop(a, t, 'manh', 1);
   }
 }
 async function tdNormal(u) {
@@ -359,9 +411,9 @@ async function tdAct(u, ult) {
 }
 async function tdAfterAct() {
   const s = tdS; if (!s || s.over) return;
-  if (!tdAlive('dich').length) return tdNextWave();
+  if (!tdAlive('dich').length) { await tdCollect('ta'); return tdNextWave(); }
   if (!tdAlive('ta').length) return tdEnd(false);
-  if (tdAlive('ta').every(u => u.acted)) return tdPhaseDich();
+  if (tdAlive('ta').every(u => u.acted)) { await tdCollect('ta'); return tdPhaseDich(); }
   tdSync();
   if (s.auto) tdAutoStep();
 }
@@ -386,6 +438,7 @@ async function tdPhaseDich() {
     if (e.no >= TD.noMax) { e.no = 0; await tdUltDo(e); } else await tdNormal(e);
     if (!tdAlive('ta').length) return tdEnd(false);
   }
+  await tdCollect('dich');
   // hết hiệp: chảy máu (mất máu cố định, bỏ qua thủ), rồi giảm lượt hiệu ứng
   let bled = false;
   s.ta.concat(s.dich).forEach(u => {
@@ -398,13 +451,14 @@ async function tdPhaseDich() {
   // hết hiệp: giảm lượt hiệu ứng
   s.ta.concat(s.dich).forEach(u => Object.keys(u.buf).forEach(k => { if (--u.buf[k].t <= 0) delete u.buf[k]; }));
   s.round++;
-  if (!tdAlive('dich').length) return tdNextWave();
+  if (!tdAlive('dich').length) { await tdCollect('ta'); return tdNextWave(); }
   tdPhaseTa();
 }
 async function tdNextWave() {
   const s = tdS;
   if (s.wave + 1 >= TD.waves) return tdEnd(true);
   await tdWait(500);
+  tdClearGround();
   s.wave++; s.dich = tdWave(s.wave); s.target = 0;
   const box = document.getElementById('td-units');
   if (box) box.innerHTML = s.dich.map(tdSpriteHtml).join('') + s.ta.map(tdSpriteHtml).join('');
@@ -415,7 +469,7 @@ async function tdNextWave() {
 }
 function tdEnd(win) {
   const s = tdS; if (!s || s.over) return;
-  s.over = win ? 'win' : 'lose'; s.phase = 'end'; s.auto = false;
+  s.over = win ? 'win' : 'lose'; s.phase = 'end'; s.auto = false; tdClearGround();
   const stars = win ? Math.max(0, 3 - s.deaths) : 0;
   s.stars = stars;
   if (win) P.gold += s.loot.bac;
@@ -518,9 +572,17 @@ function tdStyle() {
   .td-num.bleed { color: #ff5a5a; }
   .td-num.st { color: #9cf; font-size: 3.8cqw; }
   @keyframes tdNum { 0% { opacity: 0; margin-top: 2cqw; } 15% { opacity: 1; margin-top: 0; } 100% { opacity: 0; margin-top: -9cqw; } }
-  .td-orbf { position: absolute; width: 3.2cqw; height: 3.2cqw; margin: -1.6cqw 0 0 -1.6cqw; border-radius: 50%; transition: left .55s cubic-bezier(.3,.1,.4,1), top .55s cubic-bezier(.5,0,.6,1), opacity .55s; }
-  .td-orbf.blue { background: radial-gradient(circle at 35% 35%, #fff, #4cf 45%, #06a); box-shadow: 0 0 1.8cqw #4cf; }
-  .td-orbf.red { background: radial-gradient(circle at 35% 35%, #fff, #f66 45%, #a00); box-shadow: 0 0 1.8cqw #f55; }
+  .td-orbf { position: absolute; width: 3.6cqw; height: 3.6cqw; margin: -1.8cqw 0 0 -1.8cqw; border-radius: 50%; transition: left .35s ease-out, top .35s cubic-bezier(.3,-.6,.7,1); }
+  .td-orbf.loot { width: 5.5cqw; height: 5.5cqw; margin: -2.75cqw 0 0 -2.75cqw; border-radius: 0; }
+  .td-orbf.loot img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 .3cqw .4cqw #000a); }
+  .td-orbf.loot img[src*="khung_"] { object-fit: cover; object-position: 0 50%; border-radius: 50%; }
+  .td-orbf.ground { animation: tdOrbG 1.2s ease-in-out infinite alternate; }
+  @keyframes tdOrbG { from { transform: translateY(0); } to { transform: translateY(-.8cqw); } }
+  .td-orbf.fly { transition: left .5s cubic-bezier(.3,.1,.4,1), top .5s cubic-bezier(.5,0,.6,1); }
+  .td-orbf.blue, .td-orbf.red { width: 4.6cqw; height: 4.6cqw; margin: -2.3cqw 0 0 -2.3cqw; border-radius: 0; }
+  .td-orbf.blue svg, .td-orbf.red svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .td-orbf.blue { filter: drop-shadow(0 0 1cqw #4cf) drop-shadow(0 .3cqw .3cqw #0008); }
+  .td-orbf.red { filter: drop-shadow(0 0 1cqw #f55) drop-shadow(0 .3cqw .3cqw #0008); }
   .td-ban { position: absolute; top: 30%; display: flex; align-items: center; gap: 2cqw; padding: 1.5cqw 5cqw 1.5cqw 1.5cqw; background: linear-gradient(90deg, #000c, #0000); animation: tdBan 1.3s ease-out forwards; }
   .td-ban.ta { right: 0; flex-direction: row-reverse; padding: 1.5cqw 1.5cqw 1.5cqw 5cqw; background: linear-gradient(270deg, #000c, #0000); }
   .td-ban.dich { left: 0; }
