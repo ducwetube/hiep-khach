@@ -98,7 +98,7 @@ function renderHome() {
     <div class="hm-quick">${quick}</div>
     <div class="hm-modes">
       <button class="hm-mode l" onclick="G.homeChallenge()"><span class="hm-disc">${homePng('mode_pve')}</span><b>PVE</b></button>
-      <button class="hm-mode c" onclick="G.homeGo()"><span class="hm-disc">${homePng('mode_giang_ho')}</span><b>Giang Hồ</b></button>
+      <button class="hm-mode c" onclick="G.tdStart()"><span class="hm-disc">${homePng('mode_giang_ho')}</span><b>Giang Hồ</b></button>
       <button class="hm-mode r" onclick="G.homeSoon('Tỉ Võ')"><span class="hm-disc">${homePng('mode_ti_vo')}</span><b>Tỉ Võ</b></button>
     </div>
     <div class="hm-funcs"><div class="hm-fscroll" id="hm-fscroll">${funcs}</div></div>
@@ -111,7 +111,7 @@ function homeNoDrag() {
   if (window._hmNoDrag) return; window._hmNoDrag = 1;
   document.addEventListener('touchmove', e => {
     const t = e.target;
-    if (t.closest && t.closest('.home') && !t.closest('.hm-fscroll, .hd-scroll')) e.preventDefault();
+    if (t.closest && t.closest('.home, .td') && !t.closest('.hm-fscroll, .hd-scroll')) e.preventDefault();
   }, { passive: false });
 }
 function homeMore() { const s = document.getElementById('hm-fscroll'); if (s) s.scrollBy({ left: s.clientWidth * 0.8, behavior: 'smooth' }); }
