@@ -352,8 +352,9 @@ function tdKill(t, a) {
   if (t.side === 'ta') tdS.deaths++;
   else {
     // chiến lợi phẩm rơi xuống đất, hết lượt mới bay lên ô đếm trên cùng
-    tdDrop(a, t, 'bac', 20 + Math.floor(Math.random() * 20) + (t.boss ? 100 : 0));
-    if (Math.random() < 0.4) tdDrop(a, t, 'luong', 1);
+    // bạc và lương thực cùng một mức gốc, mỗi thứ dao động riêng ±10% (người dùng chốt 2026-11-12)
+    const v = 30 + (t.boss ? 100 : 0), jit = () => Math.round(v * (0.9 + Math.random() * 0.2));
+    tdDrop(a, t, 'bac', jit()); tdDrop(a, t, 'luong', jit());
     if (t.boss || Math.random() < 0.1) tdDrop(a, t, 'manh', 1);
   }
 }
@@ -472,7 +473,7 @@ function tdEnd(win) {
   s.over = win ? 'win' : 'lose'; s.phase = 'end'; s.auto = false; tdClearGround();
   const stars = win ? Math.max(0, 3 - s.deaths) : 0;
   s.stars = stars;
-  if (win) P.gold += s.loot.bac;
+  if (win) { P.gold += s.loot.bac; P.luongThuc = (P.luongThuc || 0) + s.loot.luong; if (s.loot.manh && typeof addItem === 'function') addItem('manh_vo_so', s.loot.manh); }
   if (s.def.onEnd) s.def.onEnd(win, stars);
   if (typeof saveGame === 'function') saveGame();
   if (hasSnd()) SND.jingle(win ? 'win' : 'lose');

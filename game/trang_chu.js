@@ -23,10 +23,11 @@ const HIEP_KHACH = {
     skill: { grade: 'S', name: 'Thanh Liên Hóa Vũ', desc: 'Hồi khí huyết toàn đội, giải hiệu ứng xấu' },
     duyen: [{ name: 'Tri Kỷ', desc: 'Cùng ra trận Hồi +20%', with: [], ok: true }] },
   // Hiệp khách thật đầu tiên (2026-11-12, người dùng chốt): ảnh Gemini art (tranh có nền), chỉ số cấp 1 + tăng mỗi cấp (grow),
-  // suy từ ảnh mẫu cấp 16 (HP 2365, Công 932, Thủ 394, Hồi 401, mỗi cấp +53,3 / 23,8 / 8,4 / 8,6),
+  // suy từ ảnh mẫu cấp 23 không mặc đồ (HP 2238, Công 998, Thủ 352, Hồi 361, mỗi cấp +53,3 / 23,8 / 8,4 / 8,6);
+  // ảnh cấp 16 trước đó có mặc đồ nên số cũ (1565 / 575 / 268 / 272) sai,
 
   doan_dien_khanh: { name: 'Đoàn Diên Khánh', img: 'tm_thanh_kiem', art: 'game/img/hk/doan_dien_khanh.jpg', sprite: 'game/img/hk/doan_dien_khanh_sd.png', hand: [0.93, 0.46], role: 'ky_nang', q: 4, lv: 1, star: 1, hanh: 'kim', tuChat: 14,
-    st: { hp: 1565, atk: 575, def: 268, hoi: 272, spd: 43, mi: 100 },
+    st: { hp: 1065.4, atk: 474.4, def: 167.2, hoi: 171.8, spd: 43, mi: 100 }, // cấp 1 (hiện 1065 / 474 / 167 / 172)
     grow: { hp: 53.3, atk: 23.8, def: 8.4, hoi: 8.6 },
     ex: { crit: 10, critDmg: 150, acc: 100, dodge: 5 },
     skill: { grade: 'S', name: 'Đoàn Thị Chỉ Pháp', desc: 'Bắn chỉ lực vào toàn địch, mỗi kẻ trúng 3 tia (tổng 70% công), gây chảy máu 2 hiệp (mỗi hiệp mất máu bằng 10% công)' },
@@ -105,7 +106,7 @@ function renderHome() {
   // Dải chức năng: cuộn ngang, mũi tên bên phải cuộn tiếp
   const funcs = [
     ['G.heroView(0)', homePng('cn_doi_ngu'), 'Đội Ngũ'],
-    ["G.homeSoon('Tăng cấp')", homePng('cn_tang_cap'), 'Tăng Cấp'],
+    ['G.tangCap()', homePng('cn_tang_cap'), 'Tăng Cấp'],
     ["G.menuChar('gear')", homePng('cn_trang_bi'), 'Trang Bị'],
     ["G.homeSoon('Bảo vật')", homePng('cn_bao_vat'), 'Bảo Vật'],
     ['G.menuInv()', homePng('cn_tui_do'), 'Túi Đồ'],
@@ -176,7 +177,7 @@ function heroView(i) {
       <div class="hd-body">
         <button class="hd-back" style="${box(18, 395, 257, 90)}" onclick="G.home()">Trở về</button>
         <div class="hd-lv" style="${box(420, 400, 380, 80)}"><span class="hd-stars">${stars}</span><b>Lv ${h.lv}</b></div>
-        <button class="hd-up" style="${box(812, 395, 285, 90)}" onclick="G.homeSoon('Nâng cấp')">${homePng('lo_ren')}<b>Nâng Cấp</b></button>
+        <button class="hd-up" style="${box(812, 395, 285, 90)}" onclick="G.tcPick('${h.id}')">${homePng('lo_ren')}<b>Nâng Cấp</b></button>
         <div class="hd-name" style="${box(338, 480, 464, 68)}"><i class="hd-hanh" style="--hc:${H.color}" title="Ngũ hành: ${H.name}">${H.name}</i><b>${h.name}</b></div>
         <div class="hd-tu" style="${box(60, 500, 270, 55)}">Tư chất: ${h.tuChat}</div>
         <div class="hd-role" style="${box(60, 562, 270, 60)}"><img src="game/img/icon/loai_${h.role}.png" alt="" draggable="false"><b style="color:${R.color || '#fff'}">${R.name || ''}</b></div>

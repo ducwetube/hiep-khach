@@ -23,7 +23,7 @@ const AI_CHUONG = [
 ];
 const AI = { tlMax: 200, tlMin: 6, tlCost: 5, tlBoss: 10, bossPerDay: 3, bac: 60,
   // địch cấp 1 của ải (đặt cho Đoàn Diên Khánh cấp 1 một mình qua được ải 1; mỗi tầng sau mạnh thêm 5%)
-  mob: { hp: 650, atk: 240, def: 150, hoi: 100, spd: 40, mi: 100 } };
+  mob: { hp: 430, atk: 160, def: 100, hoi: 70, spd: 40, mi: 100 } };
 
 // Thể Lực: P.theLuc + P.tlAt (mốc thời gian đã tính hồi)
 function aiTL() {
@@ -131,6 +131,7 @@ function aiFight(t) {
       if (boss) S.used[k] = (S.used[k] || 0) + 1;
       aiTL(); P.theLuc -= aiCost(c, a, t);
       P.gold += aiBac(c, a, t);
+      P.lieu = (P.lieu || 0) + (boss ? 2 : 1); // hiệp khách nguyên liệu để tăng cấp (tang_cap.js)
     },
     back: () => aiList(a), retry: () => aiFight(t),
   });
@@ -142,9 +143,9 @@ function aiSweep(t) {
   aiTL(); P.theLuc -= aiCost(c, a, t);
   if (aiIsBoss(c, a, t)) { const S = aiState(), k = aiKey(c, a, t); S.used[k] = (S.used[k] || 0) + 1; }
   const bac = aiBac(c, a, t) + 60;
-  P.gold += bac;
+  P.gold += bac; P.luongThuc = (P.luongThuc || 0) + bac; P.lieu = (P.lieu || 0) + (aiIsBoss(c, a, t) ? 2 : 1);
   if (typeof saveGame === 'function') saveGame();
-  toast(`Quét xong: +${bac} bạc`);
+  toast(`Quét xong: +${bac} bạc, +${bac} lương thực, +${aiIsBoss(c, a, t) ? 2 : 1} Tân Binh`);
   aiList(a);
 }
 
