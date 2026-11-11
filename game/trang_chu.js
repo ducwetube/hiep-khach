@@ -52,7 +52,7 @@ function homeHead() {
     <div class="hm-xp"><small>Kinh nghiệm</small><div class="hm-exp"><i style="width:${pct.toFixed(1)}%"></i></div></div>
     <div class="hm-res">
       <div class="hm-col left">${pill('bac', P.gold, 'l', 'Bạc')}${pill('luong_thuc', P.luongThuc, 'l', 'Lương Thực')}</div>
-      <div class="hm-power"><small>Thể Lực</small><div class="hm-arc">${P.theLuc == null ? 200 : P.theLuc}/200</div><b title="Lực chiến">${lucChien().toLocaleString('vi-VN')}</b></div>
+      <div class="hm-power"><small>Thể Lực</small><div class="hm-arc">${typeof aiTL === 'function' ? aiTL() : 200}/200</div><b title="Lực chiến">${lucChien().toLocaleString('vi-VN')}</b></div>
       <div class="hm-col right">${pill('vang', P.vang, 'r', 'Kim Nguyên Bảo')}${pill('cong_hien', P.congHien, 'r', 'Cống Hiến')}</div>
     </div>`;
 }
@@ -98,7 +98,7 @@ function renderHome() {
     <div class="hm-quick">${quick}</div>
     <div class="hm-modes">
       <button class="hm-mode l" onclick="G.homeChallenge()"><span class="hm-disc">${homePng('mode_pve')}</span><b>PVE</b></button>
-      <button class="hm-mode c" onclick="G.tdStart()"><span class="hm-disc">${homePng('mode_giang_ho')}</span><b>Giang Hồ</b></button>
+      <button class="hm-mode c" onclick="G.aiMap()"><span class="hm-disc">${homePng('mode_giang_ho')}</span><b>Giang Hồ</b></button>
       <button class="hm-mode r" onclick="G.homeSoon('Tỉ Võ')"><span class="hm-disc">${homePng('mode_ti_vo')}</span><b>Tỉ Võ</b></button>
     </div>
     <div class="hm-funcs"><div class="hm-fscroll" id="hm-fscroll">${funcs}</div></div>

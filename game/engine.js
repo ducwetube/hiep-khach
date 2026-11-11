@@ -3749,6 +3749,7 @@ window.G = {
   ...(typeof THAP_G !== 'undefined' ? THAP_G : {}), // Thí Luyện Tháp (thap.js)
   ...(typeof TRANG_CHU_G !== 'undefined' ? TRANG_CHU_G : {}), // trang chủ (trang_chu.js)
   ...(typeof TRAN_DOI_G !== 'undefined' ? TRAN_DOI_G : {}), // trận đội 5 tướng (tran_doi.js)
+  ...(typeof AI_G !== 'undefined' ? AI_G : {}), // ải Giang Hồ (ai_giang_ho.js)
   ...(typeof TAI_KHOAN_G !== 'undefined' ? TAI_KHOAN_G : {}), // đăng nhập Google, lưu Firebase (tai_khoan.js)
   ...(typeof MON_PHAI_G !== 'undefined' ? MON_PHAI_G : {}), // Thanh Vân: thi tuyển, khảo hạch, sư môn (mon_phai.js)
   ...(typeof TRUY_NA_G !== 'undefined' ? TRUY_NA_G : {}), // Truy Nã Hiệp Khách (truy_na.js)

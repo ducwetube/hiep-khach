@@ -23,17 +23,25 @@ const TD_ULT = {
   tri_lieu:  { kind: 'heal', hoi: 2, atk: 0.6, txt: 'Hồi máu toàn đội' },
   ho_tro:    { kind: 'buff', atk: 0.3, turns: 2, txt: 'Tăng 30% công toàn đội 2 hiệp' },
 };
-// Vị trí chân trên sân (% bề ngang, % bề cao): phe ta bên phải, địch bên trái (như mẫu)
-const TD_SLOT = {
-  ta:   [[64, 47], [64, 68], [64, 89], [86, 57], [86, 78]],
-  dich: [[36, 47], [36, 68], [36, 89], [14, 57], [14, 78]],
+// Vị trí chân (% bề ngang, % bề cao sân) theo số người một bên; hàng trước sát đối phương, hàng sau lùi lại, so le để không đè nhau
+// (đội hình 6 ô cũ của san_dau.js quá sát cho 5 người: người dùng thấy đè lên nhau; theo mẫu: người nhỏ ~13% bề ngang, rải rộng)
+const TD_FORM = {
+  1: [[30, 76]],
+  2: [[36, 66], [26, 88]],
+  3: [[40, 60], [34, 78], [18, 70]],
+  4: [[40, 58], [34, 78], [16, 64], [12, 84]],
+  5: [[40, 58], [36, 76], [32, 94], [16, 62], [12, 80]],
 };
+function tdSlot(u) {
+  const n = Math.min(5, tdS[u.side].length), [x, y] = (TD_FORM[n] || TD_FORM[5])[u.i] || [50, 80];
+  return [u.side === 'ta' ? x : 100 - x, y];
+}
 // Đợt địch thử (Thanh Vân); boss ở đợt 3
 const TD_TEST = {
   name: 'Trận thử',
   mobs: ['son_tac_do', 'thao_khau', 'luu_manh', 'con_do', 'de_tu_that_sat', 'sat_thu'],
   boss: 'that_sat_huong_chu',
-  mob: { hp: 2600, atk: 1250, def: 900, hoi: 250, spd: 45, mi: 100 },
+  mob: { hp: 2400, atk: 1100, def: 900, hoi: 250, spd: 45, mi: 100 },
   waveN: [3, 4, 4],
 };
 
@@ -48,8 +56,8 @@ function tdUnit(side, i, o) {
 function tdWave(n) {
   const T = tdS.def, cnt = T.waveN[n] || 3, list = [];
   for (let i = 0; i < cnt; i++) {
-    const boss = n === TD.waves - 1 && i === 0;
-    const k = boss ? T.boss : tdRand(T.mobs), m = T.mob, f = 1 + n * 0.12;
+    const boss = !!T.boss && n === TD.waves - 1 && i === 0;
+    const k = boss ? T.boss : tdRand(T.mobs), m = T.mob, f = (1 + n * 0.12) * (T.pow || 1);
     list.push(tdUnit('dich', i, {
       name: (ENEMY_IMG[k] && ENEMY_IMG[k].label) || k, img: k, role: boss ? 'cong_kich' : null, boss,
       maxHp: Math.round(m.hp * f * (boss ? 3 : 1)), atk: Math.round(m.atk * f * (boss ? 1.4 : 1)), def: Math.round(m.def * f),
@@ -71,6 +79,8 @@ function tdStart(def) {
       maxHp: h.st.hp, atk: h.st.atk, def: h.st.def, hoi: h.st.hoi, spd: h.st.spd, mi: h.st.mi })),
   };
   tdS.ta.forEach(u => { if (u.role === 'ky_nang') u.no = TD.noMax; });
+  const keys = typeof SAN_DAU !== 'undefined' ? Object.keys(SAN_DAU.sets) : [];
+  tdS.bg = keys.length ? SAN_DAU.sets[tdRand(keys)].mb : { src: TD.bg };
   tdS.dich = tdWave(0);
   tdRender();
   homeNoDrag(); if (hasSnd()) SND.music('combat');
@@ -85,12 +95,13 @@ function tdPortrait(img) {
   return `<img src="game/img/quai/${img}.png" alt="" draggable="false" style="position:absolute;width:${(100 / hs).toFixed(1)}%;left:${(-hx / hs * 100).toFixed(1)}%;top:${(-(hy * m.h / m.w) / hs * 100).toFixed(1)}%">`;
 }
 function tdSpriteHtml(u) {
-  const [x, y] = TD_SLOT[u.side][u.i] || [50, 50], m = ENEMY_IMG[u.img] || { k: 1 };
-  const h = 23 * (m.k || 1) * (u.boss ? 1.25 : 1);
-  return `<div class="td-u ${u.side} ${u.dead ? 'dead' : ''}" id="td-${u.side}-${u.i}" style="left:${x}%;top:${y}%;--h:${h.toFixed(1)}cqw"
+  const [x, y] = tdSlot(u), m = ENEMY_IMG[u.img] || { k: 1 };
+  // hình cao thủ (tm_*) vẽ trên khung rộng nên trông nhỏ hơn quái: phóng thêm cho ngang cỡ
+  const k = (m.k || 1) * (u.boss ? 1.2 : 1) * (/^tm_/.test(u.img) ? 1.22 : 1);
+  return `<div class="td-u ${u.side} ${u.dead ? 'dead' : ''}" id="td-${u.side}-${u.i}" style="left:${x}%;top:${y}%;z-index:${Math.round(y)}"
       ${u.side === 'dich' ? `onclick="G.tdPick(${u.i})"` : ''}>
-    <i class="td-ring"></i>
-    <img src="game/img/quai/${u.img}.png" alt="" draggable="false">
+    <i class="td-ring"></i><i class="td-shadow"></i>
+    <img src="game/img/quai/${u.img}.png" alt="" draggable="false" style="height:${(k * 100).toFixed(0)}%">
     <span class="td-hb"><i style="width:${(u.hp / u.maxHp * 100).toFixed(1)}%"></i></span>
   </div>`;
 }
@@ -102,8 +113,8 @@ function tdRender() {
       <span class="td-loot">[[bac]]<b id="td-l-bac">x${s.loot.bac}</b></span>
       <span class="td-loot">${homePng('khung_luong_thuc')}<b id="td-l-luong">x${s.loot.luong}</b></span>
       <span class="td-loot">${homePng('manh_vo_so')}<b id="td-l-manh">x${s.loot.manh}</b></span>
-    </div>
-    <label class="td-fast" onclick="G.tdFast()"><i class="${s.fast ? 'on' : ''}"></i>Nhanh</label>`;
+      <label class="td-fast" onclick="G.tdFast()"><i class="${s.fast ? 'on' : ''}"></i>Nhanh</label>
+    </div>`;
   const cards = s.ta.map(u => `<button class="td-card r-${u.role}" id="td-c-${u.i}" onclick="G.tdTap(${u.i})">
       <span class="td-pt">${tdPortrait(u.img)}</span>
       <span class="td-hpn"><img src="game/img/icon/loai_${u.role}.png" alt=""><b>${Math.max(0, Math.round(u.hp))}</b></span>
@@ -111,18 +122,22 @@ function tdRender() {
       <span class="td-bar no"><i style="width:${(u.no / TD.noMax * 100).toFixed(1)}%"></i></span>
     </button>`).join('');
   const orbs = s.ta.map(u => `<button class="td-orb" id="td-o-${u.i}" onclick="G.tdUlt(${u.i})" title="${u.skill ? u.skill.name : ''}"><i></i></button>`).join('');
+  const bg = s.bg || { src: TD.bg };
   show(`<div class="td">
-    <div class="td-field" id="td-field" style="background-image:url(${s.def.bg || TD.bg})">
-      ${top}
-      <div id="td-units">${s.dich.map(tdSpriteHtml).join('')}${s.ta.map(tdSpriteHtml).join('')}</div>
-      <div class="td-wave" id="td-wave">${s.wave + 1}/${TD.waves}</div>
-      <div class="td-fx" id="td-fx"></div>
+    ${top}
+    <div class="td-mid">
+      <div class="td-stage" id="td-field">
+        <img class="td-bg" src="${bg.src}" alt="">${bg.dim ? '<i class="td-dusk"></i>' : ''}
+        <div id="td-units">${s.dich.map(tdSpriteHtml).join('')}${s.ta.map(tdSpriteHtml).join('')}</div>
+        <div class="td-wave" id="td-wave">${s.wave + 1}/${TD.waves}</div>
+      </div>
     </div>
     <div class="td-panel">
       <button class="td-auto ${s.auto ? 'on' : ''}" id="td-auto" onclick="G.tdAuto()">Treo</button>
       <div class="td-cards">${cards}</div>
       <div class="td-orbs">${orbs}</div>
     </div>
+    <div class="td-fx" id="td-fx"></div>
   </div>`, 'tran-doi');
   tdSync();
 }
@@ -337,7 +352,9 @@ function tdEnd(win) {
   s.over = win ? 'win' : 'lose'; s.phase = 'end'; s.auto = false;
   const stars = win ? Math.max(0, 3 - s.deaths) : 0;
   s.stars = stars;
-  if (win) { P.gold += s.loot.bac; if (typeof saveGame === 'function') saveGame(); }
+  if (win) P.gold += s.loot.bac;
+  if (s.def.onEnd) s.def.onEnd(win, stars);
+  if (typeof saveGame === 'function') saveGame();
   if (hasSnd()) SND.jingle(win ? 'win' : 'lose');
   tdSync();
   const box = document.createElement('div');
@@ -370,9 +387,9 @@ function tdQuit(done) {
   if (!done && tdS && !tdS.over && !confirm('Rời trận? Trận này sẽ tính là thua.')) return;
   const s = tdS; tdS = null;
   if (s) s.over = s.over || 'quit';
-  renderHome();
+  if (s && s.def.back) s.def.back(); else renderHome();
 }
-function tdAgain() { const d = tdS && tdS.def; tdStart(d); }
+function tdAgain() { const d = tdS && tdS.def; if (d && d.retry) d.retry(); else tdStart(d); }
 
 function tdStyle() {
   if (document.getElementById('td-style')) return;
@@ -383,34 +400,39 @@ function tdStyle() {
   @media (min-width: 600px) { .td { max-width: 480px; } }
   .td button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
   .td b, .td span, .td label { text-shadow: 0 .2cqw 0 #000, 0 0 .5cqw #000; }
-  .td-field { position: relative; flex: 1; min-height: 80cqw; background: center 40% / cover no-repeat; overflow: hidden; }
-  .td-top { position: absolute; left: 0; right: 0; top: 0; z-index: 30; display: flex; align-items: center; gap: 2cqw; padding: 1.5cqw 2cqw; background: linear-gradient(#000a, #0000); }
-  .td-gear { width: 9cqw; height: 9cqw; flex: none; }
+  .td { background: radial-gradient(ellipse at 50% 45%, #3a2a1c, #120c08 75%); }
+  .td-mid { flex: 1; min-height: 0; display: flex; }
+  .td-stage { position: relative; width: 100%; flex: 1; overflow: hidden; border-top: .5cqw solid #7d6036; border-bottom: .5cqw solid #7d6036; box-shadow: 0 2cqw 4cqw #0009; }
+  .td-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 60%; }
+  .td-dusk { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(14,18,40,.62), rgba(14,18,40,.45) 45%, rgba(14,18,40,.28)); }
+  .td-top { position: relative; z-index: 30; display: flex; align-items: center; gap: 1.6cqw; padding: 2cqw; background: linear-gradient(#2e2218, #1a120c); border-bottom: .4cqw solid #7d6036; }
+  .td-gear { width: 8cqw; height: 8cqw; flex: none; }
   .td-gear .ic, .td-gear svg { width: 100%; height: 100%; }
-  .td-loot { flex: 1; display: flex; align-items: center; gap: 1.5cqw; height: 7cqw; padding: 0 2cqw 0 .5cqw; border-radius: 1.2cqw; background: #0008; }
-  .td-loot > img, .td-loot .ic, .td-loot svg { width: 6.5cqw; height: 6.5cqw; object-fit: contain; flex: none; }
-  .td-loot img[src*="khung_"] { object-fit: cover; object-position: 0 50%; width: 6.5cqw; border-radius: 50%; }
-  .td-loot b { flex: 1; text-align: center; font-size: 3.6cqw; font-weight: 800; }
-  .td-fast { position: absolute; right: 2cqw; top: 11cqw; z-index: 30; display: flex; align-items: center; gap: 1cqw; font-size: 3.8cqw; font-weight: 800; cursor: pointer; }
-  .td-fast i { width: 5cqw; height: 5cqw; border-radius: 1cqw; background: #0008; border: .4cqw solid #c9a24a; display: grid; place-items: center; }
-  .td-fast i.on::after { content: ""; width: 2.6cqw; height: 1.4cqw; border-left: .8cqw solid #6f6; border-bottom: .8cqw solid #6f6; transform: translateY(-.4cqw) rotate(-45deg); }
-  .td-u { position: absolute; width: calc(var(--h) * .9); height: var(--h); transform: translate(-50%, -100%); z-index: 10; transition: transform .18s ease-out, opacity .4s; }
-  .td-u img { position: absolute; left: 0; bottom: 0; width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; pointer-events: none; }
-  .td-u.dich img { transform: scaleX(-1); }
+  .td-loot { flex: 1; display: flex; align-items: center; gap: 1cqw; height: 6.5cqw; padding: 0 1.5cqw 0 .5cqw; border-radius: 1.2cqw; background: #0008; }
+  .td-loot > img, .td-loot .ic, .td-loot svg { width: 5.6cqw; height: 5.6cqw; object-fit: contain; flex: none; }
+  .td-loot img[src*="khung_"] { object-fit: cover; object-position: 0 50%; border-radius: 50%; }
+  .td-loot b { flex: 1; text-align: center; font-size: 3.3cqw; font-weight: 800; }
+  .td-fast { flex: none; display: flex; align-items: center; gap: 1cqw; font-size: 3.4cqw; font-weight: 800; cursor: pointer; }
+  .td-fast i { width: 4.6cqw; height: 4.6cqw; border-radius: 1cqw; background: #0008; border: .4cqw solid #c9a24a; display: grid; place-items: center; }
+  .td-fast i.on::after { content: ""; width: 2.4cqw; height: 1.2cqw; border-left: .7cqw solid #6f6; border-bottom: .7cqw solid #6f6; transform: translateY(-.4cqw) rotate(-45deg); }
+  .td-u { position: absolute; width: 13%; aspect-ratio: 3 / 4; transform: translate(-50%, -100%); transition: transform .18s ease-out, opacity .4s; }
+  .td-u img { position: absolute; left: 50%; bottom: 0; width: auto; max-width: 190%; object-fit: contain; object-position: 50% 100%; transform: translateX(-50%); pointer-events: none; }
+  .td-u.ta img { transform: translateX(-50%) scaleX(-1); }
+  .td-shadow { position: absolute; bottom: 0; left: 14%; right: 14%; height: 10%; border-radius: 50%; background: radial-gradient(closest-side, rgba(0,0,0,.55), transparent); transform: translateY(40%); }
   .td-u.dich { cursor: pointer; }
   .td-u.lunge { transform: translate(calc(-50% + var(--dx)), calc(-100% + var(--dy))); }
-  .td-u.hit img { animation: tdHit .32s; }
-  @keyframes tdHit { 0%, 100% { filter: none; } 30% { filter: brightness(2) sepia(1) hue-rotate(-30deg) saturate(4); } }
-  .td-u.dich.hit img { animation: tdHitE .32s; }
-  @keyframes tdHitE { 0%, 100% { filter: none; transform: scaleX(-1); } 30% { filter: brightness(2) sepia(1) hue-rotate(-30deg) saturate(4); transform: scaleX(-1) translateX(1.5cqw); } }
+  .td-u.hit img { animation: tdHitE .32s; }
+  .td-u.ta.hit img { animation: tdHit .32s; }
+  @keyframes tdHit { 0%, 100% { filter: none; transform: translateX(-50%) scaleX(-1); } 30% { filter: brightness(2) sepia(1) hue-rotate(-30deg) saturate(4); transform: translateX(calc(-50% - 1.2cqw)) scaleX(-1); } }
+  @keyframes tdHitE { 0%, 100% { filter: none; transform: translateX(-50%); } 30% { filter: brightness(2) sepia(1) hue-rotate(-30deg) saturate(4); transform: translateX(calc(-50% + 1.2cqw)); } }
   .td-u.dead { opacity: 0; pointer-events: none; }
   .td-u.stun img { filter: grayscale(.6) brightness(.8); }
-  .td-hb { position: absolute; left: 15%; right: 15%; top: -2cqw; height: 1.4cqw; border-radius: 1cqw; background: #000b; border: .2cqw solid #0008; overflow: hidden; }
+  .td-hb { position: absolute; left: 10%; right: 10%; top: -12%; height: 1.2cqw; border-radius: 1cqw; background: #000b; border: .2cqw solid #0008; overflow: hidden; }
   .td-hb i { display: block; height: 100%; background: linear-gradient(#7f6, #2a2); transition: width .3s; }
   .td-u.dich .td-hb i { background: linear-gradient(#f86, #c22); }
-  .td-ring { position: absolute; left: 10%; right: 10%; bottom: -1.6cqw; height: 4cqw; border-radius: 50%; border: .5cqw solid #ffd43b; box-shadow: 0 0 1.5cqw #ffd43b; opacity: 0; }
+  .td-ring { position: absolute; left: 50%; bottom: 0; width: 110%; aspect-ratio: 3 / 1; transform: translate(-50%, 42%); border-radius: 50%; border: .5cqw solid #ffd43b; box-shadow: 0 0 1.5cqw #ffd43b; opacity: 0; }
   .td-u.tgt .td-ring { opacity: 1; }
-  .td-wave { position: absolute; right: 3cqw; bottom: 2cqw; z-index: 25; font-size: 6cqw; font-weight: 800; }
+  .td-wave { position: absolute; right: 3cqw; top: 2cqw; z-index: 120; font-size: 5.5cqw; font-weight: 800; }
   .td-fx { position: absolute; inset: 0; z-index: 200; pointer-events: none; }
   .td-num { position: absolute; transform: translate(-50%, -50%); font-size: 4.6cqw; font-weight: 900; color: #fff; text-shadow: 0 0 .6cqw #000, 0 .3cqw 0 #000; animation: tdNum 1s ease-out forwards; white-space: nowrap; }
   .td-num.crit { font-size: 6.2cqw; color: #ffd43b; }
