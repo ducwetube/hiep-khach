@@ -75,8 +75,8 @@ function tdStart(def) {
   tdS = {
     def: def || TD_TEST, wave: 0, round: 1, phase: 'ta', busy: false, target: 0, deaths: 0,
     auto: !!(tdS && tdS.auto), fast: !!(tdS && tdS.fast), loot: { bac: 0, luong: 0, manh: 0 }, over: null,
-    ta: team.map(({ h }, i) => tdUnit('ta', i, { name: h.name, img: h.img, role: h.role, skill: h.skill,
-      maxHp: h.st.hp, atk: h.st.atk, def: h.st.def, hoi: h.st.hoi, spd: h.st.spd, mi: h.st.mi })),
+    ta: team.map(({ h }, i) => tdUnit('ta', i, { name: h.name, img: h.img, art: h.art, sprite: h.sprite, hand: h.hand, ult: h.ult, role: h.role, skill: h.skill,
+      ...(st => ({ maxHp: st.hp, atk: st.atk, def: st.def, hoi: st.hoi, spd: st.spd, mi: st.mi }))(heroSt(h)) })),
   };
   tdS.ta.forEach(u => { if (u.role === 'ky_nang') u.no = TD.noMax; });
   const keys = typeof SAN_DAU !== 'undefined' ? Object.keys(SAN_DAU.sets) : [];
@@ -88,20 +88,21 @@ function tdStart(def) {
 }
 
 /* ---------- vẽ ---------- */
-function tdPortrait(img) {
+function tdPortrait(img, art) {
+  if (art) return `<img src="${art}" alt="" draggable="false" style="position:absolute;width:250%;left:-75%;top:-76%">`;
   const m = ENEMY_IMG[img];
   if (!m || !m.head) return `<img src="game/img/quai/${img}.png" alt="" draggable="false">`;
   const [hx, hy, hs] = m.head;
   return `<img src="game/img/quai/${img}.png" alt="" draggable="false" style="position:absolute;width:${(100 / hs).toFixed(1)}%;left:${(-hx / hs * 100).toFixed(1)}%;top:${(-(hy * m.h / m.w) / hs * 100).toFixed(1)}%">`;
 }
 function tdSpriteHtml(u) {
-  const [x, y] = tdSlot(u), m = ENEMY_IMG[u.img] || { k: 1 };
+  const [x, y] = tdSlot(u), m = u.sprite ? { k: 1.55 } : (ENEMY_IMG[u.img] || { k: 1 });
   // hình cao thủ (tm_*) vẽ trên khung rộng nên trông nhỏ hơn quái: phóng thêm cho ngang cỡ
-  const k = (m.k || 1) * (u.boss ? 1.2 : 1) * (/^tm_/.test(u.img) ? 1.22 : 1);
+  const k = (m.k || 1) * (u.boss ? 1.2 : 1) * (!u.sprite && /^tm_/.test(u.img) ? 1.22 : 1);
   return `<div class="td-u ${u.side} ${u.dead ? 'dead' : ''}" id="td-${u.side}-${u.i}" style="left:${x}%;top:${y}%;z-index:${Math.round(y)}"
       ${u.side === 'dich' ? `onclick="G.tdPick(${u.i})"` : ''}>
     <i class="td-ring"></i><i class="td-shadow"></i>
-    <img src="game/img/quai/${u.img}.png" alt="" draggable="false" style="height:${(k * 100).toFixed(0)}%">
+    <img class="${u.sprite ? 'nf' : ''}" src="${u.sprite || `game/img/quai/${u.img}.png`}" alt="" draggable="false" style="height:${(k * 100).toFixed(0)}%">
     <span class="td-hb"><i style="width:${(u.hp / u.maxHp * 100).toFixed(1)}%"></i></span>
   </div>`;
 }
@@ -116,7 +117,7 @@ function tdRender() {
       <label class="td-fast" onclick="G.tdFast()"><i class="${s.fast ? 'on' : ''}"></i>Nhanh</label>
     </div>`;
   const cards = s.ta.map(u => `<button class="td-card r-${u.role}" id="td-c-${u.i}" onclick="G.tdTap(${u.i})">
-      <span class="td-pt">${tdPortrait(u.img)}</span>
+      <span class="td-pt">${tdPortrait(u.img, u.art)}</span>
       <span class="td-hpn"><img src="game/img/icon/loai_${u.role}.png" alt=""><b>${Math.max(0, Math.round(u.hp))}</b></span>
       <span class="td-bar hp"><i style="width:${(u.hp / u.maxHp * 100).toFixed(1)}%"></i></span>
       <span class="td-bar no"><i style="width:${(u.no / TD.noMax * 100).toFixed(1)}%"></i></span>
@@ -186,7 +187,7 @@ function tdBanner(u, name) {
   const fx = document.getElementById('td-fx'); if (!fx) return;
   const d = document.createElement('div');
   d.className = 'td-ban ' + u.side;
-  d.innerHTML = `<span class="td-ban-pt">${tdPortrait(u.img)}</span><b>${esc(name)}</b>`;
+  d.innerHTML = `<span class="td-ban-pt">${tdPortrait(u.img, u.art)}</span><b>${esc(name)}</b>`;
   fx.appendChild(d); setTimeout(() => d.remove(), 1300);
 }
 // cục khí bay từ kẻ bị đánh về người nhận (phe ta: về thẻ dưới; phe địch: về người trên sân)
@@ -207,6 +208,51 @@ function tdLunge(u, tgt) {
   e.style.setProperty('--dy', ((b.y - a.y) * 0.55).toFixed(0) + 'px');
   e.classList.add('lunge');
   setTimeout(() => e.classList.remove('lunge'), tdS && tdS.fast ? 200 : 380);
+}
+// Hiệu ứng "chỉ pháp" (Đoàn Thị Chỉ Pháp): tụ khí vàng ở đầu ngón tay, rồi từng tia chỉ lực vàng bắn liên tiếp tới mỗi kẻ địch,
+// chạm thì nổ chùm sáng (theo đoạn phim mẫu người dùng gửi). Vẽ bằng mã, không cần ảnh.
+function tdHand(u) {
+  const root = document.querySelector('.td'), e = document.getElementById(`td-${u.side}-${u.i}`);
+  const img = e && e.querySelector('img');
+  if (!root || !img) return tdPos(u);
+  const R = root.getBoundingClientRect(), r = img.getBoundingClientRect(), h = u.hand || [0.85, 0.45];
+  // h = vị trí bàn tay trên ảnh quay sang phải; ảnh bị lật (quái quay trái) thì lấy đối xứng
+  const frac = img.classList.contains('nf') ? h[0] : 1 - h[0];
+  return { x: r.left + r.width * frac - R.left, y: r.top + r.height * h[1] - R.top };
+}
+async function tdChi(u, foes, onHit) {
+  const box = document.getElementById('td-fx'); if (!box || !foes.length) return;
+  const a = tdHand(u), fast = tdS && tdS.fast, cq = box.clientWidth / 100;
+  const orb = document.createElement('div');
+  orb.className = 'td-chi-orb'; orb.style.left = a.x + 'px'; orb.style.top = a.y + 'px';
+  box.appendChild(orb);
+  await tdWait(380);
+  // mỗi kẻ địch 3 tia chỉ lực (ảnh fx_chi_luc.png, đầu tia ở mép phải ảnh), bắn tùm lum xen kẽ
+  const shots = [];
+  foes.forEach((t, j) => { for (let k = 0; k < 3; k++) shots.push({ t, k, at: j * 70 + k * 190 + Math.random() * 90 }); });
+  const fly = fast ? 170 : 280, W = 36 * cq;
+  await Promise.all(shots.map(sh => new Promise(done => setTimeout(() => {
+    const s0 = { x: a.x + (Math.random() - 0.5) * 3 * cq, y: a.y + (Math.random() - 0.5) * 3 * cq };
+    const b = tdPos(sh.t), e = { x: b.x + (Math.random() - 0.5) * 6 * cq, y: b.y + (Math.random() - 0.5) * 6 * cq };
+    const ang = Math.atan2(e.y - s0.y, e.x - s0.x) * 180 / Math.PI;
+    const img = document.createElement('img');
+    img.src = 'game/img/fx_chi_luc.png'; img.className = 'td-bolt'; img.style.width = W + 'px';
+    box.appendChild(img);
+    const tf = (p, sc) => `translate(${p.x}px, ${p.y}px) rotate(${ang}deg) scale(${sc}) translate(-95%, -50%)`;
+    let fin = false;
+    const end = () => {
+      if (fin) return; fin = true; img.remove();
+      const hit = document.createElement('div');
+      hit.className = 'td-chi-hit'; hit.style.left = e.x + 'px'; hit.style.top = e.y + 'px';
+      box.appendChild(hit); setTimeout(() => hit.remove(), 600);
+      if (onHit) onHit(sh.t, sh.k);
+      done();
+    };
+    if (img.animate) img.animate([{ transform: tf(s0, 0.45), opacity: 0.4 }, { transform: tf(e, 1), opacity: 1 }], { duration: fly, easing: 'ease-in', fill: 'forwards' }).onfinish = end;
+    setTimeout(end, fly + 120); // dự phòng
+  }, fast ? sh.at / 2 : sh.at))));
+  await tdWait(220);
+  orb.remove();
 }
 function tdHitFx(u) {
   const e = document.getElementById(`td-${u.side}-${u.i}`); if (!e) return;
@@ -235,12 +281,12 @@ function tdTarget(u) {
   const top = Math.max(...live.map(x => x.mi));
   return tdRand(live.filter(x => x.mi === top));
 }
-function tdHurt(a, t, dmg, crit) {
+function tdHurt(a, t, dmg, crit, noOrb) {
   t.hp = Math.max(0, t.hp - dmg);
   tdPop(t, (crit ? 'Bạo ' : '') + dmg.toLocaleString('vi-VN'), crit ? 'crit' : '');
   tdHitFx(t);
   // rơi cục: sát thương càng lớn rơi càng nhiều (1–3 cục), mỗi cục xanh hoặc đỏ, về ngẫu nhiên người cùng phe người đánh
-  const n = Math.min(3, 1 + Math.floor(dmg / t.maxHp * 4));
+  const n = noOrb ? 0 : Math.min(3, 1 + Math.floor(dmg / t.maxHp * 4));
   for (let k = 0; k < n; k++) {
     const mates = tdAlive(a.side); if (!mates.length) break;
     const r = tdRand(mates), blue = Math.random() < 0.5;
@@ -269,14 +315,25 @@ async function tdNormal(u) {
   await tdWait(380);
 }
 async function tdUltDo(u) {
-  const U = u.side === 'ta' ? TD_ULT[u.role] : { kind: 'one', pow: 1.6 };
+  const U = u.ult || (u.side === 'ta' ? TD_ULT[u.role] : { kind: 'one', pow: 1.6 });
   if (!U) return tdNormal(u);
   tdBanner(u, u.side === 'ta' ? (u.skill ? u.skill.name : 'Tuyệt chiêu') : u.name);
   if (u.role !== 'ky_nang') u.no = 0;
   await tdWait(500);
   if (U.kind === 'all') {
     const foes = tdAlive(tdFoe(u));
-    foes.forEach(t => { const r = tdDmg(u, t, U.pow); tdHurt(u, t, r.d, r.crit); });
+    const bleed = t => { if (U.bleed && !t.dead) { t.bleed = { v: Math.round(tdAtk(u) * U.bleed.pct), t: U.bleed.turns }; setTimeout(() => tdPop(t, 'Chảy máu', 'st'), 300); } };
+    if (U.fx === 'chi') {
+      // mỗi kẻ địch trúng 3 tia, sát thương của chiêu chia 3 phần; chỉ tia cuối mới rơi cục
+      const plan = new Map(foes.map(t => [t, tdDmg(u, t, U.pow)]));
+      await tdChi(u, foes, (t, k) => {
+        if (t.dead) return;
+        const r = plan.get(t), part = k < 2 ? Math.round(r.d / 3) : r.d - 2 * Math.round(r.d / 3);
+        tdHurt(u, t, Math.max(1, part), r.crit, k < 2);
+        if (k === 2) bleed(t);
+        tdSync();
+      });
+    } else foes.forEach(t => { const r = tdDmg(u, t, U.pow); tdHurt(u, t, r.d, r.crit); bleed(t); });
   } else if (U.kind === 'one') {
     const t = tdTarget(u); if (t) {
       tdLunge(u, t); await tdWait(200);
@@ -329,6 +386,15 @@ async function tdPhaseDich() {
     if (e.no >= TD.noMax) { e.no = 0; await tdUltDo(e); } else await tdNormal(e);
     if (!tdAlive('ta').length) return tdEnd(false);
   }
+  // hết hiệp: chảy máu (mất máu cố định, bỏ qua thủ), rồi giảm lượt hiệu ứng
+  let bled = false;
+  s.ta.concat(s.dich).forEach(u => {
+    if (u.dead || !u.bleed) return;
+    u.hp = Math.max(0, u.hp - u.bleed.v); tdPop(u, '-' + u.bleed.v, 'bleed'); tdHitFx(u); bled = true;
+    if (--u.bleed.t <= 0) u.bleed = null;
+    if (u.hp <= 0) tdKill(u);
+  });
+  if (bled) { tdSync(); await tdWait(450); if (!tdAlive('ta').length) return tdEnd(false); }
   // hết hiệp: giảm lượt hiệu ứng
   s.ta.concat(s.dich).forEach(u => Object.keys(u.buf).forEach(k => { if (--u.buf[k].t <= 0) delete u.buf[k]; }));
   s.round++;
@@ -437,6 +503,19 @@ function tdStyle() {
   .td-num { position: absolute; transform: translate(-50%, -50%); font-size: 4.6cqw; font-weight: 900; color: #fff; text-shadow: 0 0 .6cqw #000, 0 .3cqw 0 #000; animation: tdNum 1s ease-out forwards; white-space: nowrap; }
   .td-num.crit { font-size: 6.2cqw; color: #ffd43b; }
   .td-num.heal { color: #6f6; }
+  .td-u.ta img.nf { transform: translateX(-50%); }
+  .td-u.ta.hit img.nf { animation: tdHitE .32s; }
+  .td-chi-orb { position: absolute; width: 9cqw; height: 9cqw; margin: -4.5cqw 0 0 -4.5cqw; border-radius: 50%; background: radial-gradient(circle, #fff, #fff3a0 30%, #ffc23a 55%, #ffb00000 72%); animation: tdChiOrb .5s ease-in-out infinite alternate; }
+  @keyframes tdChiOrb { from { transform: scale(.6); opacity: .7; } to { transform: scale(1.25); opacity: 1; } }
+  .td-bolt { position: absolute; left: 0; top: 0; height: auto; pointer-events: none; transform-origin: 0 0; filter: drop-shadow(0 0 1.5cqw #ffb000aa); }
+  .td-chi { position: absolute; height: 2.2cqw; margin-top: -1.1cqw; transform-origin: 0 50%; border-radius: 2cqw; pointer-events: none;
+    background: linear-gradient(90deg, #fff0, #fff6c0 18%, #ffd43b 55%, #fff 92%, #fff0); box-shadow: 0 0 2cqw #ffcf3a, 0 0 4cqw #ffa000aa; animation: tdChi .7s ease-out forwards; }
+  .td-chi.thin { height: .9cqw; margin-top: -.45cqw; opacity: .8; }
+  @keyframes tdChi { 0% { clip-path: inset(0 100% 0 0); opacity: 1; } 25% { clip-path: inset(0 0 0 0); opacity: 1; } 100% { clip-path: inset(0 0 0 70%); opacity: 0; } }
+  .td-chi-hit { position: absolute; width: 16cqw; height: 16cqw; margin: -8cqw 0 0 -8cqw; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle, #fff, #fff3a0 22%, #ffc23a 45%, #ff8a0000 70%); animation: tdChiHit .55s ease-out forwards; }
+  @keyframes tdChiHit { 0% { transform: scale(.2); opacity: 1; } 60% { opacity: .9; } 100% { transform: scale(1.4); opacity: 0; } }
+  .td-num.bleed { color: #ff5a5a; }
   .td-num.st { color: #9cf; font-size: 3.8cqw; }
   @keyframes tdNum { 0% { opacity: 0; margin-top: 2cqw; } 15% { opacity: 1; margin-top: 0; } 100% { opacity: 0; margin-top: -9cqw; } }
   .td-orbf { position: absolute; width: 3.2cqw; height: 3.2cqw; margin: -1.6cqw 0 0 -1.6cqw; border-radius: 50%; transition: left .55s cubic-bezier(.3,.1,.4,1), top .55s cubic-bezier(.5,0,.6,1), opacity .55s; }

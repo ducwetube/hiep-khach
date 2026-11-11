@@ -19,10 +19,15 @@ const HOME_TEAM = [
     st: { hp: 2450, atk: 1120, def: 1180, hoi: 860, spd: 46, mi: 80 },
     skill: { grade: 'S', name: 'Thanh Liên Hóa Vũ', desc: 'Hồi khí huyết toàn đội, giải hiệu ứng xấu' },
     duyen: [{ name: 'Tri Kỷ', desc: 'Cùng ra trận Hồi +20%', with: [4], ok: true }] },
-  { name: 'Mộ Thanh', img: 'tm_thanh_kiem', role: 'ky_nang', q: 4, lv: 1, star: 1, hanh: 'kim', tuChat: 15,
-    st: { hp: 2280, atk: 1890, def: 1240, hoi: 420, spd: 60, mi: 120 },
-    skill: { grade: 'SS', name: 'Thái Cực Kiếm Ý', desc: 'Mỗi hiệp ra chiêu, choáng 1 kẻ địch ngẫu nhiên' },
-    duyen: [{ name: 'Sư Đồ', desc: 'Cùng ra trận Thủ +250%', with: [0], ok: true }] },
+  // Hiệp khách thật đầu tiên (2026-11-12, người dùng chốt): ảnh Gemini art (tranh có nền), chỉ số cấp 1 + tăng mỗi cấp (grow),
+  // suy từ ảnh mẫu cấp 16 (HP 2365, Công 932, Thủ 394, Hồi 401, mỗi cấp +53,3 / 23,8 / 8,4 / 8,6)
+  { name: 'Đoàn Diên Khánh', img: 'tm_thanh_kiem', art: 'game/img/hk/doan_dien_khanh.jpg', sprite: 'game/img/hk/doan_dien_khanh_sd.png', hand: [0.93, 0.46], role: 'ky_nang', q: 4, lv: 1, star: 1, hanh: 'kim', tuChat: 14,
+    st: { hp: 1565, atk: 575, def: 268, hoi: 272, spd: 43, mi: 100 },
+    grow: { hp: 53.3, atk: 23.8, def: 8.4, hoi: 8.6 },
+    ex: { crit: 10, critDmg: 150, acc: 100, dodge: 5 },
+    skill: { grade: 'S', name: 'Đoàn Thị Chỉ Pháp', desc: 'Bắn chỉ lực vào toàn địch, mỗi kẻ trúng 3 tia (tổng 70% công), gây chảy máu 2 hiệp (mỗi hiệp mất máu bằng 10% công)' },
+    ult: { kind: 'all', pow: 0.7, bleed: { pct: 0.1, turns: 2 }, fx: 'chi' },
+    duyen: [{ name: 'Phụ Tử', desc: 'Cùng ra trận Công +150%', with: [], ok: false }] },
   { name: 'Hoàng Y Nữ', img: 'tm_hoang_y_kiem_nu', role: 'ho_tro', q: 2, lv: 1, star: 1, hanh: 'hoa', tuChat: 11,
     st: { hp: 2100, atk: 1350, def: 1100, hoi: 500, spd: 55, mi: 90 },
     skill: { grade: 'A', name: 'Phượng Minh Khúc', desc: 'Tăng 20% Công toàn đội 2 hiệp' },
@@ -30,6 +35,14 @@ const HOME_TEAM = [
 ];
 const HOME_Q = ['', 'thuong', 'hiem', 'tuyet', 'truyen']; // màu khung theo phẩm cấp (tạm)
 
+// Ảnh thân hiệp khách: tranh riêng (art, có nền) nếu có, không thì hình cao thủ tạm
+const heroImg = h => h.art || `game/img/quai/${h.img}.png`;
+// Chỉ số theo cấp: gốc cấp 1 (st) + tăng mỗi cấp (grow) × (cấp − 1), làm tròn
+function heroSt(h) {
+  const o = {}, g = h.grow || {}, n = (h.lv || 1) - 1;
+  Object.keys(h.st).forEach(k => { o[k] = Math.round(h.st[k] + (g[k] || 0) * n); });
+  return o;
+}
 const homePng = n => `<img src="game/img/icon/${n}.png" alt="" draggable="false">`;
 // Lực chiến: một con số tổng sức mạnh (tạm tính từ chỉ số nhân vật hiện tại; có đội thật thì cộng cả đội)
 function lucChien() {
@@ -65,7 +78,7 @@ function renderHome() {
   const tb = el('topbar'); if (tb) tb.classList.add('hidden');
   if (hasSnd()) SND.music('village');
   const cards = HOME_TEAM.map((h, i) => `<button class="hm-card q-${HOME_Q[h.q]}" onclick="G.heroView(${i})" aria-label="${h.name}">
-      <img src="game/img/quai/${h.img}.png" alt="" draggable="false">
+      <img class="${h.art ? 'art' : ''}" src="${heroImg(h)}" alt="" draggable="false">
       <span class="hm-band"><span class="hm-lv">${h.lv}</span><span class="hm-star">${'<i></i>'.repeat(h.star)}</span></span></button>`).join('');
   // Hàng nút nhanh: 4 ô (người dùng chốt 2026-11-12), icon ảnh Gemini nhanh_<mã>.png
   const quick = [
@@ -135,8 +148,8 @@ function heroView(i) {
   const eq = [['mu_1', 'Mũ'], ['kiem_1', 'Vũ khí'], ['ao_1', 'Giáp'], ['dai_lung_1', 'Đai lưng'], ['giay_1', 'Giày']].map(([ic, t], k) =>
     `<button class="hd-eq" style="${box(885, 572 + k * 152, 137, 137)}" onclick="G.homeSoon('Trang bị')"><span class="hd-eqi">[[${ic}]]</span><b>${t}</b></button>`).join('');
   const ST = [['hp', 'Khí huyết'], ['atk', 'Công'], ['def', 'Thủ'], ['hoi', 'Hồi'], ['spd', 'Tốc'], ['mi', 'Mị']];
-  const sts = ST.map(([k, t]) => `<span><small>${t}</small><b>${(h.st[k] || 0).toLocaleString('vi-VN')}</b></span>`).join('');
-  const ava = j => { const o = HOME_TEAM[j]; return o ? `<button class="hd-ava" onclick="G.heroView(${j})" title="${o.name}"><img src="game/img/quai/${o.img}.png" alt="" draggable="false"></button>` : ''; };
+  const hs = heroSt(h), sts = ST.map(([k, t]) => `<span><small>${t}</small><b>${(hs[k] || 0).toLocaleString('vi-VN')}</b></span>`).join('');
+  const ava = j => { const o = HOME_TEAM[j]; return o ? `<button class="hd-ava" onclick="G.heroView(${j})" title="${o.name}"><img class="${o.art ? 'art' : ''}" src="${heroImg(o)}" alt="" draggable="false"></button>` : ''; };
   const duyen = (h.duyen || []).map(d => `<div class="hd-bar hd-duyen"><b>Duyên: ${d.name}</b><span>${d.desc}</span><em class="${d.ok ? 'ok' : ''}">${d.ok ? 'Đạt' : 'Chưa đạt'}</em></div>
     <div class="hd-avas">${ava(heroSel)}${(d.with || []).map(ava).join('')}</div>`).join('');
   show(`<div class="home hd">
@@ -151,9 +164,9 @@ function heroView(i) {
         <div class="hd-tu" style="${box(60, 500, 270, 55)}">Tư chất: ${h.tuChat}</div>
         <div class="hd-role" style="${box(60, 562, 270, 60)}"><img src="game/img/icon/loai_${h.role}.png" alt="" draggable="false"><b style="color:${R.color || '#fff'}">${R.name || ''}</b></div>
         ${bao}
-        <div class="hd-art q-${HOME_Q[h.q]}" style="${box(360, 620, 440, 690, true)}"><img src="game/img/quai/${h.img}.png" alt="" draggable="false"></div>
+        <div class="hd-art q-${HOME_Q[h.q]}" style="${box(360, 620, 440, 690, true)}"><img class="${h.art ? 'art' : ''}" src="${heroImg(h)}" alt="" draggable="false"></div>
         ${eq}
-        <div class="hd-power" style="${box(362, 1338, 436, 74)}"><span>Chiến Lực:</span><b>${Object.values(h.st).reduce((a, b) => a + b, 0).toLocaleString('vi-VN')}</b></div>
+        <div class="hd-power" style="${box(362, 1338, 436, 74)}"><span>Chiến Lực:</span><b>${Object.values(hs).reduce((a, b) => a + b, 0).toLocaleString('vi-VN')}</b></div>
         <button class="hd-linh" style="${box(895, 1325, 117, 117)}" onclick="G.homeSoon('Linh thú')">Linh</button>
       </div>
       <div class="hd-bar hd-stats">${sts}</div>
@@ -195,7 +208,7 @@ function heroStyle() {
   .hd-stars i { width: 4cqw; height: 4cqw; background: #3a3020; clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
   .hd-stars i.on { background: #ffd43b; }
   .hd-name { display: flex; align-items: center; gap: 2cqw; padding: 0 3cqw 0 1cqw; border-radius: 4cqw; background: linear-gradient(#3a2a1a, #1e140a); border: .4cqw solid #c9a24a; }
-  .hd-name b { flex: 1; text-align: center; font-size: 4.4cqw; font-weight: 800; color: #fff4d0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hd-name b { flex: 1; text-align: center; font-size: 3.4cqw; letter-spacing: -.1cqw; font-weight: 800; color: #fff4d0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .hd-hanh { flex: none; width: 5.2cqw; height: 5.2cqw; border-radius: 50%; display: grid; place-items: center; font: normal 800 1.7cqw/1 sans-serif; color: #fff; background: radial-gradient(circle at 35% 30%, #fff8, var(--hc) 60%); border: .3cqw solid #fff9; text-shadow: 0 0 .4cqw #000; }
   .hd-tu { white-space: nowrap; display: flex; align-items: center; justify-content: center; font-size: 4cqw; font-weight: 800; color: #fff4d0; }
   .hd-role { display: flex; align-items: center; justify-content: center; gap: 1.2cqw; }
@@ -210,6 +223,8 @@ function heroStyle() {
   .hd-eq b { margin-top: -.6cqw; font-size: 2.6cqw; font-weight: 700; color: #e8d8b0; }
   .hd-art { border-radius: 1.6cqw; overflow: hidden; border: .6cqw solid #c9a24a; background: radial-gradient(ellipse at 50% 60%, #ffffff22, #0006 70%), linear-gradient(#2a3a30aa, #101a14cc); box-shadow: 0 .6cqw 1.6cqw #000a; }
   .hd-art img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 100%; transform: scaleX(-1) scale(1.12); transform-origin: 50% 96%; }
+  .hd-art img.art { object-fit: cover; object-position: 50% 40%; transform: none; }
+  .hd-ava img.art { object-position: 50% 18%; transform: scale(1.6); transform-origin: 50% 20%; }
   .hd-power { display: flex; align-items: center; justify-content: center; gap: 1.6cqw; border-radius: 1.4cqw; background: linear-gradient(#3a2a1a, #1e140a); border: .4cqw solid #c9a24a; }
   .hd-power span { font-size: 4cqw; font-weight: 800; color: #fff4d0; }
   .hd-power b { font-size: 4.6cqw; font-weight: 800; color: #ffd43b; }
@@ -300,6 +315,7 @@ function homeStyle() {
   .hm-team { margin-top: 1.4cqw; display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.1cqw; padding: 0 .4cqw; }
   .hm-card { position: relative; height: max(43.5cqw, calc(43.5cqw + (100dvh - 179.2cqw) * .4)); border-radius: 1cqw; overflow: hidden; border: .6cqw solid var(--qc) !important; background: linear-gradient(var(--qg), color-mix(in srgb, var(--qg) 55%, #000)) !important; box-shadow: inset 0 0 2cqw #0008; }
   .hm-card img { position: absolute; left: 0; top: 0; width: 100%; height: calc(100% - 5.8cqw); object-fit: cover; object-position: 50% 15%; transform: scaleX(-1); }
+  .hm-card img.art { transform: none; object-position: 50% 22%; }
   .hm-card.q-thuong { --qc: #4fbf5a; --qg: #1f6a2a; } .hm-card.q-hiem { --qc: #4f8aff; --qg: #1e3a8a; }
   .hm-card.q-tuyet { --qc: #b77bff; --qg: #4b2a8a; } .hm-card.q-truyen { --qc: #ffbf3a; --qg: #8a5a10; }
   .hm-band { position: absolute; left: 0; right: 0; bottom: 0; height: 5.8cqw; display: flex; align-items: center; justify-content: space-between; padding: 0 1.2cqw 0 .6cqw; background: color-mix(in srgb, var(--qc) 55%, #000); }
