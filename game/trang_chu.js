@@ -115,7 +115,7 @@ function homeStyle() {
   const st = document.createElement('style');
   st.id = 'home-style';
   st.textContent = `
-  .home { position: relative; min-height: 100dvh; display: flex; flex-direction: column; gap: 10px; padding: max(8px, env(safe-area-inset-top)) 10px calc(76px + env(safe-area-inset-bottom)); color: #f3e7c9; overflow: hidden; }
+  .home { box-sizing: border-box; position: relative; min-height: 100dvh; display: flex; flex-direction: column; gap: 10px; padding: max(8px, env(safe-area-inset-top)) 10px calc(76px + env(safe-area-inset-bottom)); color: #f3e7c9; overflow: hidden; }
   .hm-bg { position: fixed; inset: 0; z-index: -1; background: linear-gradient(rgba(14,10,6,.55), rgba(14,10,6,.35) 40%, rgba(14,10,6,.8)), url(game/img/ban_do/tv_doc.jpg) center / cover; }
   .home button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; padding: 0; }
   .hm-ic img, .hm-disc img { width: 100%; height: 100%; object-fit: contain; display: block; }
@@ -141,7 +141,7 @@ function homeStyle() {
   .hm-res b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   /* hàng đội hình */
   .hm-team { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
-  .hm-card { position: relative; aspect-ratio: 3 / 4.3; border-radius: 10px; overflow: hidden; border: 2px solid var(--qc); background: radial-gradient(circle at 50% 35%, var(--qg), #160f08 75%); box-shadow: 0 0 10px var(--qg); }
+  .hm-card { position: relative; aspect-ratio: 3 / 5; border-radius: 10px; overflow: hidden; border: 2px solid var(--qc); background: radial-gradient(circle at 50% 35%, var(--qg), #160f08 75%); box-shadow: 0 0 10px var(--qg); }
   .hm-card img { position: absolute; inset: 6% 4% 18%; width: 92%; height: 76%; object-fit: contain; object-position: bottom; transform: scaleX(-1); }
   .hm-card.q-thuong { --qc: #9aa3a8; --qg: #4a5257; } .hm-card.q-hiem { --qc: #4fa8ff; --qg: #1d4a7a; }
   .hm-card.q-tuyet { --qc: #b77bff; --qg: #4b2a7a; } .hm-card.q-truyen { --qc: #ffbf3a; --qg: #7a4d10; }
@@ -158,12 +158,12 @@ function homeStyle() {
   .hm-f .hm-ic { width: 40px; height: 40px; }
   .hm-q b, .hm-f b { font-size: 11px; font-weight: 700; text-shadow: 0 1px 2px #000, 0 0 4px #000; white-space: nowrap; }
   /* ba nút lớn */
-  .hm-modes { display: flex; justify-content: center; align-items: flex-end; gap: 8px; margin: 2px 0; }
-  .hm-mode { display: flex; flex-direction: column; align-items: center; }
+  .hm-modes { display: flex; justify-content: center; align-items: flex-end; gap: 4px; margin: auto 0; padding: 6px 0; }
+  .hm-mode { display: flex; flex-direction: column; align-items: center; min-width: 0; }
   .hm-disc { display: block; border-radius: 50%; padding: 12%; background: radial-gradient(circle at 50% 40%, #5a3412, #1d1008 70%); border: 3px solid #e2bd62; box-shadow: 0 0 0 3px #6b3d12, 0 0 18px #ffb84a88, inset 0 0 14px #000; }
-  .hm-mode.side .hm-disc { width: 27vw; max-width: 112px; height: 27vw; max-height: 112px; }
-  .hm-mode.main .hm-disc { width: 36vw; max-width: 150px; height: 36vw; max-height: 150px; animation: hmGlow 2.4s ease-in-out infinite alternate; }
-  .hm-mode b { margin-top: -10px; font: 20px 'Pattaya', serif; color: #ffe39a; text-shadow: 0 2px 0 #3a1a00, 0 0 6px #000, 0 0 2px #000; }
+  .hm-mode.side .hm-disc { width: 23vw; max-width: 100px; height: 23vw; max-height: 100px; }
+  .hm-mode.main .hm-disc { width: 33vw; max-width: 140px; height: 33vw; max-height: 140px; animation: hmGlow 2.4s ease-in-out infinite alternate; }
+  .hm-mode b { margin-top: -10px; font: 18px 'Pattaya', serif; white-space: nowrap; color: #ffe39a; text-shadow: 0 2px 0 #3a1a00, 0 0 6px #000, 0 0 2px #000; }
   .hm-mode.main b { font-size: 25px; }
   .hm-mode:active .hm-disc { transform: scale(.95); }
   @keyframes hmGlow { to { box-shadow: 0 0 0 3px #6b3d12, 0 0 30px #ffcf6aaa, inset 0 0 14px #000; } }
