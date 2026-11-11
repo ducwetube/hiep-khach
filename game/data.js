@@ -1466,3 +1466,24 @@ const TRUYEN = {
     ],
   },
 };
+
+/* =====================================================================
+   LOẠI HIỆP KHÁCH (2026-11-12, người dùng chốt 5 loại cho game xếp đội; chức năng làm sau)
+   icon: game/img/icon/loai_<mã>.png (ảnh Gemini của người dùng, gốc luu_tru/trang_chu/loai_tuong_icon.png)
+   ===================================================================== */
+const HERO_ROLES = {
+  ho_ve:     { name: 'Hộ Vệ',     color: '#4aa8ff', desc: 'Thiên về Thủ, Khí huyết, Né; bị ưu tiên tấn công' },
+  cong_kich: { name: 'Công Kích', color: '#ff7a3a', desc: 'Thiên về lực Công, kỹ năng sát thương cao' },
+  ho_tro:    { name: 'Hỗ Trợ',    color: '#ffd23a', desc: 'Thiên về hỗ trợ, tăng sức chiến đấu cho toàn đội' },
+  tri_lieu:  { name: 'Trị Liệu',  color: '#5fe04a', desc: 'Có năng lực hồi phục Khí huyết cao' },
+  ky_nang:   { name: 'Kỹ Năng',   color: '#c86aff', desc: 'Nộ khí luôn đầy' },
+};
+
+/* NGŨ HÀNH của hiệp khách (2026-11-12, người dùng chốt: dùng để khắc hệ, luật khắc làm sau). Chưa có icon ảnh: vẽ tạm vòng tròn màu */
+const NGU_HANH = {
+  kim:  { name: 'Kim',  color: '#e8c35a' },
+  moc:  { name: 'Mộc',  color: '#4fbf5a' },
+  thuy: { name: 'Thủy', color: '#3a8cff' },
+  hoa:  { name: 'Hỏa',  color: '#ff5a3a' },
+  tho:  { name: 'Thổ',  color: '#b07a3a' },
+};

@@ -7,11 +7,26 @@
    ===================================================================== */
 // Đội mẫu (5 ô) cho tới khi có hệ hiệp khách thật; hình chibi cao thủ có sẵn trong game
 const HOME_TEAM = [
-  { name: 'Lãnh Nguyệt', img: 'tm_nu_kiem_lam', role: 'Tấn công', q: 3, lv: 1, star: 2 },
-  { name: 'Hàn Sơn', img: 'tm_cuong_khach', role: 'Thủ', q: 2, lv: 1, star: 1 },
-  { name: 'Thanh Liên', img: 'tm_bach_lien_nu', role: 'Hỗ trợ', q: 3, lv: 1, star: 1 },
-  { name: 'Mộ Thanh', img: 'tm_thanh_kiem', role: 'Kỹ năng', q: 4, lv: 1, star: 1 },
-  { name: 'Hoàng Y Nữ', img: 'tm_hoang_y_kiem_nu', role: 'Tấn công', q: 2, lv: 1, star: 1 },
+  { name: 'Lãnh Nguyệt', img: 'tm_nu_kiem_lam', role: 'cong_kich', q: 3, lv: 1, star: 2, hanh: 'thuy', tuChat: 14,
+    st: { hp: 2030, atk: 2034, def: 1297, hoi: 401, spd: 51, mi: 100 },
+    skill: { grade: 'S', name: 'Cửu Kiếm Quyết', desc: 'Tấn công toàn địch và tăng Chuẩn toàn đội 2 hiệp' },
+    duyen: [{ name: 'Sư Đồ', desc: 'Cùng ra trận Thủ +250%', with: [3], ok: true }, { name: 'Đồng Môn', desc: 'Cùng ra trận Công +15%', with: [1, 4], ok: false }] },
+  { name: 'Hàn Sơn', img: 'tm_cuong_khach', role: 'ho_ve', q: 2, lv: 1, star: 1, hanh: 'tho', tuChat: 12,
+    st: { hp: 4120, atk: 980, def: 2210, hoi: 350, spd: 38, mi: 300 },
+    skill: { grade: 'A', name: 'Thiết Bích Quyết', desc: 'Khiêu khích toàn địch, giảm 30% sát thương nhận 2 hiệp' },
+    duyen: [{ name: 'Huynh Đệ', desc: 'Cùng ra trận Khí huyết +20%', with: [0], ok: true }] },
+  { name: 'Thanh Liên', img: 'tm_bach_lien_nu', role: 'tri_lieu', q: 3, lv: 1, star: 1, hanh: 'moc', tuChat: 13,
+    st: { hp: 2450, atk: 1120, def: 1180, hoi: 860, spd: 46, mi: 80 },
+    skill: { grade: 'S', name: 'Thanh Liên Hóa Vũ', desc: 'Hồi khí huyết toàn đội, giải hiệu ứng xấu' },
+    duyen: [{ name: 'Tri Kỷ', desc: 'Cùng ra trận Hồi +20%', with: [4], ok: true }] },
+  { name: 'Mộ Thanh', img: 'tm_thanh_kiem', role: 'ky_nang', q: 4, lv: 1, star: 1, hanh: 'kim', tuChat: 15,
+    st: { hp: 2280, atk: 1890, def: 1240, hoi: 420, spd: 60, mi: 120 },
+    skill: { grade: 'SS', name: 'Thái Cực Kiếm Ý', desc: 'Mỗi hiệp ra chiêu, choáng 1 kẻ địch ngẫu nhiên' },
+    duyen: [{ name: 'Sư Đồ', desc: 'Cùng ra trận Thủ +250%', with: [0], ok: true }] },
+  { name: 'Hoàng Y Nữ', img: 'tm_hoang_y_kiem_nu', role: 'ho_tro', q: 2, lv: 1, star: 1, hanh: 'hoa', tuChat: 11,
+    st: { hp: 2100, atk: 1350, def: 1100, hoi: 500, spd: 55, mi: 90 },
+    skill: { grade: 'A', name: 'Phượng Minh Khúc', desc: 'Tăng 20% Công toàn đội 2 hiệp' },
+    duyen: [{ name: 'Tri Kỷ', desc: 'Cùng ra trận Hồi +20%', with: [2], ok: true }] },
 ];
 const HOME_Q = ['', 'thuong', 'hiem', 'tuyet', 'truyen']; // màu khung theo phẩm cấp (tạm)
 
@@ -24,6 +39,23 @@ function lucChien() {
 }
 const homeSoon = what => toast(`${what}: sắp mở`);
 
+// Phần đầu dùng chung (Trang chủ, màn chi tiết hiệp khách): băng tên, kinh nghiệm, tài nguyên + Lực Chiến
+function homeHead() {
+  const need = expNeed(P.lv), pct = P.lv >= MAX_LV ? 100 : Math.min(100, P.exp / need * 100);
+  const pill = (k, v, side, name) => `<span class="hm-pill ${side}" title="${name}" style="background-image:url(game/img/icon/khung_${k}.png)"><b>${Number(v || 0).toLocaleString('vi-VN')}</b></span>`;
+  const srv = typeof curServer !== 'undefined' ? 'S' + curServer : 'S1';
+  return `    <header class="hm-top">
+      <span class="hm-tl">[${srv}] [Cấp ${P.lv}]</span>
+      <button class="hm-plaque" onclick="G.menuChar()"><b>${esc(P.name)}</b></button>
+      <span class="hm-tr">${sectName(P.sect)}</span>
+    </header>
+    <div class="hm-xp"><small>Kinh nghiệm</small><div class="hm-exp"><i style="width:${pct.toFixed(1)}%"></i></div></div>
+    <div class="hm-res">
+      <div class="hm-col left">${pill('bac', P.gold, 'l', 'Bạc')}${pill('luong_thuc', P.luongThuc, 'l', 'Lương Thực')}</div>
+      <div class="hm-power"><small>Thể Lực</small><div class="hm-arc">${P.theLuc == null ? 200 : P.theLuc}/200</div><b title="Lực chiến">${lucChien().toLocaleString('vi-VN')}</b></div>
+      <div class="hm-col right">${pill('vang', P.vang, 'r', 'Kim Nguyên Bảo')}${pill('cong_hien', P.congHien, 'r', 'Cống Hiến')}</div>
+    </div>`;
+}
 function renderHome() {
   if (!P) return renderTitle();
   combat = null;
@@ -32,10 +64,7 @@ function renderHome() {
   homeNoDrag();
   const tb = el('topbar'); if (tb) tb.classList.add('hidden');
   if (hasSnd()) SND.music('village');
-  const need = expNeed(P.lv), pct = P.lv >= MAX_LV ? 100 : Math.min(100, P.exp / need * 100);
-  const herbs = invCount('vo_danh_thao') + invCount('nhan_sam') + invCount('tuyet_lien_km');
-  const srv = typeof curServer !== 'undefined' ? 'S' + curServer : 'S1';
-  const cards = HOME_TEAM.map(h => `<button class="hm-card q-${HOME_Q[h.q]}" onclick="G.homeTeam()" aria-label="${h.name}">
+  const cards = HOME_TEAM.map((h, i) => `<button class="hm-card q-${HOME_Q[h.q]}" onclick="G.heroView(${i})" aria-label="${h.name}">
       <img src="game/img/quai/${h.img}.png" alt="" draggable="false">
       <span class="hm-band"><span class="hm-lv">${h.lv}</span><span class="hm-star">${'<i></i>'.repeat(h.star)}</span></span></button>`).join('');
   // Hàng nút nhanh: 6 ô, ô thứ 4 là bóng thoại (icon tạm)
@@ -69,17 +98,7 @@ function renderHome() {
   const last = (worldLog[worldLog.length - 1] || '').replace(/<[^>]+>/g, '').replace(/\[\[[a-z0-9_]+\]\]/g, '');
   show(`<div class="home">
     <div class="hm-bg"></div>
-    <header class="hm-top">
-      <span class="hm-tl">[${srv}] [Cấp ${P.lv}]</span>
-      <button class="hm-plaque" onclick="G.menuChar()"><b>${esc(P.name)}</b></button>
-      <span class="hm-tr">${sectName(P.sect)}</span>
-    </header>
-    <div class="hm-xp"><small>Kinh nghiệm</small><div class="hm-exp"><i style="width:${pct.toFixed(1)}%"></i></div></div>
-    <div class="hm-res">
-      <div class="hm-col left"><span>[[bac]]<b>${P.gold.toLocaleString('vi-VN')}</b></span><span>${homePng('manh_vo_so')}<b>${invCount('manh_vo_so')}</b></span></div>
-      <div class="hm-power"><small>Lực Chiến</small><div class="hm-arc">Cấp ${P.lv}</div><b>${lucChien().toLocaleString('vi-VN')}</b></div>
-      <div class="hm-col right"><span><b>${invCount('manh_noi_so')}</b>${homePng('manh_noi_so')}</span><span><b>${herbs}</b>[[vo_danh_thao]]</span></div>
-    </div>
+    ${homeHead()}
     <div class="hm-team">${cards}</div>
     <div class="hm-quick">${quick}</div>
     <div class="hm-modes">
@@ -98,10 +117,128 @@ function homeNoDrag() {
   if (window._hmNoDrag) return; window._hmNoDrag = 1;
   document.addEventListener('touchmove', e => {
     const t = e.target;
-    if (t.closest && t.closest('.home') && !t.closest('.hm-fscroll')) e.preventDefault();
+    if (t.closest && t.closest('.home') && !t.closest('.hm-fscroll, .hd-scroll')) e.preventDefault();
   }, { passive: false });
 }
 function homeMore() { const s = document.getElementById('hm-fscroll'); if (s) s.scrollBy({ left: s.clientWidth * 0.8, behavior: 'smooth' }); }
+/* ---------- MÀN CHI TIẾT HIỆP KHÁCH (2026-11-12, theo bản phác người dùng, khung 1116 × 2000) ----------
+   Phần đầu giữ như Trang chủ (homeHead). Phần thân đặt tuyệt đối theo tọa độ bản phác (đơn vị cqw = điểm ảnh mẫu × 0,0896,
+   gốc y = 390 của bản phác), phần dưới (chỉ số, tuyệt chiêu, duyên) xếp dọc và cuộn được. Không có thanh nút dưới.
+   Số liệu đang là đội mẫu HOME_TEAM; Nâng Cấp, Bảo Vật, Trang bị, Linh chưa có chức năng. */
+let heroSel = 0;
+function heroView(i) {
+  if (!P) return renderTitle();
+  heroSel = Math.max(0, Math.min(HOME_TEAM.length - 1, i | 0));
+  const h = HOME_TEAM[heroSel], R = HERO_ROLES[h.role] || {}, H = NGU_HANH[h.hanh] || { name: '?', color: '#888' };
+  closeModalSilent(); homeStyle(); heroStyle(); homeNoDrag();
+  const tb = el('topbar'); if (tb) tb.classList.add('hidden');
+  const u = v => (v * 0.0896).toFixed(2) + 'cqw';
+  // Khung chính giãn theo chiều cao màn (--k, heroFit): vị trí dọc nhân --k; ô có s = true giãn cả chiều cao
+  const box = (x, y, w, hh, s) => `left:${u(x)};top:calc(${u(y - 390)} * var(--k));width:${u(w)};height:${s ? `calc(${u(hh)} * var(--k))` : u(hh)}`;
+  const stars = Array.from({ length: 5 }, (_, k) => `<i class="${k < h.star ? 'on' : ''}"></i>`).join('');
+  const bao = [[640, 'Bảo Vật 1', ''], [905, 'Bảo Vật 2', ''], [1165, 'Bảo Vật 3', '3 sao mở']].map(([y, t, lock]) =>
+    `<button class="hd-bao ${lock && h.star < 3 ? 'lock' : ''}" style="${box(92, y + 12, 200, 205, true)}" onclick="G.homeSoon('Bảo vật')"><b>${t}</b>${lock && h.star < 3 ? `<small>${lock}</small>` : ''}</button>`).join('');
+  const eq = [['mu_1', 'Mũ'], ['kiem_1', 'Vũ khí'], ['ao_1', 'Giáp'], ['dai_lung_1', 'Đai lưng'], ['giay_1', 'Giày']].map(([ic, t], k) =>
+    `<button class="hd-eq" style="${box(885, 572 + k * 152, 137, 137)}" onclick="G.homeSoon('Trang bị')"><span class="hd-eqi">[[${ic}]]</span><b>${t}</b></button>`).join('');
+  const ST = [['hp', 'Khí huyết'], ['atk', 'Công'], ['def', 'Thủ'], ['hoi', 'Hồi'], ['spd', 'Tốc'], ['mi', 'Mị']];
+  const sts = ST.map(([k, t]) => `<span><small>${t}</small><b>${(h.st[k] || 0).toLocaleString('vi-VN')}</b></span>`).join('');
+  const ava = j => { const o = HOME_TEAM[j]; return o ? `<button class="hd-ava" onclick="G.heroView(${j})" title="${o.name}"><img src="game/img/quai/${o.img}.png" alt="" draggable="false"></button>` : ''; };
+  const duyen = (h.duyen || []).map(d => `<div class="hd-bar hd-duyen"><b>Duyên: ${d.name}</b><span>${d.desc}</span><em class="${d.ok ? 'ok' : ''}">${d.ok ? 'Đạt' : 'Chưa đạt'}</em></div>
+    <div class="hd-avas">${ava(heroSel)}${(d.with || []).map(ava).join('')}</div>`).join('');
+  show(`<div class="home hd">
+    <div class="hm-bg"></div>
+    ${homeHead()}
+    <div class="hd-scroll">
+      <div class="hd-body">
+        <button class="hd-back" style="${box(18, 395, 257, 90)}" onclick="G.home()">Trở về</button>
+        <div class="hd-lv" style="${box(420, 400, 380, 80)}"><span class="hd-stars">${stars}</span><b>Lv ${h.lv}</b></div>
+        <button class="hd-up" style="${box(812, 395, 285, 90)}" onclick="G.homeSoon('Nâng cấp')">${homePng('lo_ren')}<b>Nâng Cấp</b></button>
+        <div class="hd-name" style="${box(338, 480, 464, 68)}"><i class="hd-hanh" style="--hc:${H.color}" title="Ngũ hành: ${H.name}">${H.name}</i><b>${h.name}</b></div>
+        <div class="hd-tu" style="${box(60, 500, 270, 55)}">Tư chất: ${h.tuChat}</div>
+        <div class="hd-role" style="${box(60, 562, 270, 60)}"><img src="game/img/icon/loai_${h.role}.png" alt="" draggable="false"><b style="color:${R.color || '#fff'}">${R.name || ''}</b></div>
+        ${bao}
+        <div class="hd-art q-${HOME_Q[h.q]}" style="${box(360, 620, 440, 690, true)}"><img src="game/img/quai/${h.img}.png" alt="" draggable="false"></div>
+        ${eq}
+        <div class="hd-power" style="${box(362, 1338, 436, 74)}"><span>Chiến Lực:</span><b>${Object.values(h.st).reduce((a, b) => a + b, 0).toLocaleString('vi-VN')}</b></div>
+        <button class="hd-linh" style="${box(895, 1325, 117, 117)}" onclick="G.homeSoon('Linh thú')">Linh</button>
+      </div>
+      <div class="hd-bar hd-stats">${sts}</div>
+      <div class="hd-bar hd-skill"><i class="hd-grade">${h.skill.grade}</i><b>${h.skill.name}</b><span>${h.skill.desc}</span></div>
+      ${duyen}
+    </div>
+  </div>`, 'hero-' + heroSel);
+  heroFit();
+}
+// Ưu tiên khung chính (người dùng chốt): giãn khung chính cho kín màn, chỉ chừa dòng chỉ số + tuyệt chiêu; Duyên kéo xuống mới thấy
+function heroFit() {
+  const sc = document.querySelector('.hd-scroll'), body = sc && sc.querySelector('.hd-body');
+  if (!body) return;
+  body.style.setProperty('--k', 1);
+  const cs = getComputedStyle(sc), padT = parseFloat(cs.paddingTop) || 0;
+  const bars = [...sc.querySelectorAll('.hd-stats, .hd-skill')].reduce((a, e) => a + e.offsetHeight + (parseFloat(getComputedStyle(e).marginTop) || 0), 0);
+  const avail = sc.clientHeight - padT - bars - 8, base = body.offsetHeight;
+  body.style.setProperty('--k', Math.max(1, Math.min(1.25, avail / base)).toFixed(3));
+}
+window.addEventListener('resize', () => { if (document.querySelector('.hd-body')) heroFit(); });
+function heroStyle() {
+  if (document.getElementById('hero-style')) return;
+  const st = document.createElement('style');
+  st.id = 'hero-style';
+  st.textContent = `
+  .home.hd { padding-bottom: env(safe-area-inset-bottom); }
+  .hd-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding: 4cqw 0 6cqw; }
+  .hd-scroll::-webkit-scrollbar { display: none; }
+  .hd-body { --k: 1; position: relative; height: calc(94.3cqw * var(--k)); }
+  .hd-body > * { position: absolute; box-sizing: border-box; }
+  .hd-back, .hd-up { white-space: nowrap; border-radius: 2cqw !important; font: 4.6cqw 'Pattaya', serif !important; display: flex; align-items: center; justify-content: center; gap: 1cqw; box-shadow: 0 .6cqw 1cqw #0008; }
+  .hd-back { background: linear-gradient(#3f8a4a, #1d5426) !important; border: .5cqw solid #c9a24a !important; color: #f3e7c9 !important; }
+  .hd-up { background: linear-gradient(#f2c25a, #b57a1e) !important; border: .5cqw solid #ffe39a !important; color: #3a1e05 !important; }
+  .hd-up img { width: 6.5cqw; height: 6.5cqw; flex: none; }
+  .hd-up b, .hd-back { text-shadow: none !important; }
+  .hd-lv { display: flex; align-items: center; justify-content: center; gap: 2cqw; }
+  .hd-lv b { white-space: nowrap; font-size: 4.2cqw; font-weight: 800; color: #fff4d0; }
+  .hd-stars { display: flex; gap: .6cqw; }
+  .hd-stars i { width: 4cqw; height: 4cqw; background: #3a3020; clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+  .hd-stars i.on { background: #ffd43b; }
+  .hd-name { display: flex; align-items: center; gap: 2cqw; padding: 0 3cqw 0 1cqw; border-radius: 4cqw; background: linear-gradient(#3a2a1a, #1e140a); border: .4cqw solid #c9a24a; }
+  .hd-name b { flex: 1; text-align: center; font-size: 4.4cqw; font-weight: 800; color: #fff4d0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hd-hanh { flex: none; width: 5.2cqw; height: 5.2cqw; border-radius: 50%; display: grid; place-items: center; font: normal 800 1.7cqw/1 sans-serif; color: #fff; background: radial-gradient(circle at 35% 30%, #fff8, var(--hc) 60%); border: .3cqw solid #fff9; text-shadow: 0 0 .4cqw #000; }
+  .hd-tu { white-space: nowrap; display: flex; align-items: center; justify-content: center; font-size: 4cqw; font-weight: 800; color: #fff4d0; }
+  .hd-role { display: flex; align-items: center; justify-content: center; gap: 1.2cqw; }
+  .hd-role img { width: 5.4cqw; height: 5.4cqw; border-radius: .8cqw; }
+  .hd-role b { font-size: 3.8cqw; font-weight: 800; white-space: nowrap; }
+  .hd-bao, .hd-eq { border-radius: 1.4cqw !important; background: linear-gradient(#4a3c2c, #2a2018) !important; border: .5cqw solid #9a7a4a !important; box-shadow: inset 0 0 2cqw #0009, 0 .4cqw .8cqw #0008; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .hd-bao b { font-size: 3.4cqw; font-weight: 800; color: #e8d8b0; }
+  .hd-bao small { margin-top: .6cqw; font-size: 2.8cqw; color: #d8b070; }
+  .hd-bao.lock { filter: grayscale(.7) brightness(.7); }
+  .hd-eqi { width: 7.5cqw; height: 7.5cqw; opacity: .35; filter: grayscale(.4); }
+  .hd-eqi svg, .hd-eqi .ic { width: 100%; height: 100%; }
+  .hd-eq b { margin-top: -.6cqw; font-size: 2.6cqw; font-weight: 700; color: #e8d8b0; }
+  .hd-art { border-radius: 1.6cqw; overflow: hidden; border: .6cqw solid #c9a24a; background: radial-gradient(ellipse at 50% 60%, #ffffff22, #0006 70%), linear-gradient(#2a3a30aa, #101a14cc); box-shadow: 0 .6cqw 1.6cqw #000a; }
+  .hd-art img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 100%; transform: scaleX(-1) scale(1.12); transform-origin: 50% 96%; }
+  .hd-power { display: flex; align-items: center; justify-content: center; gap: 1.6cqw; border-radius: 1.4cqw; background: linear-gradient(#3a2a1a, #1e140a); border: .4cqw solid #c9a24a; }
+  .hd-power span { font-size: 4cqw; font-weight: 800; color: #fff4d0; }
+  .hd-power b { font-size: 4.6cqw; font-weight: 800; color: #ffd43b; }
+  .hd-linh { border-radius: 50% !important; background: radial-gradient(circle at 40% 35%, #8a5a2a, #3a2210) !important; border: .6cqw solid #d8b25a !important; font: 4.6cqw 'Pattaya', serif !important; color: #ffe39a !important; box-shadow: 0 .6cqw 1cqw #0008; }
+  .hd-bar { box-sizing: border-box; margin: 1.6cqw 6.7cqw 0; border-radius: 1.4cqw; background: linear-gradient(#3a2a1acc, #1e140acc); border: .4cqw solid #9a7a4a; display: flex; align-items: center; }
+  .hd-stats { min-height: 6.9cqw; justify-content: space-around; padding: .6cqw 1cqw; }
+  .hd-stats span { display: flex; flex-direction: column; align-items: center; }
+  .hd-stats small { font-size: 2.5cqw; color: #c8b890; }
+  .hd-stats b { font-size: 3.4cqw; font-weight: 800; color: #fff4d0; }
+  .hd-skill { min-height: 9cqw; gap: 1.6cqw; padding: 1cqw 2cqw; }
+  .hd-grade { flex: none; font: italic 900 6cqw/1 serif; color: #ffcf3a; text-shadow: 0 .3cqw 0 #7a3a00, 0 0 1cqw #000; }
+  .hd-skill b { flex: none; white-space: nowrap; font-size: 3.3cqw; font-weight: 800; color: #ffd76a; padding-right: 2cqw; border-right: .3cqw solid #9a7a4a; }
+  .hd-skill span, .hd-duyen span { flex: 1; font-size: 3.1cqw; color: #f3e7c9; line-height: 1.3; }
+  .hd-duyen { min-height: 7.4cqw; gap: 2cqw; padding: .8cqw 2.4cqw; }
+  .hd-duyen b { flex: none; width: 27cqw; font-size: 3.6cqw; font-weight: 800; color: #fff4d0; padding-right: 2cqw; border-right: .3cqw solid #9a7a4a; }
+  .hd-duyen em { flex: none; font-style: normal; font-size: 3.8cqw; font-weight: 800; color: #9a8a6a; }
+  .hd-duyen em.ok { color: #ffcf3a; }
+  .hd-avas { display: flex; gap: .4cqw; margin: 1.2cqw 7.3cqw 0; }
+  .hd-ava { width: 12.5cqw; height: 12.5cqw; border-radius: 1.2cqw !important; overflow: hidden; background: #2a2018 !important; border: .5cqw solid #9a7a4a !important; }
+  .hd-ava img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 12%; transform: scaleX(-1) scale(1.4); transform-origin: 50% 20%; }
+  `;
+  document.head.appendChild(st);
+}
 // Hành Tẩu: vào bản đồ (về Thanh Vân nếu đang ở nơi không còn đi được)
 function homeGo() { if (!LOCATIONS[P.loc]) P.loc = START_LOC; renderWorld(); }
 function homeTeam() { toast('Hệ hiệp khách đang được xây dựng: đội trên là đội mẫu'); }
@@ -139,7 +276,7 @@ function homeStyle() {
   html:has(.home), body:has(.home) { overflow: hidden; overscroll-behavior: none; height: 100%; }
   .home { box-sizing: border-box; container-type: inline-size; position: fixed; inset: 0; margin: 0 auto; overscroll-behavior: none; display: flex; flex-direction: column; color: #f3e7c9; overflow: hidden;
     padding: env(safe-area-inset-top) 0 calc(24.5cqw + env(safe-area-inset-bottom)); }
-  .hm-bg { position: fixed; inset: 0; z-index: -1; background: linear-gradient(rgba(10,14,10,.5), rgba(10,14,10,.25) 45%, rgba(10,14,10,.7)), url(game/img/ban_do/tv_doc.jpg) center / cover; }
+  .hm-bg { position: fixed; inset: 0; z-index: -1; background: linear-gradient(rgba(8,16,12,.35), rgba(8,16,12,.05) 40%, rgba(8,16,12,.15) 70%, rgba(8,16,12,.45)), url(game/img/nen_trang_chu.jpg) center / cover; }
   .home button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; padding: 0; }
   .hm-ic img, .hm-disc img { width: 100%; height: 100%; object-fit: contain; display: block; }
   .hm-ic .ic, .hm-ic svg { width: 100%; height: 100%; }
@@ -155,16 +292,16 @@ function homeStyle() {
   .hm-exp { height: 3.1cqw; margin-top: .6cqw; border-radius: 2cqw; background: #0a1a0c; border: .4cqw solid #8aa04a; overflow: hidden; }
   .hm-exp i { display: block; height: 100%; background: linear-gradient(#a6e26a, #4c9a2a); }
   /* tài nguyên: 255 → 440 */
-  .hm-res { margin-top: 2.2cqw; height: 16.5cqw; display: grid; grid-template-columns: 1fr 27cqw 1fr; align-items: center; padding: 0 2.5cqw; }
-  .hm-col { display: grid; gap: 1.6cqw; }
-  .hm-col span { height: 5cqw; display: flex; align-items: center; gap: 1.2cqw; font-size: 3cqw; font-weight: 700; color: #fff4d0; }
-  .hm-col span > img, .hm-col .ic, .hm-col svg { width: 6cqw; height: 6cqw; flex: none; filter: drop-shadow(0 .3cqw .4cqw #000); }
-  .hm-col b { flex: 0 0 19.7cqw; box-sizing: border-box; height: 100%; justify-content: center; display: flex; align-items: center; padding: 0 2cqw; border-radius: 1.4cqw; background: linear-gradient(#6a4a2a, #3e2814); border: .3cqw solid #a07a3a; white-space: nowrap; overflow: hidden; }
-  .hm-col.right span { justify-content: flex-end; }
+  .hm-res { margin-top: 2cqw; height: 19cqw; display: grid; grid-template-columns: 1fr 27cqw 1fr; align-items: center; padding: 0 1.5cqw; }
+  .hm-col { display: grid; gap: .8cqw; } .hm-col.right { justify-items: end; }
+  /* khung tài nguyên: ảnh Gemini 3:1 (vòng icon chiếm cả chiều cao), số nằm trong ô nâu */
+  .hm-pill { display: flex; align-items: center; width: 27cqw; aspect-ratio: 480 / 162; background: center / 100% 100% no-repeat; filter: drop-shadow(0 .4cqw .5cqw #0009); }
+  .hm-pill b { flex: 1; min-width: 0; text-align: center; font-size: 3.2cqw; font-weight: 800; color: #fff4d0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hm-pill.l { padding: 0 10% 0 30%; } .hm-pill.r { padding: 0 29% 0 11%; } .hm-pill { box-sizing: border-box; }
   .hm-power { display: flex; flex-direction: column; align-items: center; }
   .hm-power small { font-size: 3.3cqw; font-weight: 700; }
   .hm-arc { width: 26cqw; height: 4.2cqw; margin-top: .3cqw; display: grid; place-items: center; font-size: 2.8cqw; font-weight: 700; border-radius: 0 0 13cqw 13cqw / 0 0 4.2cqw 4.2cqw; background: linear-gradient(#6fbf4a, #2f6a22); border: .4cqw solid #c9e08a; }
-  .hm-power b { font: 6.3cqw/1.1 'Pattaya', serif; color: #ffd76a; text-shadow: 0 .3cqw 0 #6a2a00, 0 0 2.5cqw #ff3a1a, 0 0 1cqw #ff6a1a; }
+  .hm-power b { margin-top: 1.4cqw; font: 6.3cqw/1.1 'Pattaya', serif; color: #ffd76a; text-shadow: 0 .3cqw 0 #6a2a00, 0 0 2.5cqw #ff3a1a, 0 0 1cqw #ff6a1a; }
   /* thẻ nhân vật: 460 → 945, mỗi thẻ 212 × 485 */
   .hm-team { margin-top: 1.4cqw; display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.1cqw; padding: 0 .4cqw; }
   .hm-card { position: relative; height: max(43.5cqw, calc(43.5cqw + (100dvh - 179.2cqw) * .4)); border-radius: 1cqw; overflow: hidden; border: .6cqw solid var(--qc) !important; background: linear-gradient(var(--qg), color-mix(in srgb, var(--qg) 55%, #000)) !important; box-shadow: inset 0 0 2cqw #0008; }
@@ -223,4 +360,4 @@ function homeStyle() {
   document.head.appendChild(st);
 }
 
-const TRANG_CHU_G = { home: renderHome, homeGo, homeTeam, homeChallenge, homeDaily, homeShops, homeSoon, homeMore };
+const TRANG_CHU_G = { home: renderHome, homeGo, homeTeam, homeChallenge, homeDaily, homeShops, homeSoon, homeMore, heroView };
