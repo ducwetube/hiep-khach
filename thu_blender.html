@@ -84,7 +84,7 @@
     back:  { src: 'game/img/blender/fx_bl_khien_sau.webp', n: 20, w: 224, h: 280 },
     front: { src: 'game/img/blender/fx_bl_khien_truoc.webp', n: 20, w: 224, h: 280 },
     idle:  { src: 'game/img/blender/doan_idle.webp', n: 24 },
-    atk:   { src: 'game/img/blender/doan_atk.webp', n: 22 },
+    atk:   { src: 'game/img/blender/doan_atk.webp', n: 26 },
   };
   // vùng xuất của hình động (px hình gốc 446 x 700): x -110..556, y -40..740
   const ANIM_BOX = { x0: -110, y0: -40, x1: 556, y1: 740, iw: 446 };
@@ -116,7 +116,7 @@
     if (!animOn) { sp.style.visibility = ''; return null; }
     sp.style.visibility = 'hidden';
     const loop = which === 'idle';
-    animEl = sheet(SH[which], animBox(), loop, loop ? 1300 : 1100);
+    animEl = sheet(SH[which], animBox(), loop, 1300);
     el.doan.appendChild(animEl);
     if (!loop) { const me = animEl; me._anim.onfinish = () => { if (animEl === me) playDoan('idle'); }; }
     return animEl;
@@ -147,12 +147,15 @@
   }
 
   async function chi() {
-    if (animOn) { playDoan('atk'); await wait(330); }   // lấy đà rồi chồm tới chĩa ngón (khung 7 trong 22)
+    // lấy đà, giơ tay ngang chĩa ngón về trước (khung 9 trong 26), giữ thế ở khung 11 tới khi bắn xong
+    let an = null;
+    if (animOn) { an = playDoan('atk')._anim; await wait(470); }
     const a = hand();
-    if (animOn) { const k = el.doan.getBoundingClientRect().width / ANIM_BOX.iw; a.x += 85 * k; a.y += 40 * k; }
+    if (animOn) { const k = el.doan.getBoundingClientRect().width / ANIM_BOX.iw; a.x += 91 * k; a.y -= 66 * k; }
     const orb = document.createElement('div'); orb.className = 'orb'; orb.style.left = a.x + 'px'; orb.style.top = a.y + 'px';
     fx.appendChild(orb);
     await wait(animOn ? 100 : 380);
+    if (an) { an.pause(); an.currentTime = 11.5 / 26 * 1300 * slow; }
     const foes = ['e1', 'e2', 'e3'], shots = [];
     foes.forEach((k, j) => { for (let n = 0; n < 4; n++) shots.push({ k, last: n === 3, at: j * 70 + n * 190 + Math.random() * 90 }); });
     const fly = 280, W = 36 * cq();
@@ -174,6 +177,7 @@
     }, sh.at * slow))));
     await wait(220);
     orb.remove();
+    if (an && animEl && animEl._anim === an) an.play();   // hạ tay về thế đứng
   }
 
   let shield = [];
