@@ -87,6 +87,7 @@ function tdStart(def) {
     const list = u.anim ? Object.values(u.anim).filter(v => v && v.src).map(v => v.src) : [];
     if (u.anim && u.anim.chem && TD_SLASH[u.anim.chem.slash]) list.push(TD_SLASH[u.anim.chem.slash].src);
     if (u.ult && u.ult.fx === 'nguyen') list.push(TD_CURSE.nom.src, TD_CURSE.no.src);
+    if (u.ult && u.ult.fx === 'langba') list.push(TD_LANGBA.src);
     if (u.anim && u.anim.danh && TD_SHOT[u.anim.danh.shot]) list.push(TD_SHOT[u.anim.danh.shot].src, TD_SHOT[u.anim.danh.shot].hit.src);
     if (u.ult && u.ult.fx === 'chi') list.push(TD_BURST.src);
     if (u.ult && TD_SHIELD[u.ult.shield]) list.push(TD_SHIELD[u.ult.shield].back, TD_SHIELD[u.ult.shield].front);
@@ -301,15 +302,25 @@ const TD_CURSE = {
 const TD_SHOT = {
   song_am: { src: 'game/img/blender/fx_bl_song_am.webp', n: 8, ms: 400, size: 17, ax: 0.2, ay: 0.5, fly: 320,
     hit: { src: 'game/img/blender/fx_bl_no_tim_nho.webp', n: 16, ms: 520, size: 18 } },
+  // Lục Mạch Thần Kiếm (Đoàn Dự): kiếm khí xanh băng, tấm 2:1, mũi kiếm ở 85% ngang
+  kiem_khi: { src: 'game/img/blender/fx_bl_kiem_khi.webp', n: 8, ms: 400, size: 30, ar: 0.5, ax: 0.85, ay: 0.5, fly: 240,
+    hit: { src: 'game/img/blender/fx_bl_no_xanh_nho.webp', n: 16, ms: 480, size: 16 } },
 };
-function tdShoot(u, t, kind) {
+// điểm bắn: tay (u.hand); có hình động và `tip` thì cộng đầu ngón lúc ra chiêu
+function tdShotFrom(u, tip) {
+  const a = tdHand(u); if (!tip) return a;
+  const b = tdBody(u); if (!b) return a;
+  a.x += (b.img.classList.contains('nf') ? 1 : -1) * tip[0] * b.k; a.y += tip[1] * b.k;
+  return a;
+}
+function tdShoot(u, t, kind, from) {
   const box = document.getElementById('td-fx'), S = TD_SHOT[kind];
   if (!box || !S) return Promise.resolve();
   return new Promise(done => {
-    const cq = box.clientWidth / 100, fast = tdS && tdS.fast, a = tdHand(u), b = tdPos(t);
-    const sz = S.size * cq, ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+    const cq = box.clientWidth / 100, fast = tdS && tdS.fast, a = from || tdHand(u), b = tdPos(t);
+    const sz = S.size * cq, sh = sz * (S.ar || 1), ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
     const s = tdStrip(S.src, S.n, S.ms, true);
-    Object.assign(s.el.style, { left: a.x - sz * S.ax + 'px', top: a.y - sz * S.ay + 'px', width: sz + 'px', height: sz + 'px', transformOrigin: `${S.ax * 100}% ${S.ay * 100}%` });
+    Object.assign(s.el.style, { left: a.x - sz * S.ax + 'px', top: a.y - sh * S.ay + 'px', width: sz + 'px', height: sh + 'px', transformOrigin: `${S.ax * 100}% ${S.ay * 100}%` });
     box.appendChild(s.el);
     let fin = false;
     const end = () => {
@@ -322,6 +333,27 @@ function tdShoot(u, t, kind) {
     const fly = S.fly * (fast ? 0.5 : 1), dx = b.x - a.x, dy = b.y - a.y;
     if (s.el.animate) s.el.animate([{ transform: `translate(0, 0) rotate(${ang}deg) scale(.6)`, opacity: .6 }, { transform: `translate(${dx}px, ${dy}px) rotate(${ang}deg) scale(1.1)`, opacity: 1 }], { duration: fly, easing: 'ease-in', fill: 'forwards' }).onfinish = end;
     setTimeout(end, fly + 150);   // dự phòng
+  });
+}
+// Lăng Ba Vi Bộ (Đoàn Dự): sóng nước + gió dưới chân từng đồng đội
+const TD_LANGBA = { src: 'game/img/blender/fx_bl_song_nuoc.webp', n: 20, ms: 1000, ar: 250 / 200, foot: 0.8, size: 30 };
+function tdGroundFx(t, N) {
+  const box = document.getElementById('td-fx'); if (!box) return;
+  const cq = box.clientWidth / 100, p = tdFeet(t), w = N.size * cq, h = w * N.ar;
+  const s = tdStrip(N.src, N.n, N.ms * (tdS && tdS.fast ? 0.5 : 1), false);
+  Object.assign(s.el.style, { left: p.x - w / 2 + 'px', top: p.y - h * N.foot + 'px', width: w + 'px', height: h + 'px' });
+  box.appendChild(s.el); setTimeout(() => s.el.remove(), N.ms + 250);
+}
+// bóng mờ đuổi theo khi nhân vật lướt (chép hình động đang chạy, chậm hơn một nhịp)
+function tdGhosts(u, which) {
+  const A = u.anim && u.anim[which], e = document.getElementById(`td-${u.side}-${u.i}`);
+  const body = e && e.querySelector('.td-sheet.body:not(.old)'); if (!A || !body) return;
+  const k = tdS && tdS.fast ? 0.5 : 1;
+  [[90, 0.4], [180, 0.22]].forEach(([d, op]) => {
+    const g = tdStrip(A.src, A.n, A.ms * k, false);
+    g.el.style.cssText = body.style.cssText; g.el.classList.add('ghost'); g.el.style.opacity = op;
+    if (g.anim) g.anim.currentTime = -d * k;
+    e.insertBefore(g.el, body); setTimeout(() => g.el.remove(), (A.ms + d) * k + 100);
   });
 }
 // chân một người (px, so với khung .td)
@@ -544,7 +576,7 @@ async function tdNormal(u) {
     const D = u.anim.danh;
     tdAnimPlay(u, 'danh');
     await tdWait(D.fire / D.n * D.ms);
-    await tdShoot(u, t, D.shot);
+    await tdShoot(u, t, D.shot, tdShotFrom(u, D.tip));
   } else {
     tdLunge(u, t);
     await tdWait(220);
@@ -608,6 +640,15 @@ async function tdUltDo(u) {
       });
       tdSync();
     });
+  } else if (U.kind === 'speed') {
+    // Lăng Ba Vi Bộ (Đoàn Dự): lướt bước qua lại để lại bóng mờ, sóng nước dậy dưới chân đồng đội, cả đội +Tốc vài hiệp
+    // (Tốc chưa có tác dụng trong trận đội: người dùng sẽ quyết sau)
+    const A = u.anim && u.anim.bo;
+    if (A) { tdAnimPlay(u, 'bo'); tdGhosts(u, 'bo'); await tdWait(A.wave / A.n * A.ms); } else await tdWait(300);
+    const k = tdS && tdS.fast ? 0.5 : 1;
+    tdAlive(u.side).forEach((m, j) => setTimeout(() => { if (tdS) tdGroundFx(m, TD_LANGBA); }, j * 90 * k));
+    await tdWait(150);
+    tdAlive(u.side).forEach(m => { m.buf.spd = { v: U.spd, t: U.turns }; tdPop(m, 'Tốc +' + Math.round(U.spd * 100) + '%', 'st'); });
   } else if (U.kind === 'heal') {
     tdAlive(u.side).forEach(m => { const h = Math.round(u.hoi * U.hoi + tdAtk(u) * U.atk); m.hp = Math.min(m.maxHp, m.hp + h); tdPop(m, '+' + h, 'heal'); });
   } else if (U.kind === 'buff') {
@@ -791,6 +832,7 @@ function tdStyle() {
   .td-u.hit .td-sheet.body { animation: tdHitB .32s; }
   .td-u.stun .td-sheet.body { filter: grayscale(.6) brightness(.8); }
   @keyframes tdHitB { 30% { filter: brightness(2) sepia(1) hue-rotate(-30deg) saturate(4); translate: -1.2cqw 0; } }
+  .td-u .td-sheet.ghost { z-index: 0; filter: brightness(1.35) saturate(.5) hue-rotate(160deg); }
   .td-u .td-sheet.shield { z-index: 0; animation: tdShIn .45s ease-out; transition: opacity .35s; }
   .td-u .td-sheet.shield.front { z-index: 2; opacity: .85; }
   .td-u .td-sheet.shield.out { opacity: 0; }

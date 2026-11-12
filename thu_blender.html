@@ -84,6 +84,11 @@
     <button id="bDanh">Đánh thường</button>
   </div>
   <div class="row">
+    <b>Đoàn Dự</b>
+    <button id="bLangBa">Lăng Ba Vi Bộ</button>
+    <button id="bKiem">Đánh thường</button>
+  </div>
+  <div class="row">
     <b>Nam Hải Ngạc Thần · đánh thường</b>
     <button id="bChem">Vung kích chém</button>
   </div>
@@ -114,6 +119,7 @@
     doan: { x: 27, y: 84, w: 15.5, src: 'game/img/hk/doan_dien_khanh_sd.png', ar: 446 / 700 },
     nam:  { x: 14, y: 64, w: 23, src: 'game/img/hk/nam_hai_ngac_than_sd.png', ar: 730 / 700, flip: true },
     diep: { x: 11, y: 97, w: 19.3, src: 'game/img/hk/diep_nhi_nuong_sd.png', ar: 555 / 700 },
+    du:   { x: 40, y: 66, w: 13.3, src: 'game/img/hk/doan_du_sd.png', ar: 384 / 700 },
     e1:   { x: 72, y: 66, w: 17, src: 'game/img/quai/tm_cuong_khach.png', flip: false },
     e2:   { x: 86, y: 80, w: 17, src: 'game/img/quai/tm_hac_lao.png', flip: false },
     e3:   { x: 70, y: 95, w: 17, src: 'game/img/quai/tm_thanh_kiem.png', flip: false },
@@ -151,6 +157,10 @@
       idle: { src: 'game/img/blender/diep_idle.webp', n: 24, ms: 1300 },
       phep: { src: 'game/img/blender/diep_phep.webp', n: 30, ms: 1500, doll: 7, blast: 19 },
       danh: { src: 'game/img/blender/diep_danh.webp', n: 16, ms: 800, fire: 7 } },
+    du: { iw: 384, box: [-120, -90, 520, 760],
+      idle: { src: 'game/img/blender/du_idle.webp', n: 24, ms: 1300 },
+      danh: { src: 'game/img/blender/du_danh.webp', n: 16, ms: 800, fire: 7 },
+      bo: { src: 'game/img/blender/du_bo.webp', n: 30, ms: 1500, wave: 24 } },
   };
   const FXS = {
     nom: { src: 'game/img/blender/fx_bl_nom_rom.webp', n: 18 },
@@ -158,7 +168,48 @@
     slash: { src: 'game/img/blender/fx_bl_chem_nuoc.webp', n: 12 },
     wave: { src: 'game/img/blender/fx_bl_song_am.webp', n: 8 },
     hitTim: { src: 'game/img/blender/fx_bl_no_tim_nho.webp', n: 16 },
+    kiem: { src: 'game/img/blender/fx_bl_kiem_khi.webp', n: 8 },
+    hitXanh: { src: 'game/img/blender/fx_bl_no_xanh_nho.webp', n: 16 },
+    song: { src: 'game/img/blender/fx_bl_song_nuoc.webp', n: 20 },
   };
+  // Đoàn Dự đánh thường (Lục Mạch Thần Kiếm): chỉ hai ngón, kiếm khí xanh bay tới, chạm thì nổ bọt nước
+  async function kiem() {
+    const D = HERO.du.danh, tgt = ['e1', 'e2', 'e3'][Math.floor(Math.random() * 3)];
+    heroPlay('du', 'danh');
+    await wait(D.fire / D.n * D.ms);
+    const r = rectIn(el.du.querySelector('img.sp')), k = r.w / 384, a = { x: r.l + r.w * 0.906 + 88 * k, y: r.t + r.h * 0.283 + 72 * k };
+    const t = rectIn(el[tgt].querySelector('img.sp')), b = { x: t.l + t.w / 2, y: t.t + t.h * 0.45 };
+    const W = 30 * cq(), H = W / 2, ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+    const s = sheet(FXS.kiem, { left: a.x - W * 0.85 + 'px', top: a.y - H / 2 + 'px', width: W + 'px', height: H + 'px', transformOrigin: '85% 50%' }, true, 400);
+    fx.appendChild(s);
+    await new Promise(done => {
+      const an = s.animate([{ transform: `translate(0,0) rotate(${ang}deg) scale(.6)`, opacity: .6 }, { transform: `translate(${b.x - a.x}px, ${b.y - a.y}px) rotate(${ang}deg) scale(1.1)`, opacity: 1 }], { duration: 240 * slow, easing: 'ease-in', fill: 'forwards' });
+      an.onfinish = done; setTimeout(done, 380 * slow);
+    });
+    s.remove();
+    const hs = 16 * cq();
+    fx.appendChild(sheet(FXS.hitXanh, { left: b.x - hs / 2 + 'px', top: b.y - hs / 2 + 'px', width: hs + 'px', height: hs + 'px' }, false, 480));
+    hitFx(tgt); pop(tgt, '-' + (115 + Math.round(Math.random() * 30)));
+  }
+  // Đoàn Dự nộ Lăng Ba Vi Bộ: lướt bước để lại bóng mờ, sóng nước dưới chân đồng đội
+  async function langBa() {
+    const A = HERO.du.bo;
+    heroPlay('du', 'bo');
+    const body = heroEl.du;
+    [[90, 0.4], [180, 0.22]].forEach(([d, op]) => {
+      const g = sheet(A, {}, false, A.ms); g.style.cssText = body.style.cssText; g.style.opacity = op; g.style.zIndex = 1;
+      g.style.filter = 'brightness(1.35) saturate(.5) hue-rotate(160deg)'; g._anim.currentTime = -d * slow;
+      el.du.insertBefore(g, body);
+    });
+    await wait(A.wave / A.n * A.ms);
+    const w = 30 * cq(), h = w * 1.25;
+    ['doan', 'nam', 'diep', 'du'].forEach((k, j) => setTimeout(() => {
+      const r = rectIn(el[k]);
+      fx.appendChild(sheet(FXS.song, { left: r.l + r.w / 2 - w / 2 + 'px', top: r.t + r.h - h * 0.8 + 'px', width: w + 'px', height: h + 'px' }, false, 1000));
+    }, j * 90 * slow));
+    await wait(150);
+    ['doan', 'nam', 'diep', 'du'].forEach(k => pop(k, 'Tốc +14%', 'st'));
+  }
   // Diệp Nhị Nương đánh thường: lắc trống, đẩy về phía địch, sóng âm tím bay tới, chạm thì nổ
   async function danh() {
     const D = HERO.diep.danh, tgt = ['e1', 'e2', 'e3'][Math.floor(Math.random() * 3)];
@@ -321,11 +372,13 @@
     playDoan('idle');
   };
   $('bCurse').onclick = async () => { if (busy) return; busy = true; try { await curse(); } finally { busy = false; } };
+  $('bKiem').onclick = async () => { if (busy) return; busy = true; try { await kiem(); } finally { busy = false; } };
+  $('bLangBa').onclick = async () => { if (busy) return; busy = true; try { await langBa(); } finally { busy = false; } };
   $('bDanh').onclick = async () => { if (busy) return; busy = true; try { await danh(); } finally { busy = false; } };
   $('bChem').onclick = async () => { if (busy) return; busy = true; try { await chem(); } finally { busy = false; } };
   // preload
   [...Object.values(SH), ...Object.values(FXS), ...Object.values(HERO).flatMap(h => Object.values(h).filter(v => v && v.src))].forEach(s => { const i = new Image(); i.src = s.src; });
-  addEventListener('load', () => { playDoan('idle'); heroPlay('nam', 'idle'); heroPlay('diep', 'idle'); });
+  addEventListener('load', () => { playDoan('idle'); heroPlay('nam', 'idle'); heroPlay('diep', 'idle'); heroPlay('du', 'idle'); });
   addEventListener('resize', () => { if (animEl && animOn) Object.assign(animEl.style, animBox()); });
   window.TEST = { chi, guard, setMode, playDoan };
 })();
