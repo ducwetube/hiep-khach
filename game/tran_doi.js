@@ -281,7 +281,7 @@ async function tdChi(u, foes, onHit) {
   await tdWait(380);
   // mỗi kẻ địch 3 tia chỉ lực (ảnh fx_chi_luc.png, đầu tia ở mép phải ảnh), bắn tùm lum xen kẽ
   const shots = [];
-  foes.forEach((t, j) => { for (let k = 0; k < 3; k++) shots.push({ t, k, at: j * 70 + k * 190 + Math.random() * 90 }); });
+  foes.forEach((t, j) => { const n = (u.ult && u.ult.split || [1, 1, 1]).length; for (let k = 0; k < n; k++) shots.push({ t, k, at: j * 70 + k * 190 + Math.random() * 90 }); });
   const fly = fast ? 170 : 280, W = 36 * cq;
   await Promise.all(shots.map(sh => new Promise(done => setTimeout(() => {
     const s0 = { x: a.x + (Math.random() - 0.5) * 3 * cq, y: a.y + (Math.random() - 0.5) * 3 * cq };
@@ -381,9 +381,11 @@ async function tdUltDo(u) {
       const plan = new Map(foes.map(t => [t, tdDmg(u, t, U.pow)]));
       await tdChi(u, foes, (t, k) => {
         if (t.dead) return;
-        const r = plan.get(t), part = k < 2 ? Math.round(r.d / 3) : r.d - 2 * Math.round(r.d / 3);
-        tdHurt(u, t, Math.max(1, part), r.crit, k < 2);
-        if (k === 2) bleed(t);
+        // chia sát thương của chiêu theo split (Đoàn Diên Khánh 20 / 20 / 20 / 40%); tia cuối gom phần làm tròn, rơi cục, gây chảy máu
+        const sp = U.split || [1 / 3, 1 / 3, 1 / 3], last = k === sp.length - 1, r = plan.get(t);
+        const part = last ? r.d - sp.slice(0, -1).reduce((a, f) => a + Math.round(r.d * f), 0) : Math.round(r.d * sp[k]);
+        tdHurt(u, t, Math.max(1, part), r.crit, !last);
+        if (last) bleed(t);
         tdSync();
       });
     } else foes.forEach(t => { const r = tdDmg(u, t, U.pow); tdHurt(u, t, r.d, r.crit); bleed(t); });

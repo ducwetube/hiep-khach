@@ -30,8 +30,8 @@ const HIEP_KHACH = {
     st: { hp: 1065.4, atk: 474.4, def: 167.2, hoi: 171.8, spd: 43, mi: 100 }, // cấp 1 (hiện 1065 / 474 / 167 / 172)
     grow: { hp: 53.3, atk: 23.8, def: 8.4, hoi: 8.6 },
     ex: { crit: 10, critDmg: 150, acc: 100, dodge: 5 },
-    skill: { grade: 'S', name: 'Đoàn Thị Chỉ Pháp', desc: 'Bắn chỉ lực vào toàn địch, mỗi kẻ trúng 3 tia (tổng 70% công), gây chảy máu 2 hiệp (mỗi hiệp mất máu bằng 10% công)' },
-    ult: { kind: 'all', pow: 0.7, bleed: { pct: 0.1, turns: 2 }, fx: 'chi' },
+    skill: { grade: 'S', name: 'Đoàn Thị Chỉ Pháp', desc: 'Bắn chỉ lực vào toàn địch, mỗi kẻ trúng 4 tia (20 / 20 / 20 / 40% của tổng 70% công), gây chảy máu 2 hiệp (mỗi hiệp mất máu bằng 10% công)' },
+    ult: { kind: 'all', pow: 0.7, bleed: { pct: 0.1, turns: 2 }, fx: 'chi', split: [0.2, 0.2, 0.2, 0.4] },
     duyen: [{ name: 'Phụ Tử', desc: 'Cùng ra trận Công +150%', with: [], ok: false }] },
 
   hoang_y_nu: { name: 'Hoàng Y Nữ', img: 'tm_hoang_y_kiem_nu', role: 'ho_tro', q: 2, lv: 1, star: 1, hanh: 'hoa', tuChat: 11,
