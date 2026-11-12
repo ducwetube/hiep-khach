@@ -1486,4 +1486,5 @@ const NGU_HANH = {
   thuy: { name: 'Thủy', color: '#3a8cff' },
   hoa:  { name: 'Hỏa',  color: '#ff5a3a' },
   tho:  { name: 'Thổ',  color: '#b07a3a' },
+  am:   { name: 'Ám',   color: '#9a5aff' },   // hệ thứ sáu (vòng tím trong game mẫu; Nhậm Doanh Doanh, Nhậm Ngã Hành), người dùng đặt tên 2026-11-12
 };

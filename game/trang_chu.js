@@ -132,17 +132,67 @@ const HIEP_KHACH = {
       { name: 'Hầu Tử', desc: 'Sử dụng Công +50%', with: [{ ten: 'Hầu Tử', loai: 'linh' }], eff: { atk: 0.5 } },
     ] },
 
+  // Hiệp khách thứ sáu (2026-11-12): từ ảnh mẫu 10 sao; Công Kích hệ Ám (Bạo 15, Né 2,5).
+  // Nộ S+ Trúc Hải Triều Thanh (người dùng chốt cấp 1): 170% Công một mục tiêu, Công bản thân +5% 2 hiệp.
+  nham_doanh_doanh: { name: 'Nhậm Doanh Doanh', img: 'tm_nu_quy', art: 'game/img/hk/nham_doanh_doanh.jpg', face: [0.4, 0.17], sprite: 'game/img/hk/nham_doanh_doanh_sd.png', hand: [0.98, 0.34], role: 'cong_kich', q: 4, lv: 1, star: 1, hanh: 'am', tuChat: 13,
+    st: { hp: 800.0, atk: 476.2, def: 170.2, hoi: 180.0, spd: 50, mi: 100 },
+    grow: { hp: 40, atk: 23.81, def: 8.51, hoi: 9 },
+    ex: { crit: 15, critDmg: 150, acc: 100, dodge: 2.5 },
+    skill: { grade: 'S+', name: 'Trúc Hải Triều Thanh', desc: 'Tấn công mục tiêu chỉ định 170% Công, tăng 5% Công bản thân trong 2 hiệp' },
+    ult: { kind: 'flute', pow: 1.7, selfAtk: 0.05, turns: 2 },
+    // hình động Blender (tools/blender/nham_doanh_doanh.py): danh = thổi tiêu phất tay (nốt nhạc tím bay), tieu = thổi tiêu say sưa rồi đẩy khúc nhạc (khung fx = lốc lá trúc hiện trên mục tiêu)
+    anim: { iw: 479, ih: 700, box: [-80, -90, 560, 760],
+      idle: { src: 'game/img/blender/ndd_idle.webp', n: 24, ms: 1300 },
+      danh: { src: 'game/img/blender/ndd_danh.webp', n: 16, ms: 800, fire: 7, shot: 'not_nhac' },
+      tieu: { src: 'game/img/blender/ndd_tieu.webp', n: 30, ms: 1500, fx: 7 } },
+    duyen: [   // theo ảnh game mẫu người dùng gửi 2026-11-12; người trong Thần Giáo ngoài 2 cha con là Claude đoán theo truyện
+      { name: 'Nữ Kiệt', desc: 'Cùng ra trận Công +150% Thủ +200%', with: [{ ten: 'Miêu Nhược Lan' }, { ten: 'Quách Tường' }], eff: { atk: 1.5, def: 2 } },
+      { name: 'Thần Giáo', desc: 'Cùng ra trận Công +200% HP +350%', with: ['nham_nga_hanh', { ten: 'Hướng Vấn Thiên' }, { ten: 'Đông Phương Bất Bại' }, { ten: 'Lệnh Hồ Xung' }], eff: { atk: 2, hp: 3.5 } },
+      { name: 'Tiếu Khán', desc: 'Cùng ra trận Công +130%', with: [{ ten: 'Lệnh Hồ Xung' }], eff: { atk: 1.3 } },
+      { name: 'Ngọc Tiêu', desc: 'Sử dụng Công +100%', with: [{ ten: 'Ngọc Tiêu', loai: 'bao' }], eff: { atk: 1 } },
+      { name: 'Hắc Mộc Lệnh', desc: 'Sử dụng Thủ +100%', with: [{ ten: 'Hắc Mộc Lệnh', loai: 'bao' }], eff: { def: 1 } },
+      { name: 'Thần Lệnh', desc: 'Sử dụng HP +150%', with: [{ ten: 'Thần Lệnh', loai: 'bao' }], eff: { hp: 1.5 } },
+      { name: 'Tâm Ma Ký', desc: 'Sử dụng Bạo +25%', with: [{ ten: 'Tâm Ma Ký', loai: 'bao' }], eff: { crit: 25 } },
+      { name: 'Huyền Thiên Giới', desc: 'Sử dụng Bạo +30%', with: [{ ten: 'Huyền Thiên Giới', loai: 'bao' }], eff: { crit: 30 } },
+      { name: 'Tiểu Giải', desc: 'Sử dụng Công +50%', with: [{ ten: 'Tiểu Giải', loai: 'linh' }], eff: { atk: 0.5 } },
+    ] },
+
+  // Hiệp khách thứ bảy (2026-11-12): từ ảnh mẫu 10 sao; Kỹ Năng hệ Ám (Bạo 10, Né 5).
+  // Nộ S+ Hấp Tinh Đại Pháp (người dùng chốt cấp 1): đánh toàn địch 66% Công, Công toàn địch −7% 2 hiệp (kháng bạo toàn đội chỉ có ở sao cao).
+  nham_nga_hanh: { name: 'Nhậm Ngã Hành', img: 'tm_hac_lao', art: 'game/img/hk/nham_nga_hanh.jpg', face: [0.55, 0.3], sprite: 'game/img/hk/nham_nga_hanh_sd.png', hand: [0.86, 0.3], role: 'ky_nang', q: 4, lv: 1, star: 1, hanh: 'am', tuChat: 14,
+    st: { hp: 945.0, atk: 479.1, def: 179.1, hoi: 204.1, spd: 42, mi: 100 },
+    grow: { hp: 47.25, atk: 23.96, def: 8.96, hoi: 10.2 },
+    ex: { crit: 10, critDmg: 150, acc: 100, dodge: 5 },
+    skill: { grade: 'S+', name: 'Hấp Tinh Đại Pháp', desc: 'Tấn công toàn bộ kẻ địch 66% Công, giảm 7% Công toàn bộ kẻ địch trong 2 hiệp' },
+    ult: { kind: 'drain', pow: 0.66, atkDown: 0.07, turns: 2 },
+    // hình động Blender (tools/blender/nham_nga_hanh.py): chem = vồ bàn tay vuốt (vết cào tím), hut = giơ tay run lên hút khí (vortex trên mọi kẻ địch, khí bay về tay; hit = khung siết tay)
+    anim: { iw: 517, ih: 700, box: [-80, -90, 600, 760],
+      idle: { src: 'game/img/blender/nnh_idle.webp', n: 24, ms: 1300 },
+      chem: { src: 'game/img/blender/nnh_danh.webp', n: 16, ms: 750, hit: 7, slash: 'cao_tim' },
+      hut: { src: 'game/img/blender/nnh_hut.webp', n: 30, ms: 1600, fx: 7, hit: 22 } },
+    duyen: [
+      { name: 'Đối Địch', desc: 'Cùng ra trận Công +130%', with: [{ ten: 'Nhạc Bất Quần' }], eff: { atk: 1.3 } },
+      { name: 'Song Đấu', desc: 'Cùng ra trận Thủ +250%', with: [{ ten: 'Đông Phương Bất Bại' }], eff: { def: 2.5 } },
+      { name: 'Thần Giáo', desc: 'Cùng ra trận Công +200% HP +350%', with: ['nham_doanh_doanh', { ten: 'Hướng Vấn Thiên' }, { ten: 'Đông Phương Bất Bại' }, { ten: 'Lệnh Hồ Xung' }], eff: { atk: 2, hp: 3.5 } },
+      { name: 'Hắc Mộc Lệnh', desc: 'Sử dụng Công +100%', with: [{ ten: 'Hắc Mộc Lệnh', loai: 'bao' }], eff: { atk: 1 } },
+      { name: 'Hấp Tinh Phổ', desc: 'Sử dụng Bền +30%', with: [{ ten: 'Hấp Tinh Phổ', loai: 'bao' }], eff: { ben: 30 } },
+      { name: 'Thần Lệnh', desc: 'Sử dụng Phá Giáp +2000', with: [{ ten: 'Thần Lệnh', loai: 'bao' }], eff: { phaGiap: 2000 } },
+      { name: 'Phá Sơn Kiếm', desc: 'Sử dụng Bền +35%', with: [{ ten: 'Phá Sơn Kiếm', loai: 'bao' }], eff: { ben: 35 } },
+      { name: 'Vĩnh Sinh Giới', desc: 'Sử dụng Bạo +30%', with: [{ ten: 'Vĩnh Sinh Giới', loai: 'bao' }], eff: { crit: 30 } },
+      { name: 'Tiểu Điêu', desc: 'Sử dụng Phá Giáp +5000', with: [{ ten: 'Tiểu Điêu', loai: 'linh' }], eff: { phaGiap: 5000 } },
+    ] },
+
   hoang_y_nu: { name: 'Hoàng Y Nữ', img: 'tm_hoang_y_kiem_nu', role: 'ho_tro', q: 2, lv: 1, star: 1, hanh: 'hoa', tuChat: 11,
     st: { hp: 2100, atk: 1350, def: 1100, hoi: 500, spd: 55, mi: 90 },
     skill: { grade: 'A', name: 'Phượng Minh Khúc', desc: 'Tăng 20% Công toàn đội 2 hiệp' },
     duyen: [{ name: 'Tri Kỷ', desc: 'Cùng ra trận Hồi +20%', with: [], ok: true }] },
 };
 // Nhân vật mới được tặng sẵn (người dùng chốt 2026-11-12: Đoàn Diên Khánh + Nam Hải Ngạc Thần)
-const HK_START = ['doan_dien_khanh', 'nam_hai_ngac_than', 'diep_nhi_nuong', 'doan_du', 'van_trung_hac'];
+const HK_START = ['doan_dien_khanh', 'nam_hai_ngac_than', 'diep_nhi_nuong', 'doan_du', 'van_trung_hac', 'nham_doanh_doanh', 'nham_nga_hanh'];
 // Hiệp khách đã có (P.hk[mã] = {lv, star}) + đội ra trận 5 ô (P.doi, null = ô trống). Bản lưu chưa có thì tặng Đoàn Diên Khánh.
 function hkEnsure() {
   if (!P) return;
-  if (!P.hk || !Object.keys(P.hk).length) { P.hk = {}; HK_START.forEach(id => { P.hk[id] = { lv: 1, star: 1 }; }); P.hkTang2 = true; P.hkTang3 = true; P.hkTang4 = true; P.hkTang5 = true; }
+  if (!P.hk || !Object.keys(P.hk).length) { P.hk = {}; HK_START.forEach(id => { P.hk[id] = { lv: 1, star: 1 }; }); P.hkTang2 = true; P.hkTang3 = true; P.hkTang4 = true; P.hkTang5 = true; P.hkTang6 = true; }
   if (!Array.isArray(P.doi)) P.doi = HK_START.slice();
   P.doi = P.doi.slice(0, 5).map(id => (id && P.hk[id] && HIEP_KHACH[id] ? id : null));
   while (P.doi.length < 5) P.doi.push(null);
@@ -169,6 +219,14 @@ function hkEnsure() {
     P.hkTang5 = true;
     if (!P.hk.van_trung_hac) P.hk.van_trung_hac = { lv: 1, star: 1 };
     const k = P.doi.indexOf(null); if (k >= 0 && !P.doi.includes('van_trung_hac')) P.doi[k] = 'van_trung_hac';
+  }
+  // tặng bù Nhậm Doanh Doanh + Nhậm Ngã Hành (2026-11-12); đội đã đủ thì chỉ vào danh sách Võ Hiệp
+  if (!P.hkTang6) {
+    P.hkTang6 = true;
+    ['nham_doanh_doanh', 'nham_nga_hanh'].forEach(id => {
+      if (!P.hk[id]) P.hk[id] = { lv: 1, star: 1 };
+      const k = P.doi.indexOf(null); if (k >= 0 && !P.doi.includes(id)) P.doi[k] = id;
+    });
   }
 }
 // Duyên đạt: hiệp khách đó và mọi người trong `with` đều đang ở đội ra trận; người / bảo vật / linh thú chưa có ({ ten }) thì chưa đạt
