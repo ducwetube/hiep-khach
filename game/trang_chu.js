@@ -37,7 +37,15 @@ const HIEP_KHACH = {
     anim: { iw: 446, ih: 700, box: [-110, -40, 556, 740], tip: [91, -66],
       idle: { src: 'game/img/blender/doan_idle.webp', n: 24, ms: 1300 },
       atk: { src: 'game/img/blender/doan_atk.webp', n: 26, ms: 1300, fire: 470, hold: 11.5 } },
-    duyen: [{ name: 'Phụ Tử', desc: 'Cùng ra trận Công +150%', with: [], ok: false }] },
+    // Duyên (theo ảnh game mẫu người dùng gửi 2026-11-12): with = mã hiệp khách cùng ra trận, hoặc { ten, loai } cho người / bảo vật / linh thú
+    // chưa có trong game; loai 'bao' / 'linh' = "Sử dụng" (trang bị bảo vật / mang linh thú). eff = mức cộng ghi sẵn, CHƯA áp vào chỉ số.
+    duyen: [
+      { name: 'Phụ Tử', desc: 'Cùng ra trận Công +150%', with: ['doan_du'], eff: { atk: 1.5 } },
+      { name: 'Đoàn Viên', desc: 'Cùng ra trận Công +150% HP +200%', with: [{ ten: 'Đao Bạch Phượng' }], eff: { atk: 1.5, hp: 2 } },
+      { name: 'Tứ Đại Ác Nhân', desc: 'Cùng ra trận Công +200% HP +300%', with: ['diep_nhi_nuong', { ten: 'Vân Trung Hạc' }, 'nam_hai_ngac_than'], eff: { atk: 2, hp: 3 } },
+      { name: 'Bàn Cờ', desc: 'Sử dụng HP +30%', with: [{ ten: 'Bàn Cờ', loai: 'bao' }], eff: { hp: 0.3 } },
+      { name: 'Hắc Miêu', desc: 'Sử dụng Công +50%', with: [{ ten: 'Hắc Miêu', loai: 'linh' }], eff: { atk: 0.5 } },
+    ] },
 
   // Hiệp khách thật thứ hai (2026-11-12, người dùng gửi tranh + ảnh nền đen): chỉ số cấp 1 khớp ảnh mẫu (1306 / 345 / 238 / 242, tốc 53, Mị 300),
   // mỗi cấp +5% chỉ số cấp 1; Hộ Vệ: Bạo 0, Bền 10%, Né 5%. chiêu nộ cấp 1 người dùng chốt: +55% HP, −20% Công
@@ -53,7 +61,13 @@ const HIEP_KHACH = {
     anim: { iw: 730, ih: 700, box: [-170, -110, 840, 760],
       idle: { src: 'game/img/blender/nam_idle.webp', n: 24, ms: 1300 },
       chem: { src: 'game/img/blender/nam_chem.webp', n: 20, ms: 950, hit: 8, slash: 'nuoc' } },
-    duyen: [{ name: 'Thầy Trò', desc: 'Cùng ra trận HP +200%', with: [], ok: false }] },
+    duyen: [   // theo ảnh game mẫu người dùng gửi 2026-11-12; eff chưa áp vào chỉ số
+      { name: 'Thầy Trò', desc: 'Cùng ra trận HP +200%', with: ['doan_du'], eff: { hp: 2 } },
+      { name: 'Ghen Ghét', desc: 'Cùng ra trận Thủ +200%', with: ['diep_nhi_nuong'], eff: { def: 2 } },
+      { name: 'Tứ Đại Ác Nhân', desc: 'Cùng ra trận Công +200% HP +300%', with: ['doan_dien_khanh', 'diep_nhi_nuong', { ten: 'Vân Trung Hạc' }], eff: { atk: 2, hp: 3 } },
+      { name: 'Tái Sinh Phù', desc: 'Sử dụng Bền +10%', with: [{ ten: 'Tái Sinh Phù', loai: 'bao' }], eff: { ben: 10 } },
+      { name: 'Tiểu Thử', desc: 'Sử dụng HP +150%', with: [{ ten: 'Tiểu Thử', loai: 'linh' }], eff: { hp: 1.5 } },
+    ] },
 
   // Hiệp khách thứ ba (2026-11-12): suy từ ảnh mẫu cấp 10 (cột Căn Cốt) + 10 sao (Cơ Bản ÷ 1,2⁹); Hỗ Trợ: Bền 5%, Né 7,5%.
   // Nộ S Hoán Hồn Khúc (người dùng chốt): +14% khí huyết tối đa toàn đội (cấp 1), ru ngủ 2 kẻ địch ngẫu nhiên 2 hiệp (như choáng, có Zzz).
@@ -70,7 +84,13 @@ const HIEP_KHACH = {
       phep: { src: 'game/img/blender/diep_phep.webp', n: 30, ms: 1500, doll: 7, blast: 19 },
       // đánh thường từ xa: lắc trống rồi đẩy về phía địch, khung fire = sóng âm bay ra (tran_doi.js TD_SHOT)
       danh: { src: 'game/img/blender/diep_danh.webp', n: 16, ms: 800, fire: 7, shot: 'song_am' } },
-    duyen: [{ name: 'Mẫu Tử', desc: 'Cùng ra trận HP +200%', with: [], ok: false }] },
+    duyen: [   // theo ảnh game mẫu người dùng gửi 2026-11-12; eff chưa áp vào chỉ số
+      { name: 'Mẫu Tử', desc: 'Cùng ra trận HP +200%', with: [{ ten: 'Hư Trúc' }], eff: { hp: 2 } },
+      { name: 'Ghen Ghét', desc: 'Cùng ra trận Thủ +200%', with: ['nam_hai_ngac_than'], eff: { def: 2 } },
+      { name: 'Tứ Đại Ác Nhân', desc: 'Cùng ra trận Công +200% HP +300%', with: ['doan_dien_khanh', 'nam_hai_ngac_than', { ten: 'Vân Trung Hạc' }], eff: { atk: 2, hp: 3 } },
+      { name: 'Kinh Vô Tự', desc: 'Sử dụng Thủ +20%', with: [{ ten: 'Kinh Vô Tự', loai: 'bao' }], eff: { def: 0.2 } },
+      { name: 'Lang Báo', desc: 'Sử dụng Tốc +5%', with: [{ ten: 'Lang Báo', loai: 'linh' }], eff: { spd: 0.05 } },
+    ] },
 
   // Hiệp khách thứ tư (2026-11-12): ảnh mẫu cấp 1 · 1 sao không đồ; Hỗ Trợ hệ Thủy. Nộ S Lăng Ba Vi Bộ: +14% Tốc toàn đội 2 hiệp
   // (người dùng chốt; Tốc CHƯA có tác dụng trong trận đội, người dùng sẽ quyết sau). Đánh thường: Lục Mạch Thần Kiếm (kiếm khí từ hai ngón tay).
@@ -120,6 +140,12 @@ function hkEnsure() {
     if (!P.hk.doan_du) P.hk.doan_du = { lv: 1, star: 1 };
     const k = P.doi.indexOf(null); if (k >= 0 && !P.doi.includes('doan_du')) P.doi[k] = 'doan_du';
   }
+}
+// Duyên đạt: hiệp khách đó và mọi người trong `with` đều đang ở đội ra trận; người / bảo vật / linh thú chưa có ({ ten }) thì chưa đạt
+function duyenOk(id, d) {
+  if (!d.with || !d.with.length) return !!d.ok;
+  if (!P || !Array.isArray(P.doi) || !P.doi.includes(id)) return false;
+  return d.with.every(w => typeof w === 'string' && P.doi.includes(w));
 }
 const hkGet = id => (id && HIEP_KHACH[id] && P.hk[id] ? Object.assign({ id }, HIEP_KHACH[id], P.hk[id]) : null);
 function hkTeam() { hkEnsure(); return P.doi.map(hkGet); }        // 5 ô, có thể null
@@ -250,9 +276,15 @@ function heroView(i, from) {
   const ST = [['hp', 'Khí huyết'], ['atk', 'Công'], ['def', 'Thủ'], ['hoi', 'Hồi'], ['spd', 'Tốc'], ['mi', 'Mị']];
   const hs = heroSt(h), sts = ST.map(([k, t]) => `<span><small>${t}</small><b>${(hs[k] || 0).toLocaleString('vi-VN')}</b></span>`).join('');
   // chân dung trong duyên: mã hiệp khách; chưa có thì mờ (vẫn hiện hình)
-  const ava = id => { const o = HIEP_KHACH[id]; return o ? `<button class="hd-ava ${P.hk[id] ? '' : 'off'}" ${P.hk[id] ? `onclick="G.heroView('${id}')"` : ''} title="${o.name}"><img class="${o.art ? 'art' : ''}" src="${heroImg(o)}" alt="" draggable="false" style="${o.art ? heroPos(o, 18) : ''}"></button>` : ''; };
-  const duyen = (h.duyen || []).map(d => `<div class="hd-bar hd-duyen"><b>Duyên: ${d.name}</b><span>${d.desc}</span><em class="${d.ok ? 'ok' : ''}">${d.ok ? 'Đạt' : 'Chưa đạt'}</em></div>
-    <div class="hd-avas">${ava(heroSel)}${(d.with || []).map(ava).join('')}</div>`).join('');
+  // người / bảo vật / linh thú chưa có trong game ({ ten, loai }): ô mờ ghi tên
+  // mỗi ô: chân dung + tên ở dưới (tự xuống dòng, không đè ô bên cạnh)
+  const ava = id => {
+    if (id && typeof id === 'object') return `<span class="hd-avi"><span class="hd-ava off none"><i>${id.loai === 'bao' ? 'Bảo vật' : id.loai === 'linh' ? 'Linh thú' : 'Chưa có'}</i></span><small class="off">${id.ten}</small></span>`;
+    const o = HIEP_KHACH[id];
+    return o ? `<span class="hd-avi"><button class="hd-ava ${P.hk[id] ? '' : 'off'}" ${P.hk[id] ? `onclick="G.heroView('${id}')"` : ''} title="${o.name}"><img class="${o.art ? 'art' : ''}" src="${heroImg(o)}" alt="" draggable="false" style="${o.art ? heroPos(o, 18) : ''}"></button><small class="${P.hk[id] ? '' : 'off'}">${o.name}</small></span>` : '';
+  };
+  const duyen = (h.duyen || []).map(d => { const ok = duyenOk(h.id, d); return `<div class="hd-bar hd-duyen"><b>Duyên: ${d.name}</b><span>${d.desc}</span><em class="${ok ? 'ok' : ''}">${ok ? 'Đạt' : 'Chưa đạt'}</em></div>
+    <div class="hd-avas">${ava(h.id)}${(d.with || []).map(ava).join('')}</div>`; }).join('');
   show(`<div class="home hd">
     <div class="hm-bg"></div>
     ${homeHead()}
@@ -343,9 +375,14 @@ function heroStyle() {
   .hd-duyen b { flex: none; width: 27cqw; font-size: 3.6cqw; font-weight: 800; color: #fff4d0; padding-right: 2cqw; border-right: .3cqw solid #9a7a4a; }
   .hd-duyen em { flex: none; font-style: normal; font-size: 3.8cqw; font-weight: 800; color: #9a8a6a; }
   .hd-duyen em.ok { color: #ffcf3a; }
-  .hd-avas { display: flex; gap: .4cqw; margin: 1.2cqw 7.3cqw 0; }
+  .hd-avas { display: flex; flex-wrap: wrap; gap: 1cqw .6cqw; margin: 1.2cqw 5cqw .6cqw; }
   .hd-ava { width: 12.5cqw; height: 12.5cqw; border-radius: 1.2cqw !important; overflow: hidden; background: #2a2018 !important; border: .5cqw solid #9a7a4a !important; }
   .hd-ava.off { filter: grayscale(1) brightness(.6); }
+  .hd-avi { flex: none; width: 15.5cqw; display: flex; flex-direction: column; align-items: center; gap: .6cqw; }
+  .hd-avi small { width: 100%; font-size: 2.4cqw; font-weight: 700; line-height: 1.2; color: #8f8; text-align: center; text-shadow: 0 .2cqw .3cqw #000; overflow-wrap: anywhere; }
+  .hd-avi small.off { color: #b8a888; }
+  .hd-ava.none { display: flex; align-items: center; justify-content: center; }
+  .hd-ava.none i { font-style: normal; font-size: 2.3cqw; color: #c9b48a; text-align: center; }
   .hd-ava img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 12%; transform: scaleX(-1) scale(1.4); transform-origin: 50% 20%; }
   `;
   document.head.appendChild(st);
