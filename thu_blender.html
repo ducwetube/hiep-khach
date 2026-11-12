@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thử Hiệu Ứng Blender</title>
+<style>
+  :root { --bg: #1b1410; --ink: #f3e6c8; --muted: #b9a684; --gold: #e8b64a; --line: #5a4530; --btn: #3a2a1c; --on: #7a4f18; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, sans-serif; }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 12px 16px 28px; }
+  h1 { font-size: 19px; margin: 4px 0 2px; color: var(--gold); }
+  p.sub { margin: 0 0 10px; color: var(--muted); font-size: 13px; }
+  .stage { position: relative; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; container-type: inline-size; background: #000; }
+  .stage > img.bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .u { position: absolute; transform: translate(-50%, -100%); pointer-events: none; }
+  .u img.sp { display: block; width: 100%; position: relative; z-index: 2; }
+  .u.flip img.sp { transform: scaleX(-1); }
+  .u.hit img.sp { animation: hit .35s; }
+  @keyframes hit { 0%,100% { filter: none; translate: 0; } 30% { filter: brightness(2) sepia(1) hue-rotate(-20deg); translate: 1.2cqw; } }
+  /* sprite sheet player: strip of N frames, translated by steps */
+  .sheet { position: absolute; overflow: hidden; pointer-events: none; }
+  .sheet img { position: absolute; left: 0; top: 0; height: 100%; width: auto; max-width: none; }
+  .shield { left: 50%; transform: translateX(-50%); }
+  .shield.back { z-index: 1; }
+  .shield.front { z-index: 3; opacity: .85; }
+  .shield.in { animation: shIn .45s ease-out; }
+  @keyframes shIn { from { scale: .3; opacity: 0; } to { scale: 1; } }
+  .fx { position: absolute; inset: 0; pointer-events: none; z-index: 20; }
+  .bolt { position: absolute; left: 0; top: 0; transform-origin: 0 0; filter: drop-shadow(0 0 1.5cqw #ffb000aa); }
+  .oldhit { position: absolute; width: 16cqw; height: 16cqw; margin: -8cqw 0 0 -8cqw; border-radius: 50%;
+    background: radial-gradient(circle, #fff, #fff3a0 22%, #ffc23a 45%, #ff8a0000 70%); animation: oldHit .55s ease-out forwards; }
+  @keyframes oldHit { 0% { transform: scale(.2); opacity: 1; } 60% { opacity: .9; } 100% { transform: scale(1.4); opacity: 0; } }
+  .orb { position: absolute; width: 7cqw; height: 7cqw; margin: -3.5cqw 0 0 -3.5cqw; border-radius: 50%;
+    background: radial-gradient(circle, #fff, #fff3a0 30%, #ffc23a 55%, #ffb00000 72%); animation: orb .4s ease-in-out infinite alternate; }
+  @keyframes orb { to { transform: scale(1.3); } }
+  .tag { position: absolute; left: 2cqw; top: 2cqw; z-index: 30; background: #000a; color: var(--gold); font-size: 3.4cqw; padding: .6cqw 1.8cqw; border-radius: 99px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .row b { width: 100%; font-size: 13px; color: var(--muted); font-weight: 600; margin-top: 4px; }
+  button { flex: 1 1 0; min-width: 0; padding: 10px 6px; border-radius: 8px; border: 1px solid var(--line); background: var(--btn); color: var(--ink); font: inherit; font-size: 14px; }
+  button.on { background: var(--on); border-color: var(--gold); }
+  button:active { transform: translateY(1px); }
+  .note { margin-top: 14px; font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Thử Hiệu Ứng Blender</h1>
+  <p class="sub">So hiệu ứng làm bằng Blender với hiệu ứng đang có trong game.</p>
+  <div class="stage" id="st">
+    <img class="bg" src="game/img/san_dau/ngay.jpg" alt="">
+    <div class="tag" id="tag">Bản Blender</div>
+    <div class="fx" id="fx"></div>
+  </div>
+  <div class="row">
+    <b>Bản hiệu ứng</b>
+    <button id="mOld">Cũ</button>
+    <button id="mNew" class="on">Blender</button>
+  </div>
+  <div class="row">
+    <b>Đoàn Diên Khánh</b>
+    <button id="bChi">Đoàn Thị Chỉ Pháp</button>
+    <button id="bAnim" class="on">Hình động: Bật</button>
+  </div>
+  <div class="row">
+    <b>Nam Hải Ngạc Thần</b>
+    <button id="bGuard">Ngạc Thần Hộ Thể</button>
+    <button id="bOff">Tắt khiên</button>
+  </div>
+  <div class="row">
+    <b>Tốc độ</b>
+    <button id="s1" class="on">Thường</button>
+    <button id="s2">Chậm (xem kỹ)</button>
+  </div>
+  <p class="note">Hiệu ứng cũ của Hộ Thể chưa có hình (chỉ hiện số), nên ở chế độ Cũ khiên sẽ không hiện gì.</p>
+</div>
+<script>
+(() => {
+  const st = document.getElementById('st'), fx = document.getElementById('fx');
+  const cq = () => st.clientWidth / 100;
+  let mode = 'new', slow = 1;
+  const SH = {
+    burst: { src: 'game/img/blender/fx_bl_no_vang.webp', n: 16, w: 200, h: 200 },
+    back:  { src: 'game/img/blender/fx_bl_khien_sau.webp', n: 20, w: 224, h: 280 },
+    front: { src: 'game/img/blender/fx_bl_khien_truoc.webp', n: 20, w: 224, h: 280 },
+    idle:  { src: 'game/img/blender/doan_idle.webp', n: 24 },
+    atk:   { src: 'game/img/blender/doan_atk.webp', n: 22 },
+  };
+  // vùng xuất của hình động (px hình gốc 446 x 700): x -110..556, y -40..740
+  const ANIM_BOX = { x0: -110, y0: -40, x1: 556, y1: 740, iw: 446 };
+  let animOn = true, animEl = null;
+  // x, foot y (% of stage), height (% of stage width), flip
+  const units = {
+    doan: { x: 27, y: 84, w: 15.5, src: 'game/img/hk/doan_dien_khanh_sd.png', ar: 446 / 700 },
+    nam:  { x: 12, y: 66, w: 23, src: 'game/img/hk/nam_hai_ngac_than_sd.png', ar: 730 / 700, flip: true },
+    e1:   { x: 72, y: 66, w: 17, src: 'game/img/quai/tm_cuong_khach.png', flip: false },
+    e2:   { x: 86, y: 80, w: 17, src: 'game/img/quai/tm_hac_lao.png', flip: false },
+    e3:   { x: 70, y: 95, w: 17, src: 'game/img/quai/tm_thanh_kiem.png', flip: false },
+  };
+  const el = {};
+  for (const [k, u] of Object.entries(units)) {
+    const d = document.createElement('div');
+    d.className = 'u' + (u.flip ? ' flip' : '');
+    d.style.left = u.x + '%'; d.style.top = u.y + '%'; d.style.width = u.w + 'cqw';
+    d.innerHTML = `<img class="sp" src="${u.src}" alt="">`;
+    st.insertBefore(d, fx); el[k] = d;
+  }
+  // hình động Đoàn Diên Khánh: lớp phủ đúng chỗ hình tĩnh
+  function animBox() {
+    const W = el.doan.getBoundingClientRect().width, k = W / ANIM_BOX.iw;
+    return { left: ANIM_BOX.x0 * k + 'px', top: ANIM_BOX.y0 * k + 'px', width: (ANIM_BOX.x1 - ANIM_BOX.x0) * k + 'px', height: (ANIM_BOX.y1 - ANIM_BOX.y0) * k + 'px', zIndex: 2 };
+  }
+  function playDoan(which) {
+    if (animEl) { animEl.remove(); animEl = null; }
+    const sp = el.doan.querySelector('img.sp');
+    if (!animOn) { sp.style.visibility = ''; return null; }
+    sp.style.visibility = 'hidden';
+    const loop = which === 'idle';
+    animEl = sheet(SH[which], animBox(), loop, loop ? 1300 : 1100);
+    el.doan.appendChild(animEl);
+    if (!loop) { const me = animEl; me._anim.onfinish = () => { if (animEl === me) playDoan('idle'); }; }
+    return animEl;
+  }
+  const center = k => { const r = el[k].getBoundingClientRect(), s = st.getBoundingClientRect(); return { x: r.left - s.left + r.width / 2, y: r.top - s.top + r.height * 0.45 }; };
+  const hand = () => { const r = el.doan.getBoundingClientRect(), s = st.getBoundingClientRect(); return { x: r.left - s.left + r.width * 0.93, y: r.top - s.top + r.height * 0.46 }; };
+  const wait = ms => new Promise(r => setTimeout(r, ms * slow));
+
+  // play a sprite strip in a box; loop or one-shot
+  function sheet(def, box, loop, ms) {
+    const d = document.createElement('div'); d.className = 'sheet';
+    Object.assign(d.style, box);
+    const img = document.createElement('img'); img.src = def.src; d.appendChild(img);
+    const frames = []; for (let i = 0; i < def.n; i++) frames.push({ transform: `translateX(${-i * 100 / def.n}%)` });
+    const a = img.animate(frames, { duration: ms * slow, iterations: loop ? Infinity : 1, easing: `steps(${def.n}, jump-none)`, fill: 'forwards' });
+    if (!loop) { a.onfinish = () => d.remove(); setTimeout(() => d.remove(), ms * slow + 500); }
+    d._anim = a;
+    return d;
+  }
+
+  function burstAt(p) {
+    if (mode === 'old') {
+      const h = document.createElement('div'); h.className = 'oldhit'; h.style.left = p.x + 'px'; h.style.top = p.y + 'px';
+      fx.appendChild(h); setTimeout(() => h.remove(), 650 * slow); return;
+    }
+    const size = 26 * cq();
+    fx.appendChild(sheet(SH.burst, { left: p.x - size / 2 + 'px', top: p.y - size / 2 + 'px', width: size + 'px', height: size + 'px' }, false, 560));
+  }
+
+  async function chi() {
+    if (animOn) { playDoan('atk'); await wait(330); }   // lấy đà rồi chồm tới chĩa ngón (khung 7 trong 22)
+    const a = hand();
+    if (animOn) { const k = el.doan.getBoundingClientRect().width / ANIM_BOX.iw; a.x += 85 * k; a.y += 40 * k; }
+    const orb = document.createElement('div'); orb.className = 'orb'; orb.style.left = a.x + 'px'; orb.style.top = a.y + 'px';
+    fx.appendChild(orb);
+    await wait(animOn ? 100 : 380);
+    const foes = ['e1', 'e2', 'e3'], shots = [];
+    foes.forEach((k, j) => { for (let n = 0; n < 4; n++) shots.push({ k, last: n === 3, at: j * 70 + n * 190 + Math.random() * 90 }); });
+    const fly = 280, W = 36 * cq();
+    await Promise.all(shots.map(sh => new Promise(done => setTimeout(() => {
+      const c = cq(), s0 = { x: a.x + (Math.random() - .5) * 3 * c, y: a.y + (Math.random() - .5) * 3 * c };
+      const b = center(sh.k), e = { x: b.x + (Math.random() - .5) * 6 * c, y: b.y + (Math.random() - .5) * 6 * c };
+      const ang = Math.atan2(e.y - s0.y, e.x - s0.x) * 180 / Math.PI;
+      const img = document.createElement('img'); img.src = 'game/img/fx_chi_luc.png'; img.className = 'bolt'; img.style.width = W + 'px';
+      fx.appendChild(img);
+      const tf = (p, sc) => `translate(${p.x}px, ${p.y}px) rotate(${ang}deg) scale(${sc}) translate(-95%, -50%)`;
+      let fin = false;
+      const end = () => {
+        if (fin) return; fin = true; img.remove(); burstAt(e);
+        el[sh.k].classList.remove('hit'); void el[sh.k].offsetWidth; el[sh.k].classList.add('hit');
+        done();
+      };
+      img.animate([{ transform: tf(s0, .45), opacity: .4 }, { transform: tf(e, 1), opacity: 1 }], { duration: fly * slow, easing: 'ease-in', fill: 'forwards' }).onfinish = end;
+      setTimeout(end, (fly + 150) * slow);
+    }, sh.at * slow))));
+    await wait(220);
+    orb.remove();
+  }
+
+  let shield = [];
+  function guardOff() { shield.forEach(d => d.remove()); shield = []; }
+  function guard() {
+    guardOff();
+    if (mode === 'old') return;
+    const u = units.nam, d = el.nam;
+    const hgt = d.querySelector('img').getBoundingClientRect().height;
+    const H = hgt * 1.5, W = H * 224 / 280;
+    const box = { width: W + 'px', height: H + 'px', top: (hgt - H * 0.81) + 'px' };
+    const b = sheet(SH.back, box, true, 1000), f = sheet(SH.front, box, true, 1000);
+    b.classList.add('shield', 'back', 'in'); f.classList.add('shield', 'front', 'in');
+    d.appendChild(b); d.appendChild(f); shield = [b, f];
+  }
+
+  const $ = id => document.getElementById(id);
+  function setMode(m) {
+    mode = m; $('mOld').classList.toggle('on', m === 'old'); $('mNew').classList.toggle('on', m === 'new');
+    $('tag').textContent = m === 'old' ? 'Bản cũ' : 'Bản Blender';
+    if (shield.length) guard();
+  }
+  $('mOld').onclick = () => setMode('old');
+  $('mNew').onclick = () => setMode('new');
+  let busy = false;
+  $('bChi').onclick = async () => { if (busy) return; busy = true; try { await chi(); } finally { busy = false; } };
+  $('bGuard').onclick = guard;
+  $('bOff').onclick = guardOff;
+  $('s1').onclick = () => { slow = 1; $('s1').classList.add('on'); $('s2').classList.remove('on'); if (shield.length) guard(); };
+  $('s2').onclick = () => { slow = 3; $('s2').classList.add('on'); $('s1').classList.remove('on'); if (shield.length) guard(); };
+  $('bAnim').onclick = () => {
+    animOn = !animOn; $('bAnim').classList.toggle('on', animOn);
+    $('bAnim').textContent = 'Hình động: ' + (animOn ? 'Bật' : 'Tắt');
+    playDoan('idle');
+  };
+  // preload
+  Object.values(SH).forEach(s => { const i = new Image(); i.src = s.src; });
+  addEventListener('load', () => playDoan('idle'));
+  addEventListener('resize', () => { if (animEl && animOn) Object.assign(animEl.style, animBox()); });
+  window.TEST = { chi, guard, setMode, playDoan };
+})();
+</script>
+</body>
+</html>
