@@ -81,6 +81,7 @@
   <div class="row">
     <b>Diệp Nhị Nương</b>
     <button id="bCurse">Hoán Hồn Khúc</button>
+    <button id="bDanh">Đánh thường</button>
   </div>
   <div class="row">
     <b>Nam Hải Ngạc Thần · đánh thường</b>
@@ -148,17 +149,40 @@
       chem: { src: 'game/img/blender/nam_chem.webp', n: 20, ms: 950, hit: 8 } },
     diep: { iw: 555, box: [-90, -110, 665, 760],
       idle: { src: 'game/img/blender/diep_idle.webp', n: 24, ms: 1300 },
-      phep: { src: 'game/img/blender/diep_phep.webp', n: 30, ms: 1500, doll: 7, blast: 19 } },
+      phep: { src: 'game/img/blender/diep_phep.webp', n: 30, ms: 1500, doll: 7, blast: 19 },
+      danh: { src: 'game/img/blender/diep_danh.webp', n: 16, ms: 800, fire: 7 } },
   };
   const FXS = {
     nom: { src: 'game/img/blender/fx_bl_nom_rom.webp', n: 18 },
     no: { src: 'game/img/blender/fx_bl_no_tim.webp', n: 20 },
     slash: { src: 'game/img/blender/fx_bl_chem_nuoc.webp', n: 12 },
+    wave: { src: 'game/img/blender/fx_bl_song_am.webp', n: 8 },
+    hitTim: { src: 'game/img/blender/fx_bl_no_tim_nho.webp', n: 16 },
   };
+  // Diệp Nhị Nương đánh thường: lắc trống, đẩy về phía địch, sóng âm tím bay tới, chạm thì nổ
+  async function danh() {
+    const D = HERO.diep.danh, tgt = ['e1', 'e2', 'e3'][Math.floor(Math.random() * 3)];
+    heroPlay('diep', 'danh');
+    await wait(D.fire / D.n * D.ms);
+    const r = rectIn(el.diep.querySelector('img.sp')), a = { x: r.l + r.w * 0.94, y: r.t + r.h * 0.37 };
+    const t = rectIn(el[tgt].querySelector('img.sp')), b = { x: t.l + t.w / 2, y: t.t + t.h * 0.45 };
+    const sz = 17 * cq(), ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+    const w = sheet(FXS.wave, { left: a.x - sz * 0.2 + 'px', top: a.y - sz / 2 + 'px', width: sz + 'px', height: sz + 'px', transformOrigin: '20% 50%' }, true, 400);
+    fx.appendChild(w);
+    await new Promise(done => {
+      const an = w.animate([{ transform: `translate(0,0) rotate(${ang}deg) scale(.6)`, opacity: .6 }, { transform: `translate(${b.x - a.x}px, ${b.y - a.y}px) rotate(${ang}deg) scale(1.1)`, opacity: 1 }], { duration: 320 * slow, easing: 'ease-in', fill: 'forwards' });
+      an.onfinish = done; setTimeout(done, 450 * slow);
+    });
+    w.remove();
+    const hs = 18 * cq();
+    fx.appendChild(sheet(FXS.hitTim, { left: b.x - hs / 2 + 'px', top: b.y - hs / 2 + 'px', width: hs + 'px', height: hs + 'px' }, false, 520));
+    hitFx(tgt); pop(tgt, '-' + (110 + Math.round(Math.random() * 30)));
+  }
   const heroEl = {};
   function heroPlay(k, which) {
     const H = HERO[k], S = H[which], d = el[k], sp = d.querySelector('img.sp');
-    if (heroEl[k]) heroEl[k].remove();
+    const old = heroEl[k];   // giữ hình cũ tới khi hình mới giải mã xong (tránh nháy trống)
+    if (old) setTimeout(() => old.remove(), 120);
     const W = sp.getBoundingClientRect().width, kk = W / H.iw, [x0, y0, x1, y1] = H.box;
     const box = { left: (H.flip ? (H.iw - x1) : x0) * kk + 'px', top: y0 * kk + 'px', width: (x1 - x0) * kk + 'px', height: (y1 - y0) * kk + 'px', zIndex: 2, transform: H.flip ? 'scaleX(-1)' : '' };
     const loop = which === 'idle', s = sheet(S, box, loop, S.ms);
@@ -297,6 +321,7 @@
     playDoan('idle');
   };
   $('bCurse').onclick = async () => { if (busy) return; busy = true; try { await curse(); } finally { busy = false; } };
+  $('bDanh').onclick = async () => { if (busy) return; busy = true; try { await danh(); } finally { busy = false; } };
   $('bChem').onclick = async () => { if (busy) return; busy = true; try { await chem(); } finally { busy = false; } };
   // preload
   [...Object.values(SH), ...Object.values(FXS), ...Object.values(HERO).flatMap(h => Object.values(h).filter(v => v && v.src))].forEach(s => { const i = new Image(); i.src = s.src; });

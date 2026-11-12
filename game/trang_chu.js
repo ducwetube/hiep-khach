@@ -67,7 +67,9 @@ const HIEP_KHACH = {
     // phep: niệm chú lắc trống; doll = khung hiện hình nộm rơm trên đầu địch, blast = khung phất tay (nổ dưới chân địch)
     anim: { iw: 555, ih: 700, box: [-90, -110, 665, 760],
       idle: { src: 'game/img/blender/diep_idle.webp', n: 24, ms: 1300 },
-      phep: { src: 'game/img/blender/diep_phep.webp', n: 30, ms: 1500, doll: 7, blast: 19 } },
+      phep: { src: 'game/img/blender/diep_phep.webp', n: 30, ms: 1500, doll: 7, blast: 19 },
+      // đánh thường từ xa: lắc trống rồi đẩy về phía địch, khung fire = sóng âm bay ra (tran_doi.js TD_SHOT)
+      danh: { src: 'game/img/blender/diep_danh.webp', n: 16, ms: 800, fire: 7, shot: 'song_am' } },
     duyen: [{ name: 'Mẫu Tử', desc: 'Cùng ra trận HP +200%', with: [], ok: false }] },
 
   hoang_y_nu: { name: 'Hoàng Y Nữ', img: 'tm_hoang_y_kiem_nu', role: 'ho_tro', q: 2, lv: 1, star: 1, hanh: 'hoa', tuChat: 11,

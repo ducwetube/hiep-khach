@@ -87,6 +87,7 @@ function tdStart(def) {
     const list = u.anim ? Object.values(u.anim).filter(v => v && v.src).map(v => v.src) : [];
     if (u.anim && u.anim.chem && TD_SLASH[u.anim.chem.slash]) list.push(TD_SLASH[u.anim.chem.slash].src);
     if (u.ult && u.ult.fx === 'nguyen') list.push(TD_CURSE.nom.src, TD_CURSE.no.src);
+    if (u.anim && u.anim.danh && TD_SHOT[u.anim.danh.shot]) list.push(TD_SHOT[u.anim.danh.shot].src, TD_SHOT[u.anim.danh.shot].hit.src);
     if (u.ult && u.ult.fx === 'chi') list.push(TD_BURST.src);
     if (u.ult && TD_SHIELD[u.ult.shield]) list.push(TD_SHIELD[u.ult.shield].back, TD_SHIELD[u.ult.shield].front);
     list.forEach(src => { const im = new Image(); im.src = src; });
@@ -296,6 +297,33 @@ const TD_CURSE = {
   nom: { src: 'game/img/blender/fx_bl_nom_rom.webp', n: 18, ms: 900 },
   no: { src: 'game/img/blender/fx_bl_no_tim.webp', n: 20, ms: 900, ar: 250 / 200, foot: 0.8 },
 };
+// đạn đánh thường bay từ tay tới mục tiêu (sóng âm tím của Diệp Nhị Nương); ax/ay = điểm neo đầu đạn trên tấm (tỉ lệ)
+const TD_SHOT = {
+  song_am: { src: 'game/img/blender/fx_bl_song_am.webp', n: 8, ms: 400, size: 17, ax: 0.2, ay: 0.5, fly: 320,
+    hit: { src: 'game/img/blender/fx_bl_no_tim_nho.webp', n: 16, ms: 520, size: 18 } },
+};
+function tdShoot(u, t, kind) {
+  const box = document.getElementById('td-fx'), S = TD_SHOT[kind];
+  if (!box || !S) return Promise.resolve();
+  return new Promise(done => {
+    const cq = box.clientWidth / 100, fast = tdS && tdS.fast, a = tdHand(u), b = tdPos(t);
+    const sz = S.size * cq, ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+    const s = tdStrip(S.src, S.n, S.ms, true);
+    Object.assign(s.el.style, { left: a.x - sz * S.ax + 'px', top: a.y - sz * S.ay + 'px', width: sz + 'px', height: sz + 'px', transformOrigin: `${S.ax * 100}% ${S.ay * 100}%` });
+    box.appendChild(s.el);
+    let fin = false;
+    const end = () => {
+      if (fin) return; fin = true; s.el.remove();
+      const H = S.hit, hs = H.size * cq, h = tdStrip(H.src, H.n, H.ms * (fast ? 0.6 : 1), false);
+      Object.assign(h.el.style, { left: b.x - hs / 2 + 'px', top: b.y - hs / 2 + 'px', width: hs + 'px', height: hs + 'px' });
+      box.appendChild(h.el); setTimeout(() => h.el.remove(), H.ms + 250);
+      done();
+    };
+    const fly = S.fly * (fast ? 0.5 : 1), dx = b.x - a.x, dy = b.y - a.y;
+    if (s.el.animate) s.el.animate([{ transform: `translate(0, 0) rotate(${ang}deg) scale(.6)`, opacity: .6 }, { transform: `translate(${dx}px, ${dy}px) rotate(${ang}deg) scale(1.1)`, opacity: 1 }], { duration: fly, easing: 'ease-in', fill: 'forwards' }).onfinish = end;
+    setTimeout(end, fly + 150);   // dự phòng
+  });
+}
 // chân một người (px, so với khung .td)
 function tdFeet(t) {
   const root = document.querySelector('.td'), e = document.getElementById(`td-${t.side}-${t.i}`);
@@ -360,7 +388,9 @@ function tdBody(u) {
 function tdAnimPlay(u, which) {
   const A = u.anim, b = A && tdBody(u); if (!b) return null;
   b.e.classList.add('has-anim');
-  b.e.querySelectorAll('.td-sheet.body').forEach(x => x.remove());
+  // hình cũ giữ lại tới khi hình mới đã giải mã xong (tránh nháy trống lúc đổi động tác)
+  const old = [...b.e.querySelectorAll('.td-sheet.body')];
+  old.forEach(x => x.classList.add('old'));
   const S = A[which], loop = which === 'idle';
   const s = tdStrip(S.src, S.n, S.ms * (!loop && tdS && tdS.fast ? 0.5 : 1), loop);
   s.el.classList.add('body');
@@ -370,6 +400,11 @@ function tdAnimPlay(u, which) {
   const left = flip ? b.x + (A.iw - x1) * b.k : b.x + x0 * b.k;
   Object.assign(s.el.style, { left: left + 'px', top: b.y + y0 * b.k + 'px', width: (x1 - x0) * b.k + 'px', height: (y1 - y0) * b.k + 'px', transform: flip ? 'scaleX(-1)' : '' });
   b.e.appendChild(s.el);
+  const im = s.el.querySelector('img'), drop = () => old.forEach(x => x.remove());
+  if (old.length) {
+    if (im.complete && im.naturalWidth) drop();
+    else { let dn = false; const go = () => { if (!dn) { dn = true; drop(); } }; (im.decode ? im.decode() : Promise.reject()).then(go, go); setTimeout(go, 400); }
+  }
   if (!loop && s.anim) s.anim.onfinish = () => { if (s.el.isConnected && !u.dead) tdAnimPlay(u, 'idle'); };
   return s.anim;
 }
@@ -504,6 +539,12 @@ async function tdNormal(u) {
     await tdWait(hitMs - 60);
     if (C.slash) tdSlash(C.slash, u, t);
     await tdWait(60);
+  } else if (u.anim && u.anim.danh) {
+    // đánh từ xa (Diệp Nhị Nương): lắc trống, đẩy trống về phía địch, sóng âm bay tới, chạm thì nổ
+    const D = u.anim.danh;
+    tdAnimPlay(u, 'danh');
+    await tdWait(D.fire / D.n * D.ms);
+    await tdShoot(u, t, D.shot);
   } else {
     tdLunge(u, t);
     await tdWait(220);
