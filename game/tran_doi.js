@@ -105,7 +105,7 @@ function tdSpriteHtml(u) {
   return `<div class="td-u ${u.side} ${u.dead ? 'dead' : ''}" id="td-${u.side}-${u.i}" style="left:${x}%;top:${y}%;z-index:${Math.round(y)}"
       ${u.side === 'dich' ? `onclick="G.tdPick(${u.i})"` : ''}>
     <i class="td-ring"></i><i class="td-shadow"></i>
-    <img class="${u.sprite ? 'nf' : ''}" src="${u.sprite || `game/img/quai/${u.img}.png`}" alt="" draggable="false" style="height:${(k * 100).toFixed(0)}%">
+    <img class="${u.sprite ? 'nf' : ''}" src="${u.sprite || `game/img/quai/${u.img}.png`}" alt="" draggable="false" style="height:${(k * 100).toFixed(0)}%;animation-delay:-${((u.i * 0.53 + (u.side === 'dich' ? 0.3 : 0)) % 2.6).toFixed(2)}s">
     <span class="td-hb"><i style="width:${(u.hp / u.maxHp * 100).toFixed(1)}%"></i></span>
   </div>`;
 }
@@ -541,6 +541,9 @@ function tdStyle() {
   .td-u { position: absolute; width: 13%; aspect-ratio: 3 / 4; transform: translate(-50%, -100%); transition: transform .18s ease-out, opacity .4s; }
   .td-u img { position: absolute; left: 50%; bottom: 0; width: auto; max-width: 190%; object-fit: contain; object-position: 50% 100%; transform: translateX(-50%); pointer-events: none; }
   .td-u.ta img { transform: translateX(-50%) scaleX(-1); }
+  .td-u img { transform-origin: 50% 100%; animation: tdBreath 2.6s ease-in-out infinite; }
+  @keyframes tdBreath { 0%, 100% { scale: 1 1; } 50% { scale: 1.012 1.028; } }
+  .td-u.stun img, .td-u.dead img { animation: none; }
   .td-shadow { position: absolute; bottom: 0; left: 14%; right: 14%; height: 10%; border-radius: 50%; background: radial-gradient(closest-side, rgba(0,0,0,.55), transparent); transform: translateY(40%); }
   .td-u.dich { cursor: pointer; }
   .td-u.lunge { transform: translate(calc(-50% + var(--dx)), calc(-100% + var(--dy))); }

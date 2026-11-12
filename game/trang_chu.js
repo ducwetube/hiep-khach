@@ -27,8 +27,8 @@ const HIEP_KHACH = {
   // ảnh cấp 16 trước đó có mặc đồ nên số cũ (1565 / 575 / 268 / 272) sai,
 
   doan_dien_khanh: { name: 'Đoàn Diên Khánh', img: 'tm_thanh_kiem', art: 'game/img/hk/doan_dien_khanh.jpg', sprite: 'game/img/hk/doan_dien_khanh_sd.png', hand: [0.93, 0.46], role: 'ky_nang', q: 4, lv: 1, star: 1, hanh: 'kim', tuChat: 14,
-    st: { hp: 1065.4, atk: 474.4, def: 167.2, hoi: 171.8, spd: 43, mi: 100 }, // cấp 1 (hiện 1065 / 474 / 167 / 172)
-    grow: { hp: 53.3, atk: 23.8, def: 8.4, hoi: 8.6 },
+    st: { hp: 1065.4, atk: 474.8, def: 168, hoi: 172.2, spd: 43, mi: 100 }, // cấp 1 (hiện 1065 / 475 / 168 / 172)
+    grow: { hp: 53.3, atk: 23.83, def: 8.4, hoi: 8.58 },
     ex: { crit: 10, critDmg: 150, acc: 100, dodge: 5 },
     skill: { grade: 'S', name: 'Đoàn Thị Chỉ Pháp', desc: 'Bắn chỉ lực vào toàn địch, mỗi kẻ trúng 4 tia (20 / 20 / 20 / 40% của tổng 70% công), gây chảy máu 2 hiệp (mỗi hiệp mất máu bằng 10% công)' },
     ult: { kind: 'all', pow: 0.7, bleed: { pct: 0.1, turns: 2 }, fx: 'chi', split: [0.2, 0.2, 0.2, 0.4] },
