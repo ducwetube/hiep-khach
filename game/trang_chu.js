@@ -55,17 +55,32 @@ const HIEP_KHACH = {
       chem: { src: 'game/img/blender/nam_chem.webp', n: 20, ms: 950, hit: 8, slash: 'nuoc' } },
     duyen: [{ name: 'Thầy Trò', desc: 'Cùng ra trận HP +200%', with: [], ok: false }] },
 
+  // Hiệp khách thứ ba (2026-11-12): suy từ ảnh mẫu cấp 10 (cột Căn Cốt) + 10 sao (Cơ Bản ÷ 1,2⁹); Hỗ Trợ: Bền 5%, Né 7,5%.
+  // Nộ S Hoán Hồn Khúc (người dùng chốt): +14% khí huyết tối đa toàn đội (cấp 1), ru ngủ 2 kẻ địch ngẫu nhiên 2 hiệp (như choáng, có Zzz).
+  // Ngoại hình riêng của game (câu lệnh ở luu_tru/hiep_khach/cau_lenh.md), hình động + hiệu ứng làm bằng Blender (tools/blender/diep_nhi_nuong.py, fx_nguyen.py)
+  diep_nhi_nuong: { name: 'Diệp Nhị Nương', img: 'tm_nu_quy', art: 'game/img/hk/diep_nhi_nuong.jpg', face: [0.56, 0.29], sprite: 'game/img/hk/diep_nhi_nuong_sd.png', hand: [0.94, 0.37], role: 'ho_tro', q: 4, lv: 1, star: 1, hanh: 'hoa', tuChat: 14,
+    st: { hp: 1117.1, atk: 395.2, def: 240.1, hoi: 171.1, spd: 60, mi: 200 },
+    grow: { hp: 55.86, atk: 19.76, def: 12.0, hoi: 8.56 },
+    ex: { crit: 0, critDmg: 150, acc: 100, dodge: 7.5, ben: 5 },
+    skill: { grade: 'S', name: 'Hoán Hồn Khúc', desc: 'Tăng 14% khí huyết tối đa toàn đội 2 hiệp, ru ngủ ngẫu nhiên 2 kẻ địch 2 hiệp' },
+    ult: { kind: 'curse', teamHp: 0.14, n: 2, turns: 2, fx: 'nguyen' },
+    // phep: niệm chú lắc trống; doll = khung hiện hình nộm rơm trên đầu địch, blast = khung phất tay (nổ dưới chân địch)
+    anim: { iw: 555, ih: 700, box: [-90, -110, 665, 760],
+      idle: { src: 'game/img/blender/diep_idle.webp', n: 24, ms: 1300 },
+      phep: { src: 'game/img/blender/diep_phep.webp', n: 30, ms: 1500, doll: 7, blast: 19 } },
+    duyen: [{ name: 'Mẫu Tử', desc: 'Cùng ra trận HP +200%', with: [], ok: false }] },
+
   hoang_y_nu: { name: 'Hoàng Y Nữ', img: 'tm_hoang_y_kiem_nu', role: 'ho_tro', q: 2, lv: 1, star: 1, hanh: 'hoa', tuChat: 11,
     st: { hp: 2100, atk: 1350, def: 1100, hoi: 500, spd: 55, mi: 90 },
     skill: { grade: 'A', name: 'Phượng Minh Khúc', desc: 'Tăng 20% Công toàn đội 2 hiệp' },
     duyen: [{ name: 'Tri Kỷ', desc: 'Cùng ra trận Hồi +20%', with: [], ok: true }] },
 };
 // Nhân vật mới được tặng sẵn (người dùng chốt 2026-11-12: Đoàn Diên Khánh + Nam Hải Ngạc Thần)
-const HK_START = ['doan_dien_khanh', 'nam_hai_ngac_than'];
+const HK_START = ['doan_dien_khanh', 'nam_hai_ngac_than', 'diep_nhi_nuong'];
 // Hiệp khách đã có (P.hk[mã] = {lv, star}) + đội ra trận 5 ô (P.doi, null = ô trống). Bản lưu chưa có thì tặng Đoàn Diên Khánh.
 function hkEnsure() {
   if (!P) return;
-  if (!P.hk || !Object.keys(P.hk).length) { P.hk = {}; HK_START.forEach(id => { P.hk[id] = { lv: 1, star: 1 }; }); P.hkTang2 = true; }
+  if (!P.hk || !Object.keys(P.hk).length) { P.hk = {}; HK_START.forEach(id => { P.hk[id] = { lv: 1, star: 1 }; }); P.hkTang2 = true; P.hkTang3 = true; }
   if (!Array.isArray(P.doi)) P.doi = HK_START.slice();
   P.doi = P.doi.slice(0, 5).map(id => (id && P.hk[id] && HIEP_KHACH[id] ? id : null));
   while (P.doi.length < 5) P.doi.push(null);
@@ -74,6 +89,12 @@ function hkEnsure() {
     P.hkTang2 = true;
     if (!P.hk.nam_hai_ngac_than) P.hk.nam_hai_ngac_than = { lv: 1, star: 1 };
     const k = P.doi.indexOf(null); if (k >= 0 && !P.doi.includes('nam_hai_ngac_than')) P.doi[k] = 'nam_hai_ngac_than';
+  }
+  // tặng bù Diệp Nhị Nương (2026-11-12) cho bản lưu đã có, xếp vào ô trống đầu tiên
+  if (!P.hkTang3) {
+    P.hkTang3 = true;
+    if (!P.hk.diep_nhi_nuong) P.hk.diep_nhi_nuong = { lv: 1, star: 1 };
+    const k = P.doi.indexOf(null); if (k >= 0 && !P.doi.includes('diep_nhi_nuong')) P.doi[k] = 'diep_nhi_nuong';
   }
 }
 const hkGet = id => (id && HIEP_KHACH[id] && P.hk[id] ? Object.assign({ id }, HIEP_KHACH[id], P.hk[id]) : null);

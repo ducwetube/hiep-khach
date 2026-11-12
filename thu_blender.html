@@ -41,6 +41,17 @@
   button.on { background: var(--on); border-color: var(--gold); }
   button:active { transform: translateY(1px); }
   .note { margin-top: 14px; font-size: 13px; color: var(--muted); }
+  .u .zzz { position: absolute; left: 62%; bottom: 100%; z-index: 4; display: none; font: italic 900 4.6cqw/1 Georgia, serif; color: #d9e6ff; text-shadow: 0 0 .5cqw #2a3a8a, 0 .2cqw 0 #1a1a3a; white-space: nowrap; }
+  .u.sleep .zzz { display: block; }
+  .u.sleep img.sp { filter: brightness(.82) saturate(.8); }
+  .zzz b { display: inline-block; animation: zzz 1.8s ease-in-out infinite; opacity: 0; }
+  .zzz b:nth-child(2) { font-size: .8em; animation-delay: .6s; }
+  .zzz b:nth-child(3) { font-size: .62em; animation-delay: 1.2s; }
+  @keyframes zzz { 0% { opacity: 0; transform: translate(0, .8cqw); } 25% { opacity: 1; } 80% { opacity: .9; } 100% { opacity: 0; transform: translate(1.6cqw, -3.6cqw); } }
+  .pop { position: absolute; z-index: 40; transform: translate(-50%, -50%); font-weight: 900; font-size: 4cqw; color: #fff; text-shadow: 0 0 .6cqw #000, 0 .3cqw 0 #000; white-space: nowrap; animation: pop 1.2s ease-out forwards; pointer-events: none; }
+  .pop.heal { color: #6f6; font-size: 3.4cqw; }
+  .pop.st { color: #9cf; font-size: 3.4cqw; }
+  @keyframes pop { 0% { opacity: 0; margin-top: 2cqw; } 15% { opacity: 1; margin-top: 0; } 100% { opacity: 0; margin-top: -8cqw; } }
 </style>
 </head>
 <body>
@@ -68,6 +79,14 @@
     <button id="bOff">Tắt khiên</button>
   </div>
   <div class="row">
+    <b>Diệp Nhị Nương</b>
+    <button id="bCurse">Hoán Hồn Khúc</button>
+  </div>
+  <div class="row">
+    <b>Nam Hải Ngạc Thần · đánh thường</b>
+    <button id="bChem">Vung kích chém</button>
+  </div>
+  <div class="row">
     <b>Tốc độ</b>
     <button id="s1" class="on">Thường</button>
     <button id="s2">Chậm (xem kỹ)</button>
@@ -92,7 +111,8 @@
   // x, foot y (% of stage), height (% of stage width), flip
   const units = {
     doan: { x: 27, y: 84, w: 15.5, src: 'game/img/hk/doan_dien_khanh_sd.png', ar: 446 / 700 },
-    nam:  { x: 12, y: 66, w: 23, src: 'game/img/hk/nam_hai_ngac_than_sd.png', ar: 730 / 700, flip: true },
+    nam:  { x: 14, y: 64, w: 23, src: 'game/img/hk/nam_hai_ngac_than_sd.png', ar: 730 / 700, flip: true },
+    diep: { x: 11, y: 97, w: 19.3, src: 'game/img/hk/diep_nhi_nuong_sd.png', ar: 555 / 700 },
     e1:   { x: 72, y: 66, w: 17, src: 'game/img/quai/tm_cuong_khach.png', flip: false },
     e2:   { x: 86, y: 80, w: 17, src: 'game/img/quai/tm_hac_lao.png', flip: false },
     e3:   { x: 70, y: 95, w: 17, src: 'game/img/quai/tm_thanh_kiem.png', flip: false },
@@ -102,7 +122,7 @@
     const d = document.createElement('div');
     d.className = 'u' + (u.flip ? ' flip' : '');
     d.style.left = u.x + '%'; d.style.top = u.y + '%'; d.style.width = u.w + 'cqw';
-    d.innerHTML = `<img class="sp" src="${u.src}" alt="">`;
+    d.innerHTML = `<img class="sp" src="${u.src}" alt=""><i class="zzz"><b>Z</b><b>z</b><b>z</b></i>`;
     st.insertBefore(d, fx); el[k] = d;
   }
   // hình động Đoàn Diên Khánh: lớp phủ đúng chỗ hình tĩnh
@@ -120,6 +140,69 @@
     el.doan.appendChild(animEl);
     if (!loop) { const me = animEl; me._anim.onfinish = () => { if (animEl === me) playDoan('idle'); }; }
     return animEl;
+  }
+  // hình động chung cho Nam Hải / Diệp Nhị Nương (giống game: tran_doi.js tdAnimPlay)
+  const HERO = {
+    nam: { iw: 730, box: [-170, -110, 840, 760], flip: true,
+      idle: { src: 'game/img/blender/nam_idle.webp', n: 24, ms: 1300 },
+      chem: { src: 'game/img/blender/nam_chem.webp', n: 20, ms: 950, hit: 8 } },
+    diep: { iw: 555, box: [-90, -110, 665, 760],
+      idle: { src: 'game/img/blender/diep_idle.webp', n: 24, ms: 1300 },
+      phep: { src: 'game/img/blender/diep_phep.webp', n: 30, ms: 1500, doll: 7, blast: 19 } },
+  };
+  const FXS = {
+    nom: { src: 'game/img/blender/fx_bl_nom_rom.webp', n: 18 },
+    no: { src: 'game/img/blender/fx_bl_no_tim.webp', n: 20 },
+    slash: { src: 'game/img/blender/fx_bl_chem_nuoc.webp', n: 12 },
+  };
+  const heroEl = {};
+  function heroPlay(k, which) {
+    const H = HERO[k], S = H[which], d = el[k], sp = d.querySelector('img.sp');
+    if (heroEl[k]) heroEl[k].remove();
+    const W = sp.getBoundingClientRect().width, kk = W / H.iw, [x0, y0, x1, y1] = H.box;
+    const box = { left: (H.flip ? (H.iw - x1) : x0) * kk + 'px', top: y0 * kk + 'px', width: (x1 - x0) * kk + 'px', height: (y1 - y0) * kk + 'px', zIndex: 2, transform: H.flip ? 'scaleX(-1)' : '' };
+    const loop = which === 'idle', s = sheet(S, box, loop, S.ms);
+    sp.style.visibility = 'hidden';
+    d.appendChild(s); heroEl[k] = s;
+    if (!loop) s._anim.onfinish = () => { if (heroEl[k] === s) heroPlay(k, 'idle'); };
+    return s._anim;
+  }
+  const rectIn = e => { const r = e.getBoundingClientRect(), s = st.getBoundingClientRect(); return { l: r.left - s.left, t: r.top - s.top, w: r.width, h: r.height }; };
+  function pop(k, txt, cls) {
+    const r = rectIn(el[k].querySelector('img.sp')), p = document.createElement('div');
+    p.className = 'pop ' + (cls || ''); p.textContent = txt; p.style.left = r.l + r.w / 2 + 'px'; p.style.top = r.t + 'px';
+    fx.appendChild(p); setTimeout(() => p.remove(), 1300 * slow);
+  }
+  const hitFx = k => { el[k].classList.remove('hit'); void el[k].offsetWidth; el[k].classList.add('hit'); };
+
+  async function curse() {
+    const A = HERO.diep.phep, at = f => f / A.n * A.ms;
+    heroPlay('diep', 'phep');
+    await wait(at(A.doll));
+    const foes = ['e1', 'e2', 'e3'], rs = foes.map(k => rectIn(el[k].querySelector('img.sp')));
+    const cx = rs.reduce((s, r) => s + r.l + r.w / 2, 0) / rs.length, sz = 26 * cq();
+    fx.appendChild(sheet(FXS.nom, { left: cx - sz / 2 + 'px', top: Math.max(0, Math.min(...rs.map(r => r.t)) - sz * 0.85) + 'px', width: sz + 'px', height: sz + 'px' }, false, 900));
+    await wait(at(A.blast) - at(A.doll));
+    const w = 30 * cq(), h = w * 1.25;
+    foes.forEach((k, j) => setTimeout(() => {
+      const r = rectIn(el[k]);
+      fx.appendChild(sheet(FXS.no, { left: r.l + r.w / 2 - w / 2 + 'px', top: r.t + r.h - h * 0.8 + 'px', width: w + 'px', height: h + 'px' }, false, 900));
+    }, j * 60 * slow));
+    await wait(150);
+    foes.forEach(hitFx);
+    foes.slice().sort(() => Math.random() - 0.5).slice(0, 2).forEach(k => { el[k].classList.add('sleep'); pop(k, 'Ru ngủ', 'st'); setTimeout(() => el[k].classList.remove('sleep'), 5000 * slow); });
+    ['doan', 'nam', 'diep'].forEach(k => pop(k, 'HP tối đa +14%', 'heal'));
+  }
+  async function chem() {
+    const C = HERO.nam.chem, d = el.nam, a = rectIn(d), b = rectIn(el.e1);
+    const hitMs = C.hit / C.n * C.ms, dx = (b.l - a.l) * 0.55, dy = (b.t + b.h - a.t - a.h) * 0.55;
+    d.animate([{ translate: '0 0' }, { translate: `${dx}px ${dy}px`, offset: 0.25 }, { translate: `${dx}px ${dy}px`, offset: 0.75 }, { translate: '0 0' }], { duration: (hitMs + 520) * slow, easing: 'ease-out' });
+    heroPlay('nam', 'chem');
+    await wait(hitMs - 60);
+    const r = rectIn(el.e1.querySelector('img.sp')), sz = 30 * cq();
+    fx.appendChild(sheet(FXS.slash, { left: r.l + r.w / 2 - sz / 2 + 'px', top: r.t + r.h * 0.45 - sz / 2 + 'px', width: sz + 'px', height: sz + 'px' }, false, 480));
+    await wait(60);
+    hitFx('e1'); pop('e1', '-' + (90 + Math.round(Math.random() * 30)));
   }
   const center = k => { const r = el[k].getBoundingClientRect(), s = st.getBoundingClientRect(); return { x: r.left - s.left + r.width / 2, y: r.top - s.top + r.height * 0.45 }; };
   const hand = () => { const r = el.doan.getBoundingClientRect(), s = st.getBoundingClientRect(); return { x: r.left - s.left + r.width * 0.93, y: r.top - s.top + r.height * 0.46 }; };
@@ -213,9 +296,11 @@
     $('bAnim').textContent = 'Hình động: ' + (animOn ? 'Bật' : 'Tắt');
     playDoan('idle');
   };
+  $('bCurse').onclick = async () => { if (busy) return; busy = true; try { await curse(); } finally { busy = false; } };
+  $('bChem').onclick = async () => { if (busy) return; busy = true; try { await chem(); } finally { busy = false; } };
   // preload
-  Object.values(SH).forEach(s => { const i = new Image(); i.src = s.src; });
-  addEventListener('load', () => playDoan('idle'));
+  [...Object.values(SH), ...Object.values(FXS), ...Object.values(HERO).flatMap(h => Object.values(h).filter(v => v && v.src))].forEach(s => { const i = new Image(); i.src = s.src; });
+  addEventListener('load', () => { playDoan('idle'); heroPlay('nam', 'idle'); heroPlay('diep', 'idle'); });
   addEventListener('resize', () => { if (animEl && animOn) Object.assign(animEl.style, animBox()); });
   window.TEST = { chi, guard, setMode, playDoan };
 })();

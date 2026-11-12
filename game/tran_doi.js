@@ -86,6 +86,7 @@ function tdStart(def) {
   tdS.ta.forEach(u => {
     const list = u.anim ? Object.values(u.anim).filter(v => v && v.src).map(v => v.src) : [];
     if (u.anim && u.anim.chem && TD_SLASH[u.anim.chem.slash]) list.push(TD_SLASH[u.anim.chem.slash].src);
+    if (u.ult && u.ult.fx === 'nguyen') list.push(TD_CURSE.nom.src, TD_CURSE.no.src);
     if (u.ult && u.ult.fx === 'chi') list.push(TD_BURST.src);
     if (u.ult && TD_SHIELD[u.ult.shield]) list.push(TD_SHIELD[u.ult.shield].back, TD_SHIELD[u.ult.shield].front);
     list.forEach(src => { const im = new Image(); im.src = src; });
@@ -116,6 +117,7 @@ function tdSpriteHtml(u) {
     <i class="td-ring"></i><i class="td-shadow"></i>
     <img class="${u.sprite && !u.spFlip ? 'nf' : ''}" src="${u.sprite || `game/img/quai/${u.img}.png`}" alt="" draggable="false" style="height:${(k * 100).toFixed(0)}%;animation-delay:-${((u.i * 0.53 + (u.side === 'dich' ? 0.3 : 0)) % 2.6).toFixed(2)}s">
     <span class="td-hb"><i style="width:${(u.hp / u.maxHp * 100).toFixed(1)}%"></i></span>
+    <i class="td-zzz" style="bottom:${(k * 88).toFixed(0)}%"><b>Z</b><b>z</b><b>z</b></i>
   </div>`;
 }
 function tdRender() {
@@ -164,6 +166,7 @@ function tdSync() {
       el2.classList.toggle('dead', u.dead);
       el2.classList.toggle('tgt', u.side === 'dich' && u.i === s.target && !u.dead);
       el2.classList.toggle('stun', u.stun > 0);
+      el2.classList.toggle('sleep', u.sleep > 0 && !u.dead);
       const b = el2.querySelector('.td-hb i'); if (b) b.style.width = (u.hp / u.maxHp * 100).toFixed(1) + '%';
       tdFxSync(u);
     }
@@ -288,6 +291,45 @@ function tdHand(u) {
 const TD_SHIELD = { nuoc: { back: 'game/img/blender/fx_bl_khien_sau.webp', front: 'game/img/blender/fx_bl_khien_truoc.webp', n: 20, ms: 1000, ar: 224 / 280 } };
 const TD_BURST = { src: 'game/img/blender/fx_bl_no_vang.webp', n: 16, ms: 560 };
 const TD_SLASH = { nuoc: { src: 'game/img/blender/fx_bl_chem_nuoc.webp', n: 12, ms: 480 } };
+// Hoán Hồn Khúc (Diệp Nhị Nương): hình nộm rơm phát sáng trên đầu đội hình địch, rồi nổ tà thuật tím dưới chân từng kẻ
+const TD_CURSE = {
+  nom: { src: 'game/img/blender/fx_bl_nom_rom.webp', n: 18, ms: 900 },
+  no: { src: 'game/img/blender/fx_bl_no_tim.webp', n: 20, ms: 900, ar: 250 / 200, foot: 0.8 },
+};
+// chân một người (px, so với khung .td)
+function tdFeet(t) {
+  const root = document.querySelector('.td'), e = document.getElementById(`td-${t.side}-${t.i}`);
+  if (!root || !e) return { x: 0, y: 0 };
+  const R = root.getBoundingClientRect(), r = e.getBoundingClientRect();
+  return { x: r.left + r.width / 2 - R.left, y: r.bottom - R.top };
+}
+async function tdCurseFx(u, foes, onBlast) {
+  const box = document.getElementById('td-fx'); if (!box || !foes.length) { if (onBlast) onBlast(); return; }
+  const cq = box.clientWidth / 100, fast = tdS && tdS.fast, k = fast ? 0.5 : 1;
+  const A = u.anim && u.anim.phep, an = A ? tdAnimPlay(u, 'phep') : null;
+  const at = f => (A ? f / A.n * A.ms : 0);
+  await tdWait(A ? at(A.doll) : 250);
+  // dấu ấn: hình nộm rơm lơ lửng trên đầu đội hình địch (giữa các kẻ địch, cao hơn đầu người cao nhất)
+  const R = box.getBoundingClientRect();
+  const tops = foes.map(t => { const e = document.getElementById(`td-${t.side}-${t.i}`), img = e && e.querySelector('img'); return img ? img.getBoundingClientRect().top - R.top : tdPos(t).y; });
+  const cx = foes.reduce((s, t) => s + tdPos(t).x, 0) / foes.length, sz = 26 * cq;
+  const nom = tdStrip(TD_CURSE.nom.src, TD_CURSE.nom.n, TD_CURSE.nom.ms * k, false);
+  Object.assign(nom.el.style, { left: cx - sz / 2 + 'px', top: Math.max(0, Math.min(...tops) - sz * 0.85) + 'px', width: sz + 'px', height: sz + 'px' });
+  box.appendChild(nom.el); setTimeout(() => nom.el.remove(), TD_CURSE.nom.ms * k + 250);
+  await tdWait(A ? at(A.blast) - at(A.doll) : 600);
+  // nổ tà thuật dưới chân mọi kẻ địch
+  const N = TD_CURSE.no, w = 30 * cq, h = w * N.ar;
+  foes.forEach((t, j) => setTimeout(() => {
+    if (!box.isConnected) return;
+    const p = tdFeet(t), s = tdStrip(N.src, N.n, N.ms * k, false);
+    Object.assign(s.el.style, { left: p.x - w / 2 + 'px', top: p.y - h * N.foot + 'px', width: w + 'px', height: h + 'px' });
+    box.appendChild(s.el); setTimeout(() => s.el.remove(), N.ms * k + 250);
+  }, j * 60 * k));
+  await tdWait(150);
+  if (onBlast) onBlast();
+  await tdWait(450);
+  if (an && an.playState === 'paused') an.play();
+}
 // vệt chém ở chỗ trúng; người chém đứng bên phải mục tiêu thì lật ngang
 function tdSlash(kind, a, t) {
   const box = document.getElementById('td-fx'), S = TD_SLASH[kind]; if (!box || !S) return;
@@ -510,6 +552,21 @@ async function tdUltDo(u) {
     const pool = tdAlive(tdFoe(u)).sort(() => Math.random() - 0.5).slice(0, U.n);
     await tdWait(260);
     pool.forEach(t => { t.buf.atk = { v: -U.atkDown, t: U.turns }; tdHitFx(t); tdPop(t, 'Công −' + Math.round(U.atkDown * 100) + '%', 'st'); });
+  } else if (U.kind === 'curse') {
+    // Hoán Hồn Khúc (Diệp Nhị Nương): nổ tà thuật lên cả đội hình địch, ru ngủ ngẫu nhiên N kẻ (mất lượt như choáng),
+    // cả đội mình tăng khí huyết tối đa theo % (máu hiện tại tăng theo) trong vài hiệp
+    const foes = tdAlive(tdFoe(u)), sleepers = foes.slice().sort(() => Math.random() - 0.5).slice(0, U.n);
+    await tdCurseFx(u, foes, () => {
+      foes.forEach(t => tdHitFx(t));
+      sleepers.forEach(t => { t.sleep = Math.max(t.sleep || 0, U.turns); tdPop(t, 'Ru ngủ', 'st'); });
+      tdAlive(u.side).forEach(m => {
+        if (m.buf.hp2) { m.maxHp -= m.buf.hp2.add; m.hp = Math.min(m.hp, m.maxHp); }
+        const add = Math.round(m.maxHp * U.teamHp);
+        m.maxHp += add; m.hp += add; m.buf.hp2 = { v: U.teamHp, t: U.turns, add };
+        tdPop(m, 'HP tối đa +' + Math.round(U.teamHp * 100) + '%', 'heal');
+      });
+      tdSync();
+    });
   } else if (U.kind === 'heal') {
     tdAlive(u.side).forEach(m => { const h = Math.round(u.hoi * U.hoi + tdAtk(u) * U.atk); m.hp = Math.min(m.maxHp, m.hp + h); tdPop(m, '+' + h, 'heal'); });
   } else if (U.kind === 'buff') {
@@ -552,6 +609,7 @@ async function tdPhaseDich() {
     if (s.over || tdS !== s) return;
     if (e.dead) continue;
     if (e.stun) { e.stun = 0; tdPop(e, 'Choáng', 'st'); tdSync(); await tdWait(350); continue; }
+    if (e.sleep > 0) { e.sleep--; tdPop(e, 'Đang ngủ', 'st'); tdSync(); await tdWait(350); continue; }   // ru ngủ: mất lượt
     if (e.no >= TD.noMax) { e.no = 0; await tdUltDo(e); } else await tdNormal(e);
     if (!tdAlive('ta').length) return tdEnd(false);
   }
@@ -568,7 +626,7 @@ async function tdPhaseDich() {
   // hết hiệp: giảm lượt hiệu ứng
   s.ta.concat(s.dich).forEach(u => Object.keys(u.buf).forEach(k => {
     if (--u.buf[k].t > 0) return;
-    if (k === 'hp') { u.maxHp -= u.buf.hp.add; u.hp = Math.min(u.hp, u.maxHp); }  // hết tăng khí huyết tối đa
+    if (u.buf[k].add) { u.maxHp -= u.buf[k].add; u.hp = Math.min(u.hp, u.maxHp); }  // hết tăng khí huyết tối đa (hp, hp2)
     delete u.buf[k];
   }));
   s.round++;
@@ -697,7 +755,15 @@ function tdStyle() {
   .td-u .td-sheet.shield.out { opacity: 0; }
   @keyframes tdShIn { from { scale: .3; opacity: 0; } }
   .td-hb { z-index: 3; }
-  .td-u.ta .td-hb { display: none; }   /* phe mình không hiện thanh máu trên đầu (che mặt; máu đã có ở thẻ dưới) */
+  .td-u.ta .td-hb { display: none; }
+  /* ru ngủ: chữ Zzz bay lên trên đầu */
+  .td-zzz { position: absolute; left: 62%; z-index: 4; display: none; pointer-events: none; font: italic 900 4.6cqw/1 Georgia, serif; color: #d9e6ff; text-shadow: 0 0 .5cqw #2a3a8a, 0 .2cqw 0 #1a1a3a; white-space: nowrap; }
+  .td-u.sleep .td-zzz { display: block; }
+  .td-zzz b { display: inline-block; animation: tdZzz 1.8s ease-in-out infinite; opacity: 0; }
+  .td-zzz b:nth-child(2) { font-size: .8em; animation-delay: .6s; }
+  .td-zzz b:nth-child(3) { font-size: .62em; animation-delay: 1.2s; }
+  @keyframes tdZzz { 0% { opacity: 0; transform: translate(0, .8cqw); } 25% { opacity: 1; } 80% { opacity: .9; } 100% { opacity: 0; transform: translate(1.6cqw, -3.6cqw); } }
+  .td-u.sleep > img, .td-u.sleep .td-sheet.body { filter: brightness(.82) saturate(.8); }   /* phe mình không hiện thanh máu trên đầu (che mặt; máu đã có ở thẻ dưới) */
   .td-chi-orb { position: absolute; width: 9cqw; height: 9cqw; margin: -4.5cqw 0 0 -4.5cqw; border-radius: 50%; background: radial-gradient(circle, #fff, #fff3a0 30%, #ffc23a 55%, #ffb00000 72%); animation: tdChiOrb .5s ease-in-out infinite alternate; }
   @keyframes tdChiOrb { from { transform: scale(.6); opacity: .7; } to { transform: scale(1.25); opacity: 1; } }
   .td-bolt { position: absolute; left: 0; top: 0; height: auto; pointer-events: none; transform-origin: 0 0; filter: drop-shadow(0 0 1.5cqw #ffb000aa); }
