@@ -48,6 +48,11 @@ const HIEP_KHACH = {
     skill: { grade: 'S', name: 'Ngạc Thần Hộ Thể', desc: 'Tăng 55% khí huyết tối đa bản thân, giảm 20% Công của 2 kẻ địch ngẫu nhiên trong 2 hiệp' },
     ult: { kind: 'guard', selfHp: 0.55, n: 2, atkDown: 0.2, turns: 2, shield: 'nuoc' },  // shield: khiên nước xoáy (Blender) suốt lúc còn tác dụng
     spSize: [730, 700],
+    // hình động Blender (tools/blender/nam_hai_ngac_than.py; ảnh gốc quay trái, trong trận lật ngang như hình tĩnh):
+    // chem = đánh thường vung kích bổ xuống, hit = khung lưỡi kích trúng địch, slash = vệt chém hiện ở chỗ trúng
+    anim: { iw: 730, ih: 700, box: [-170, -110, 840, 760],
+      idle: { src: 'game/img/blender/nam_idle.webp', n: 24, ms: 1300 },
+      chem: { src: 'game/img/blender/nam_chem.webp', n: 20, ms: 950, hit: 8, slash: 'nuoc' } },
     duyen: [{ name: 'Thầy Trò', desc: 'Cùng ra trận HP +200%', with: [], ok: false }] },
 
   hoang_y_nu: { name: 'Hoàng Y Nữ', img: 'tm_hoang_y_kiem_nu', role: 'ho_tro', q: 2, lv: 1, star: 1, hanh: 'hoa', tuChat: 11,

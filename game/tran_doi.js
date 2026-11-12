@@ -84,7 +84,8 @@ function tdStart(def) {
   tdS.ta.forEach(u => { if (u.role === 'ky_nang') u.no = TD.noMax; });
   // tải trước hình động / hiệu ứng Blender của đội để lúc tung chiêu không bị trống
   tdS.ta.forEach(u => {
-    const list = u.anim ? [u.anim.idle.src, u.anim.atk.src] : [];
+    const list = u.anim ? Object.values(u.anim).filter(v => v && v.src).map(v => v.src) : [];
+    if (u.anim && u.anim.chem && TD_SLASH[u.anim.chem.slash]) list.push(TD_SLASH[u.anim.chem.slash].src);
     if (u.ult && u.ult.fx === 'chi') list.push(TD_BURST.src);
     if (u.ult && TD_SHIELD[u.ult.shield]) list.push(TD_SHIELD[u.ult.shield].back, TD_SHIELD[u.ult.shield].front);
     list.forEach(src => { const im = new Image(); im.src = src; });
@@ -262,13 +263,14 @@ async function tdCollect(side) {
   await tdWait(mine.length * 70 + 650);
 }
 function tdClearGround() { if (tdS && tdS.ground) { tdS.ground.forEach(o => o.el && o.el.remove()); tdS.ground = []; } }
-function tdLunge(u, tgt) {
+function tdLunge(u, tgt, hold) {
   const e = document.getElementById(`td-${u.side}-${u.i}`); if (!e) return;
   const a = tdPos(u), b = tdPos(tgt);
   e.style.setProperty('--dx', ((b.x - a.x) * 0.55).toFixed(0) + 'px');
   e.style.setProperty('--dy', ((b.y - a.y) * 0.55).toFixed(0) + 'px');
   e.classList.add('lunge');
-  setTimeout(() => e.classList.remove('lunge'), tdS && tdS.fast ? 200 : 380);
+  const ms = hold || 380;
+  setTimeout(() => e.classList.remove('lunge'), tdS && tdS.fast ? ms / 2 : ms);
 }
 // Hiệu ứng "chỉ pháp" (Đoàn Thị Chỉ Pháp): tụ khí vàng ở đầu ngón tay, rồi từng tia chỉ lực vàng bắn liên tiếp tới mỗi kẻ địch,
 // chạm thì nổ chùm sáng (theo đoạn phim mẫu người dùng gửi). Vẽ bằng mã, không cần ảnh.
@@ -285,6 +287,16 @@ function tdHand(u) {
    Mỗi tấm là một dải ngang N khung; phát bằng cách trượt dải theo từng khung (steps). */
 const TD_SHIELD = { nuoc: { back: 'game/img/blender/fx_bl_khien_sau.webp', front: 'game/img/blender/fx_bl_khien_truoc.webp', n: 20, ms: 1000, ar: 224 / 280 } };
 const TD_BURST = { src: 'game/img/blender/fx_bl_no_vang.webp', n: 16, ms: 560 };
+const TD_SLASH = { nuoc: { src: 'game/img/blender/fx_bl_chem_nuoc.webp', n: 12, ms: 480 } };
+// vệt chém ở chỗ trúng; người chém đứng bên phải mục tiêu thì lật ngang
+function tdSlash(kind, a, t) {
+  const box = document.getElementById('td-fx'), S = TD_SLASH[kind]; if (!box || !S) return;
+  const p = tdPos(t), cq = box.clientWidth / 100, sz = 30 * cq;
+  const s = tdStrip(S.src, S.n, S.ms * (tdS && tdS.fast ? 0.6 : 1), false);
+  Object.assign(s.el.style, { left: p.x - sz / 2 + 'px', top: p.y - sz / 2 + 'px', width: sz + 'px', height: sz + 'px', transform: tdPos(a).x > p.x ? 'scaleX(-1)' : '' });
+  box.appendChild(s.el);
+  setTimeout(() => s.el.remove(), S.ms + 250);
+}
 function tdStrip(src, n, ms, loop) {
   const d = document.createElement('div'); d.className = 'td-sheet';
   const im = document.createElement('img'); im.className = 'td-strip'; im.src = src; im.alt = ''; im.draggable = false; d.appendChild(im);
@@ -311,7 +323,10 @@ function tdAnimPlay(u, which) {
   const s = tdStrip(S.src, S.n, S.ms * (!loop && tdS && tdS.fast ? 0.5 : 1), loop);
   s.el.classList.add('body');
   const [x0, y0, x1, y1] = A.box;
-  Object.assign(s.el.style, { left: b.x + x0 * b.k + 'px', top: b.y + y0 * b.k + 'px', width: (x1 - x0) * b.k + 'px', height: (y1 - y0) * b.k + 'px' });
+  // ảnh gốc quay trái mà đứng phe ta (lật ngang như hình tĩnh) thì lật cả khung hình động, vùng xuất lấy đối xứng
+  const flip = u.side === 'ta' && !b.img.classList.contains('nf');
+  const left = flip ? b.x + (A.iw - x1) * b.k : b.x + x0 * b.k;
+  Object.assign(s.el.style, { left: left + 'px', top: b.y + y0 * b.k + 'px', width: (x1 - x0) * b.k + 'px', height: (y1 - y0) * b.k + 'px', transform: flip ? 'scaleX(-1)' : '' });
   b.e.appendChild(s.el);
   if (!loop && s.anim) s.anim.onfinish = () => { if (s.el.isConnected && !u.dead) tdAnimPlay(u, 'idle'); };
   return s.anim;
@@ -438,8 +453,19 @@ function tdKill(t, a) {
 }
 async function tdNormal(u) {
   const t = tdTarget(u); if (!t) return;
-  tdLunge(u, t);
-  await tdWait(220);
+  const C = u.anim && u.anim.chem;
+  if (C) {
+    // có hình động chém (Nam Hải): lao tới, vung binh khí bổ xuống, vệt chém ở chỗ trúng đúng khung lưỡi chạm
+    const hitMs = C.hit / C.n * C.ms;
+    tdLunge(u, t, hitMs + 260);
+    tdAnimPlay(u, 'chem');
+    await tdWait(hitMs - 60);
+    if (C.slash) tdSlash(C.slash, u, t);
+    await tdWait(60);
+  } else {
+    tdLunge(u, t);
+    await tdWait(220);
+  }
   const r = tdDmg(u, t, 1);
   tdHurt(u, t, r.d, r.crit);
   tdSync();
@@ -671,6 +697,7 @@ function tdStyle() {
   .td-u .td-sheet.shield.out { opacity: 0; }
   @keyframes tdShIn { from { scale: .3; opacity: 0; } }
   .td-hb { z-index: 3; }
+  .td-u.ta .td-hb { display: none; }   /* phe mình không hiện thanh máu trên đầu (che mặt; máu đã có ở thẻ dưới) */
   .td-chi-orb { position: absolute; width: 9cqw; height: 9cqw; margin: -4.5cqw 0 0 -4.5cqw; border-radius: 50%; background: radial-gradient(circle, #fff, #fff3a0 30%, #ffc23a 55%, #ffb00000 72%); animation: tdChiOrb .5s ease-in-out infinite alternate; }
   @keyframes tdChiOrb { from { transform: scale(.6); opacity: .7; } to { transform: scale(1.25); opacity: 1; } }
   .td-bolt { position: absolute; left: 0; top: 0; height: auto; pointer-events: none; transform-origin: 0 0; filter: drop-shadow(0 0 1.5cqw #ffb000aa); }
