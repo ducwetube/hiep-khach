@@ -88,6 +88,7 @@ function tdStart(def) {
     if (u.anim && u.anim.chem && TD_SLASH[u.anim.chem.slash]) list.push(TD_SLASH[u.anim.chem.slash].src);
     if (u.ult && u.ult.kind === 'claw') list.push(TD_SLASH.caox.src);
     if (u.ult && u.ult.kind === 'drain') list.push(TD_AM.xoay.src);
+    if (u.ult && u.ult.kind === 'volley' && TD_SHOT[u.ult.shot]) list.push(TD_SHOT[u.ult.shot].src, TD_SHOT[u.ult.shot].hit.src);
     if (u.ult && u.ult.kind === 'flute') list.push(TD_AM.truc.src);
     if (u.anim && u.anim.danh && TD_SHOT[u.anim.danh.shot]) list.push(TD_SHOT[u.anim.danh.shot].src, TD_SHOT[u.anim.danh.shot].hit.src);
     if (u.ult && u.ult.fx === 'nguyen') list.push(TD_CURSE.nom.src, TD_CURSE.no.src);
@@ -294,10 +295,13 @@ function tdHand(u) {
 }
 /* ---------- hình động + hiệu ứng làm bằng Blender (tools/blender/) ----------
    Mỗi tấm là một dải ngang N khung; phát bằng cách trượt dải theo từng khung (steps). */
-const TD_SHIELD = { nuoc: { back: 'game/img/blender/fx_bl_khien_sau.webp', front: 'game/img/blender/fx_bl_khien_truoc.webp', n: 20, ms: 1000, ar: 224 / 280 } };
+const TD_SHIELD = {
+  nuoc: { back: 'game/img/blender/fx_bl_khien_sau.webp', front: 'game/img/blender/fx_bl_khien_truoc.webp', n: 20, ms: 1000, ar: 224 / 280 },
+};
 const TD_BURST = { src: 'game/img/blender/fx_bl_no_vang.webp', n: 16, ms: 560 };
 const TD_SLASH = {
   nuoc: { src: 'game/img/blender/fx_bl_chem_nuoc.webp', n: 12, ms: 480 },
+  chuong: { src: 'game/img/blender/fx_bl_no_tim_nho.webp', n: 16, ms: 480, size: 20 },   // chưởng khí tím (Hướng Vấn Thiên)
   cao: { src: 'game/img/blender/fx_bl_cao.webp', n: 12, ms: 480, size: 26 },     // 3 vệt cào móng thép (Vân Trung Hạc)
   caox: { src: 'game/img/blender/fx_bl_cao_x.webp', n: 16, ms: 640, size: 38 },  // vệt cào chéo chữ X (Hạc Trảo Công)
   cao_tim: { src: 'game/img/blender/fx_bl_cao_tim.webp', n: 12, ms: 480, size: 26 }, // vuốt tím đỏ (Nhậm Ngã Hành)
@@ -337,6 +341,9 @@ const TD_SHOT = {
   // nốt nhạc tím (Nhậm Doanh Doanh), đầu đạn ở 78% ngang
   not_nhac: { src: 'game/img/blender/fx_bl_not_nhac.webp', n: 8, ms: 400, size: 17, ax: 0.78, ay: 0.5, fly: 320,
     hit: { src: 'game/img/blender/fx_bl_no_tim_nho.webp', n: 16, ms: 520, size: 16 } },
+  // kim thêu vàng có chỉ đỏ (Đông Phương Bất Bại), tấm 2:1, mũi kim ở 85% ngang
+  kim: { src: 'game/img/blender/fx_bl_kim.webp', n: 8, ms: 400, size: 24, ar: 0.5, ax: 0.85, ay: 0.5, fly: 260,
+    hit: { src: 'game/img/blender/fx_bl_no_do_nho.webp', n: 16, ms: 480, size: 15 } },
   // Lục Mạch Thần Kiếm (Đoàn Dự): kiếm khí xanh băng, tấm 2:1, mũi kiếm ở 85% ngang
   kiem_khi: { src: 'game/img/blender/fx_bl_kiem_khi.webp', n: 8, ms: 400, size: 30, ar: 0.5, ax: 0.85, ay: 0.5, fly: 240,
     hit: { src: 'game/img/blender/fx_bl_no_xanh_nho.webp', n: 16, ms: 480, size: 16 } },
@@ -489,12 +496,34 @@ function tdShield(u, on) {
     b.e.appendChild(s.el);
   });
 }
+// khiên vòm bừng lên rồi tan (một lần) bọc quanh người; tấm 200x250, chân ở 80% chiều cao
+const TD_DOME = { src: 'game/img/blender/fx_bl_khien_vom.webp', n: 18, ms: 900, ar: 250 / 200, foot: 0.8 };
+function tdDome(u) {
+  const b = tdBody(u); if (!b) return;
+  const H = b.h * 2.15, W = H / TD_DOME.ar, k = tdS && tdS.fast ? 0.5 : 1;   // vòm cao ~51% khung tấm -> cao ~1,1 lần người
+  const s = tdStrip(TD_DOME.src, TD_DOME.n, TD_DOME.ms * k, false); s.el.classList.add('dome');
+  Object.assign(s.el.style, { left: b.cx - W / 2 + 'px', top: b.bot - H * TD_DOME.foot + 'px', width: W + 'px', height: H + 'px' });
+  b.e.appendChild(s.el); setTimeout(() => s.el.remove(), TD_DOME.ms * k + 200);
+}
+// biểu tượng hiệu ứng có lợi trên đầu (tăng Thủ / tăng Công) khi còn hiệu lực
+const TD_BUFF_IC = [['def', 'tang_thu'], ['atk', 'tang_cong']];
+function tdBuffIcons(u, e) {
+  let box = e.querySelector('.td-bf');
+  if (!box) { box = document.createElement('i'); box.className = 'td-bf'; e.appendChild(box); }
+  const on = u.dead ? [] : TD_BUFF_IC.filter(([k]) => u.buf[k] && u.buf[k].v > 0).map(([, ic]) => ic);
+  const key = on.join(',');
+  if (box.dataset.k === key) return;
+  box.dataset.k = key;
+  box.innerHTML = on.map(ic => `<img src="game/img/st/${ic}.png" alt="">`).join('');
+  const img = e.querySelector(':scope > img'); if (img) box.style.bottom = (img.getBoundingClientRect().height / e.getBoundingClientRect().height * 100 + 2).toFixed(0) + '%';
+}
 // gọi trong tdSync: gắn hình động / khiên cho đúng trạng thái (sau khi vẽ lại màn, qua đợt, hết hiệu lực, chết)
 function tdFxSync(u) {
   const e = document.getElementById(`td-${u.side}-${u.i}`); if (!e) return;
   if (u.anim && !u.dead && !e.querySelector('.td-sheet.body')) tdAnimPlay(u, 'idle');
+  tdBuffIcons(u, e);
   if (u.ult && u.ult.shield) {
-    const want = !u.dead && !!u.buf.hp, has = !!e.querySelector('.td-sheet.shield:not(.out)');
+    const want = !u.dead && !!u.buf[u.ult.shieldBuf || 'hp'], has = !!e.querySelector('.td-sheet.shield:not(.out)');
     if (want !== has) tdShield(u, want);
   }
 }
@@ -689,6 +718,32 @@ async function tdUltDo(u) {
       u.buf.atk = { v: U.selfAtk, t: U.turns }; tdPop(u, 'Công +' + Math.round(U.selfAtk * 100) + '%', 'st');
       if (!t.dead) { t.buf.def = { v: -U.defDown, t: U.turns }; setTimeout(() => tdPop(t, 'Thủ −' + Math.round(U.defDown * 100) + '%', 'st'), 250); }
     }
+  } else if (U.kind === 'fortify') {
+    // Hấp Công Hộ Thể (Hướng Vấn Thiên): thủ thế gồng người, khiên khí tím bừng lên, Thủ bản thân tăng vài hiệp (khiên còn tới khi hết hiệu lực)
+    // (người dùng chốt: chỉ khiên bừng lên một lần lúc tung chiêu, sau đó chỉ còn biểu tượng tăng Thủ trên đầu)
+    const A = u.anim && u.anim.ho;
+    if (A) { tdAnimPlay(u, 'ho'); await tdWait(A.fx / A.n * A.ms); }
+    tdDome(u);
+    u.buf.def = { v: U.selfDef, t: U.turns };
+    tdPop(u, 'Thủ +' + Math.round(U.selfDef * 100) + '%', 'st');
+    tdSync();
+  } else if (U.kind === 'volley') {
+    // mưa đạn toàn địch (Cửu Kiếm Quyết: kiếm khí; Quỳ Hoa Công: kim thêu): ra chiêu, mỗi kẻ địch trúng `per` phát xen kẽ,
+    // phát cuối của mỗi kẻ tính sát thương; rồi buff (Chuẩn toàn đội / Công bản thân)
+    const A = u.anim && u.anim.volley, foes = tdAlive(tdFoe(u)), k = tdS && tdS.fast ? 0.5 : 1;
+    if (A) { tdAnimPlay(u, 'volley'); await tdWait(A.fire / A.n * A.ms); } else await tdWait(250);
+    const from = tdHand(u), per = U.per || 3, jobs = [];
+    foes.forEach((t, j) => { for (let n = 0; n < per; n++) jobs.push(new Promise(done => setTimeout(() => {
+      if (!tdS || t.dead) return done();
+      const off = { x: from.x + (Math.random() - 0.5) * 18, y: from.y + (Math.random() - 0.5) * 18 };
+      tdShoot(u, t, U.shot, off).then(() => {
+        if (n === per - 1 && !t.dead) { const r = tdDmg(u, t, U.pow); tdHurt(u, t, r.d, r.crit); tdSync(); } else tdHitFx(t);
+        done();
+      });
+    }, (j * 60 + n * 150) * k))); });
+    await Promise.all(jobs);
+    if (U.teamAcc) tdAlive(u.side).forEach(m => { m.buf.acc = { v: U.teamAcc, t: U.turns }; tdPop(m, 'Chuẩn +' + Math.round(U.teamAcc * 100) + '%', 'st'); });
+    if (U.selfAtk) { u.buf.atk = { v: U.selfAtk, t: U.turns }; tdPop(u, 'Công +' + Math.round(U.selfAtk * 100) + '%', 'st'); }
   } else if (U.kind === 'drain') {
     // Hấp Tinh Đại Pháp (Nhậm Ngã Hành): giơ tay hút, vòng xoáy trên mọi kẻ địch, khí tím bay về tay; siết tay thì gây sát thương + giảm Công
     const A = u.anim && u.anim.hut, k = tdS && tdS.fast ? 0.5 : 1, foes = tdAlive(tdFoe(u));
@@ -915,6 +970,10 @@ function tdStyle() {
   @keyframes tdShIn { from { scale: .3; opacity: 0; } }
   .td-hb { z-index: 3; }
   .td-u.ta .td-hb { display: none; }
+  .td-bf { position: absolute; left: 50%; transform: translateX(-50%); z-index: 4; display: flex; gap: .4cqw; pointer-events: none; }
+  .td-u .td-bf img { position: static; left: auto; bottom: auto; max-width: none; transform: none; width: 4.2cqw; height: 4.2cqw; border-radius: 50%; filter: drop-shadow(0 .2cqw .3cqw #000c); animation: tdBf 1.6s ease-in-out infinite alternate; }
+  @keyframes tdBf { from { translate: 0 0; } to { translate: 0 -.6cqw; } }
+  .td-u .td-sheet.dome { z-index: 3; }
   /* ru ngủ: chữ Zzz bay lên trên đầu */
   .td-zzz { position: absolute; left: 62%; z-index: 4; display: none; pointer-events: none; font: italic 900 4.6cqw/1 Georgia, serif; color: #d9e6ff; text-shadow: 0 0 .5cqw #2a3a8a, 0 .2cqw 0 #1a1a3a; white-space: nowrap; }
   .td-u.sleep .td-zzz { display: block; }
