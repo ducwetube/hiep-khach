@@ -78,7 +78,7 @@ function tdStart(def) {
   tdS = {
     def: def || TD_TEST, wave: 0, round: 1, phase: 'ta', busy: false, target: 0, deaths: 0,
     auto: !!(tdS && tdS.auto), fast: !!(tdS && tdS.fast), loot: { bac: 0, luong: 0, manh: 0 }, over: null,
-    ta: team.map(({ h }, i) => tdUnit('ta', i, { name: h.name, img: h.img, art: h.art, sprite: h.sprite, hand: h.hand, ult: h.ult, role: h.role, skill: h.skill,
+    ta: team.map(({ h }, i) => tdUnit('ta', i, { name: h.name, img: h.img, art: h.art, face: h.face, sprite: h.sprite, spFlip: h.spFlip, hand: h.hand, ult: h.ult, role: h.role, skill: h.skill,
       ...(st => ({ maxHp: st.hp, atk: st.atk, def: st.def, hoi: st.hoi, spd: st.spd, mi: st.mi }))(heroSt(h)) })),
   };
   tdS.ta.forEach(u => { if (u.role === 'ky_nang') u.no = TD.noMax; });
@@ -91,8 +91,9 @@ function tdStart(def) {
 }
 
 /* ---------- vẽ ---------- */
-function tdPortrait(img, art) {
-  if (art) return `<img src="${art}" alt="" draggable="false" style="position:absolute;width:250%;left:-75%;top:-76%">`;
+function tdPortrait(img, art, face) {
+  // tranh 781 × 1400: phóng 250%, đặt tâm mặt (face, tỉ lệ tranh) vào giữa ô
+  if (art) { const [fx, fy] = face || [0.5, 0.28]; return `<img src="${art}" alt="" draggable="false" style="position:absolute;width:250%;left:${(50 - fx * 250).toFixed(1)}%;top:${(50 - fy * 250 * 1400 / 781).toFixed(1)}%">`; }
   const m = ENEMY_IMG[img];
   if (!m || !m.head) return `<img src="game/img/quai/${img}.png" alt="" draggable="false">`;
   const [hx, hy, hs] = m.head;
@@ -105,7 +106,7 @@ function tdSpriteHtml(u) {
   return `<div class="td-u ${u.side} ${u.dead ? 'dead' : ''}" id="td-${u.side}-${u.i}" style="left:${x}%;top:${y}%;z-index:${Math.round(y)}"
       ${u.side === 'dich' ? `onclick="G.tdPick(${u.i})"` : ''}>
     <i class="td-ring"></i><i class="td-shadow"></i>
-    <img class="${u.sprite ? 'nf' : ''}" src="${u.sprite || `game/img/quai/${u.img}.png`}" alt="" draggable="false" style="height:${(k * 100).toFixed(0)}%;animation-delay:-${((u.i * 0.53 + (u.side === 'dich' ? 0.3 : 0)) % 2.6).toFixed(2)}s">
+    <img class="${u.sprite && !u.spFlip ? 'nf' : ''}" src="${u.sprite || `game/img/quai/${u.img}.png`}" alt="" draggable="false" style="height:${(k * 100).toFixed(0)}%;animation-delay:-${((u.i * 0.53 + (u.side === 'dich' ? 0.3 : 0)) % 2.6).toFixed(2)}s">
     <span class="td-hb"><i style="width:${(u.hp / u.maxHp * 100).toFixed(1)}%"></i></span>
   </div>`;
 }
@@ -120,7 +121,7 @@ function tdRender() {
       <label class="td-fast" onclick="G.tdFast()"><i class="${s.fast ? 'on' : ''}"></i>Nhanh</label>
     </div>`;
   const cards = s.ta.map(u => `<button class="td-card r-${u.role}" id="td-c-${u.i}" onclick="G.tdTap(${u.i})">
-      <span class="td-pt">${tdPortrait(u.img, u.art)}</span>
+      <span class="td-pt">${tdPortrait(u.img, u.art, u.face)}</span>
       <span class="td-hpn"><img src="game/img/icon/loai_${u.role}.png" alt=""><b>${Math.max(0, Math.round(u.hp))}</b></span>
       <span class="td-bar hp"><i style="width:${(u.hp / u.maxHp * 100).toFixed(1)}%"></i></span>
       <span class="td-bar no"><i style="width:${(u.no / TD.noMax * 100).toFixed(1)}%"></i></span>
@@ -190,7 +191,7 @@ function tdBanner(u, name) {
   const fx = document.getElementById('td-fx'); if (!fx) return;
   const d = document.createElement('div');
   d.className = 'td-ban ' + u.side;
-  d.innerHTML = `<span class="td-ban-pt">${tdPortrait(u.img, u.art)}</span><b>${esc(name)}</b>`;
+  d.innerHTML = `<span class="td-ban-pt">${tdPortrait(u.img, u.art, u.face)}</span><b>${esc(name)}</b>`;
   fx.appendChild(d); setTimeout(() => d.remove(), 1300);
 }
 // cục khí bay từ kẻ bị đánh về người nhận (phe ta: về thẻ dưới; phe địch: về người trên sân)
@@ -396,6 +397,15 @@ async function tdUltDo(u) {
       if (U.stun && !t.dead && Math.random() < U.stun) { t.stun = 1; tdPop(t, 'Choáng', 'st'); }
     }
     if (U.selfDef) { u.buf.def = { v: U.selfDef, t: U.turns }; tdPop(u, 'Thủ +' + Math.round(U.selfDef * 100) + '%', 'st'); }
+  } else if (U.kind === 'guard') {
+    // Hộ Vệ (Nam Hải Ngạc Thần): tăng khí huyết TỐI ĐA bản thân theo % (máu hiện tại tăng theo) trong vài hiệp, giảm Công ngẫu nhiên N kẻ địch
+    if (u.buf.hp) { u.maxHp -= u.buf.hp.add; u.hp = Math.min(u.hp, u.maxHp); }
+    const add = Math.round(u.maxHp * U.selfHp);
+    u.maxHp += add; u.hp += add; u.buf.hp = { v: U.selfHp, t: U.turns, add };
+    tdPop(u, 'HP tối đa +' + Math.round(U.selfHp * 100) + '%', 'heal');
+    const pool = tdAlive(tdFoe(u)).sort(() => Math.random() - 0.5).slice(0, U.n);
+    await tdWait(260);
+    pool.forEach(t => { t.buf.atk = { v: -U.atkDown, t: U.turns }; tdHitFx(t); tdPop(t, 'Công −' + Math.round(U.atkDown * 100) + '%', 'st'); });
   } else if (U.kind === 'heal') {
     tdAlive(u.side).forEach(m => { const h = Math.round(u.hoi * U.hoi + tdAtk(u) * U.atk); m.hp = Math.min(m.maxHp, m.hp + h); tdPop(m, '+' + h, 'heal'); });
   } else if (U.kind === 'buff') {
@@ -452,7 +462,11 @@ async function tdPhaseDich() {
   });
   if (bled) { tdSync(); await tdWait(450); if (!tdAlive('ta').length) return tdEnd(false); }
   // hết hiệp: giảm lượt hiệu ứng
-  s.ta.concat(s.dich).forEach(u => Object.keys(u.buf).forEach(k => { if (--u.buf[k].t <= 0) delete u.buf[k]; }));
+  s.ta.concat(s.dich).forEach(u => Object.keys(u.buf).forEach(k => {
+    if (--u.buf[k].t > 0) return;
+    if (k === 'hp') { u.maxHp -= u.buf.hp.add; u.hp = Math.min(u.hp, u.maxHp); }  // hết tăng khí huyết tối đa
+    delete u.buf[k];
+  }));
   s.round++;
   if (!tdAlive('dich').length) { await tdCollect('ta'); return tdNextWave(); }
   tdPhaseTa();

@@ -33,7 +33,8 @@ function tcHead(title, back) {
 function tcTile(h, extra) {
   const H = NGU_HANH[h.hanh] || {};
   // chân dung: phóng to phần đầu của ảnh toàn thân
-  const pt = h.art ? `<img class="art" src="${h.art}" alt="">` : `<img src="game/img/quai/${h.img}.png" alt="">`;
+  const [fx, fy] = heroFace(h);
+  const pt = h.art ? `<img class="art" src="${h.art}" alt="" style="left:${(50 - fx * 182).toFixed(1)}%;top:${(50 - fy * 182 * 1400 / 781).toFixed(1)}%">` : `<img src="game/img/quai/${h.img}.png" alt="">`;
   return `<span class="tc-pt">${pt}</span>${H.color ? `<i class="tc-hanh" style="--hc:${H.color}"></i>` : ''}
     <span class="tc-st">${'<i></i>'.repeat(h.star || 1)}</span>${extra || ''}`;
 }
