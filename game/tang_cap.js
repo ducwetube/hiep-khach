@@ -62,7 +62,7 @@ function tcPick(id) {
   const h = hkGet(tcSel); if (!h) return tangCap();
   tcEnsure();
   closeModalSilent(); aiStyle(); homeStyle(); tcStyle(); homeNoDrag();
-  const add = tcPicks * TANG_CAP.exp, aft = hkLvAfter(h.lv, h.exp, add), st = heroSt(h), g = h.grow || {};
+  const add = tcPicks * TANG_CAP.exp, aft = hkLvAfter(h.lv, h.exp, add), st = heroSt(h, true), g = h.grow || {};
   const per = k => (g[k] ? `<small>(1 cấp +${String(g[k]).replace('.', ',')})</small>` : '');
   const need = hkNeed(aft.lv), pct = Math.min(100, (aft.exp / need) * 100);
   const L = TANG_CAP.lieu, cells = Array.from({ length: P.lieu }, (_, k) =>

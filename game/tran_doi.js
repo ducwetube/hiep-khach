@@ -86,6 +86,7 @@ function tdStart(def) {
   tdS.ta.forEach(u => {
     const list = u.anim ? Object.values(u.anim).filter(v => v && v.src).map(v => v.src) : [];
     if (u.anim && u.anim.chem && TD_SLASH[u.anim.chem.slash]) list.push(TD_SLASH[u.anim.chem.slash].src);
+    if (u.ult && u.ult.kind === 'claw') list.push(TD_SLASH.caox.src);
     if (u.ult && u.ult.fx === 'nguyen') list.push(TD_CURSE.nom.src, TD_CURSE.no.src);
     if (u.ult && u.ult.fx === 'langba') list.push(TD_LANGBA.src);
     if (u.anim && u.anim.danh && TD_SHOT[u.anim.danh.shot]) list.push(TD_SHOT[u.anim.danh.shot].src, TD_SHOT[u.anim.danh.shot].hit.src);
@@ -292,7 +293,11 @@ function tdHand(u) {
    Mỗi tấm là một dải ngang N khung; phát bằng cách trượt dải theo từng khung (steps). */
 const TD_SHIELD = { nuoc: { back: 'game/img/blender/fx_bl_khien_sau.webp', front: 'game/img/blender/fx_bl_khien_truoc.webp', n: 20, ms: 1000, ar: 224 / 280 } };
 const TD_BURST = { src: 'game/img/blender/fx_bl_no_vang.webp', n: 16, ms: 560 };
-const TD_SLASH = { nuoc: { src: 'game/img/blender/fx_bl_chem_nuoc.webp', n: 12, ms: 480 } };
+const TD_SLASH = {
+  nuoc: { src: 'game/img/blender/fx_bl_chem_nuoc.webp', n: 12, ms: 480 },
+  cao: { src: 'game/img/blender/fx_bl_cao.webp', n: 12, ms: 480, size: 26 },     // 3 vệt cào móng thép (Vân Trung Hạc)
+  caox: { src: 'game/img/blender/fx_bl_cao_x.webp', n: 16, ms: 640, size: 38 },  // vệt cào chéo chữ X (Hạc Trảo Công)
+};
 // Hoán Hồn Khúc (Diệp Nhị Nương): hình nộm rơm phát sáng trên đầu đội hình địch, rồi nổ tà thuật tím dưới chân từng kẻ
 const TD_CURSE = {
   nom: { src: 'game/img/blender/fx_bl_nom_rom.webp', n: 18, ms: 900 },
@@ -393,7 +398,7 @@ async function tdCurseFx(u, foes, onBlast) {
 // vệt chém ở chỗ trúng; người chém đứng bên phải mục tiêu thì lật ngang
 function tdSlash(kind, a, t) {
   const box = document.getElementById('td-fx'), S = TD_SLASH[kind]; if (!box || !S) return;
-  const p = tdPos(t), cq = box.clientWidth / 100, sz = 30 * cq;
+  const p = tdPos(t), cq = box.clientWidth / 100, sz = (S.size || 30) * cq;
   const s = tdStrip(S.src, S.n, S.ms * (tdS && tdS.fast ? 0.6 : 1), false);
   Object.assign(s.el.style, { left: p.x - sz / 2 + 'px', top: p.y - sz / 2 + 'px', width: sz + 'px', height: sz + 'px', transform: tdPos(a).x > p.x ? 'scaleX(-1)' : '' });
   box.appendChild(s.el);
@@ -640,6 +645,20 @@ async function tdUltDo(u) {
       });
       tdSync();
     });
+  } else if (U.kind === 'claw') {
+    // Hạc Trảo Công (Vân Trung Hạc): bật vọt lên rồi bổ xuống một mục tiêu, vệt cào chữ X; Công bản thân +, Thủ mục tiêu − vài hiệp
+    const t = tdTarget(u);
+    if (t) {
+      const A = u.anim && u.anim.vo, hitMs = A ? A.hit / A.n * A.ms : 220;
+      tdLunge(u, t, hitMs + 300);
+      if (A) tdAnimPlay(u, 'vo');
+      await tdWait(hitMs - 60);
+      tdSlash('caox', u, t);
+      await tdWait(60);
+      const r = tdDmg(u, t, U.pow); tdHurt(u, t, r.d, r.crit);
+      u.buf.atk = { v: U.selfAtk, t: U.turns }; tdPop(u, 'Công +' + Math.round(U.selfAtk * 100) + '%', 'st');
+      if (!t.dead) { t.buf.def = { v: -U.defDown, t: U.turns }; setTimeout(() => tdPop(t, 'Thủ −' + Math.round(U.defDown * 100) + '%', 'st'), 250); }
+    }
   } else if (U.kind === 'speed') {
     // Lăng Ba Vi Bộ (Đoàn Dự): lướt bước qua lại để lại bóng mờ, sóng nước dậy dưới chân đồng đội, cả đội +Tốc vài hiệp
     // (Tốc chưa có tác dụng trong trận đội: người dùng sẽ quyết sau)

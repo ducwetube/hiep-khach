@@ -42,7 +42,7 @@ const HIEP_KHACH = {
     duyen: [
       { name: 'Phụ Tử', desc: 'Cùng ra trận Công +150%', with: ['doan_du'], eff: { atk: 1.5 } },
       { name: 'Đoàn Viên', desc: 'Cùng ra trận Công +150% HP +200%', with: [{ ten: 'Đao Bạch Phượng' }], eff: { atk: 1.5, hp: 2 } },
-      { name: 'Tứ Đại Ác Nhân', desc: 'Cùng ra trận Công +200% HP +300%', with: ['diep_nhi_nuong', { ten: 'Vân Trung Hạc' }, 'nam_hai_ngac_than'], eff: { atk: 2, hp: 3 } },
+      { name: 'Tứ Đại Ác Nhân', desc: 'Cùng ra trận Công +200% HP +300%', with: ['diep_nhi_nuong', 'van_trung_hac', 'nam_hai_ngac_than'], eff: { atk: 2, hp: 3 } },
       { name: 'Bàn Cờ', desc: 'Sử dụng HP +30%', with: [{ ten: 'Bàn Cờ', loai: 'bao' }], eff: { hp: 0.3 } },
       { name: 'Hắc Miêu', desc: 'Sử dụng Công +50%', with: [{ ten: 'Hắc Miêu', loai: 'linh' }], eff: { atk: 0.5 } },
     ] },
@@ -64,7 +64,7 @@ const HIEP_KHACH = {
     duyen: [   // theo ảnh game mẫu người dùng gửi 2026-11-12; eff chưa áp vào chỉ số
       { name: 'Thầy Trò', desc: 'Cùng ra trận HP +200%', with: ['doan_du'], eff: { hp: 2 } },
       { name: 'Ghen Ghét', desc: 'Cùng ra trận Thủ +200%', with: ['diep_nhi_nuong'], eff: { def: 2 } },
-      { name: 'Tứ Đại Ác Nhân', desc: 'Cùng ra trận Công +200% HP +300%', with: ['doan_dien_khanh', 'diep_nhi_nuong', { ten: 'Vân Trung Hạc' }], eff: { atk: 2, hp: 3 } },
+      { name: 'Tứ Đại Ác Nhân', desc: 'Cùng ra trận Công +200% HP +300%', with: ['doan_dien_khanh', 'diep_nhi_nuong', 'van_trung_hac'], eff: { atk: 2, hp: 3 } },
       { name: 'Tái Sinh Phù', desc: 'Sử dụng Bền +10%', with: [{ ten: 'Tái Sinh Phù', loai: 'bao' }], eff: { ben: 10 } },
       { name: 'Tiểu Thử', desc: 'Sử dụng HP +150%', with: [{ ten: 'Tiểu Thử', loai: 'linh' }], eff: { hp: 1.5 } },
     ] },
@@ -87,7 +87,7 @@ const HIEP_KHACH = {
     duyen: [   // theo ảnh game mẫu người dùng gửi 2026-11-12; eff chưa áp vào chỉ số
       { name: 'Mẫu Tử', desc: 'Cùng ra trận HP +200%', with: [{ ten: 'Hư Trúc' }], eff: { hp: 2 } },
       { name: 'Ghen Ghét', desc: 'Cùng ra trận Thủ +200%', with: ['nam_hai_ngac_than'], eff: { def: 2 } },
-      { name: 'Tứ Đại Ác Nhân', desc: 'Cùng ra trận Công +200% HP +300%', with: ['doan_dien_khanh', 'nam_hai_ngac_than', { ten: 'Vân Trung Hạc' }], eff: { atk: 2, hp: 3 } },
+      { name: 'Tứ Đại Ác Nhân', desc: 'Cùng ra trận Công +200% HP +300%', with: ['doan_dien_khanh', 'nam_hai_ngac_than', 'van_trung_hac'], eff: { atk: 2, hp: 3 } },
       { name: 'Kinh Vô Tự', desc: 'Sử dụng Thủ +20%', with: [{ ten: 'Kinh Vô Tự', loai: 'bao' }], eff: { def: 0.2 } },
       { name: 'Lang Báo', desc: 'Sử dụng Tốc +5%', with: [{ ten: 'Lang Báo', loai: 'linh' }], eff: { spd: 0.05 } },
     ] },
@@ -108,17 +108,41 @@ const HIEP_KHACH = {
       bo: { src: 'game/img/blender/du_bo.webp', n: 30, ms: 1500, wave: 24 } },
     duyen: [{ name: 'Hiệp Lữ', desc: 'Cùng ra trận HP +250%', with: [], ok: false }] },
 
+  // Hiệp khách thứ năm (2026-11-12): từ ảnh mẫu 10 sao (Cơ Bản ÷ 1,2⁹); Công Kích hệ Thủy, chỉ số phụ theo loại Công Kích (Bạo 15, Né 2,5).
+  // Nộ S Hạc Trảo Công (người dùng chốt cấp 1): 200% Công một mục tiêu, Công bản thân +5%, Thủ mục tiêu −5% trong 2 hiệp.
+  van_trung_hac: { name: 'Vân Trung Hạc', img: 'tm_cuong_kiem', art: 'game/img/hk/van_trung_hac.jpg', face: [0.58, 0.34], sprite: 'game/img/hk/van_trung_hac_sd.png', hand: [0.97, 0.31], role: 'cong_kich', q: 4, lv: 1, star: 1, hanh: 'thuy', tuChat: 14,
+    st: { hp: 865.2, atk: 488.0, def: 194.0, hoi: 179.1, spd: 51, mi: 100 },
+    grow: { hp: 43.26, atk: 24.4, def: 9.7, hoi: 8.96 },
+    ex: { crit: 15, critDmg: 150, acc: 100, dodge: 2.5 },
+    skill: { grade: 'S', name: 'Hạc Trảo Công', desc: 'Tấn công một mục tiêu 200% Công, tăng 5% Công bản thân và giảm 5% Thủ mục tiêu trong 2 hiệp' },
+    ult: { kind: 'claw', pow: 2.0, selfAtk: 0.05, defDown: 0.05, turns: 2 },
+    // hình động Blender (tools/blender/van_trung_hac.py): chem = giơ móng cào xuống (vết cào 'cao'), vo = bật vọt lên rồi bổ xuống (khung hit chạm)
+    anim: { iw: 617, ih: 700, box: [-90, -270, 720, 760],
+      idle: { src: 'game/img/blender/vth_idle.webp', n: 24, ms: 1300 },
+      chem: { src: 'game/img/blender/vth_danh.webp', n: 16, ms: 750, hit: 8, slash: 'cao' },
+      vo: { src: 'game/img/blender/vth_vo.webp', n: 26, ms: 1300, hit: 16 } },
+    duyen: [   // theo ảnh game mẫu người dùng gửi 2026-11-12; eff chưa áp vào chỉ số
+      { name: 'Háo Sắc', desc: 'Cùng ra trận Công +150%', with: [{ ten: 'Vương Ngữ Yên' }], eff: { atk: 1.5 } },
+      { name: 'Gian Trá', desc: 'Cùng ra trận Công +150% Thủ +150%', with: [{ ten: 'Đinh Xuân Thu' }], eff: { atk: 1.5, def: 1.5 } },
+      { name: 'Tứ Đại Ác Nhân', desc: 'Cùng ra trận Công +200% HP +300%', with: ['diep_nhi_nuong', 'doan_dien_khanh', 'nam_hai_ngac_than'], eff: { atk: 2, hp: 3 } },
+      { name: 'Xà Trùy', desc: 'Sử dụng Bạo +20%', with: [{ ten: 'Xà Trùy', loai: 'bao' }], eff: { crit: 20 } },
+      { name: 'Xà Đảm', desc: 'Sử dụng Bạo +15%', with: [{ ten: 'Xà Đảm', loai: 'bao' }], eff: { crit: 15 } },
+      { name: 'Ngũ Độc Cổ', desc: 'Sử dụng Công +50%', with: [{ ten: 'Ngũ Độc Cổ', loai: 'bao' }], eff: { atk: 0.5 } },
+      { name: 'Ma Hoàng Trảo', desc: 'Sử dụng Tốc +3%', with: [{ ten: 'Ma Hoàng Trảo', loai: 'bao' }], eff: { spd: 0.03 } },
+      { name: 'Hầu Tử', desc: 'Sử dụng Công +50%', with: [{ ten: 'Hầu Tử', loai: 'linh' }], eff: { atk: 0.5 } },
+    ] },
+
   hoang_y_nu: { name: 'Hoàng Y Nữ', img: 'tm_hoang_y_kiem_nu', role: 'ho_tro', q: 2, lv: 1, star: 1, hanh: 'hoa', tuChat: 11,
     st: { hp: 2100, atk: 1350, def: 1100, hoi: 500, spd: 55, mi: 90 },
     skill: { grade: 'A', name: 'Phượng Minh Khúc', desc: 'Tăng 20% Công toàn đội 2 hiệp' },
     duyen: [{ name: 'Tri Kỷ', desc: 'Cùng ra trận Hồi +20%', with: [], ok: true }] },
 };
 // Nhân vật mới được tặng sẵn (người dùng chốt 2026-11-12: Đoàn Diên Khánh + Nam Hải Ngạc Thần)
-const HK_START = ['doan_dien_khanh', 'nam_hai_ngac_than', 'diep_nhi_nuong', 'doan_du'];
+const HK_START = ['doan_dien_khanh', 'nam_hai_ngac_than', 'diep_nhi_nuong', 'doan_du', 'van_trung_hac'];
 // Hiệp khách đã có (P.hk[mã] = {lv, star}) + đội ra trận 5 ô (P.doi, null = ô trống). Bản lưu chưa có thì tặng Đoàn Diên Khánh.
 function hkEnsure() {
   if (!P) return;
-  if (!P.hk || !Object.keys(P.hk).length) { P.hk = {}; HK_START.forEach(id => { P.hk[id] = { lv: 1, star: 1 }; }); P.hkTang2 = true; P.hkTang3 = true; P.hkTang4 = true; }
+  if (!P.hk || !Object.keys(P.hk).length) { P.hk = {}; HK_START.forEach(id => { P.hk[id] = { lv: 1, star: 1 }; }); P.hkTang2 = true; P.hkTang3 = true; P.hkTang4 = true; P.hkTang5 = true; }
   if (!Array.isArray(P.doi)) P.doi = HK_START.slice();
   P.doi = P.doi.slice(0, 5).map(id => (id && P.hk[id] && HIEP_KHACH[id] ? id : null));
   while (P.doi.length < 5) P.doi.push(null);
@@ -140,6 +164,12 @@ function hkEnsure() {
     if (!P.hk.doan_du) P.hk.doan_du = { lv: 1, star: 1 };
     const k = P.doi.indexOf(null); if (k >= 0 && !P.doi.includes('doan_du')) P.doi[k] = 'doan_du';
   }
+  // tặng bù Vân Trung Hạc (2026-11-12)
+  if (!P.hkTang5) {
+    P.hkTang5 = true;
+    if (!P.hk.van_trung_hac) P.hk.van_trung_hac = { lv: 1, star: 1 };
+    const k = P.doi.indexOf(null); if (k >= 0 && !P.doi.includes('van_trung_hac')) P.doi[k] = 'van_trung_hac';
+  }
 }
 // Duyên đạt: hiệp khách đó và mọi người trong `with` đều đang ở đội ra trận; người / bảo vật / linh thú chưa có ({ ten }) thì chưa đạt
 function duyenOk(id, d) {
@@ -159,9 +189,18 @@ const heroFace = h => (h && h.face) || [0.5, 0.28];
 // object-position cho ô cắt kiểu cover: dời theo tâm mặt so với tranh mặc định
 const heroPos = (h, base) => { const [fx, fy] = heroFace(h); return `object-position:${Math.round(50 + (fx - 0.5) * 200)}% ${Math.round(base + (fy - 0.28) * 160)}%`; };
 // Chỉ số theo cấp: gốc cấp 1 (st) + tăng mỗi cấp (grow) × (cấp − 1), làm tròn
-function heroSt(h) {
-  const o = {}, g = h.grow || {}, n = (h.lv || 1) - 1;
-  Object.keys(h.st).forEach(k => { o[k] = Math.round(h.st[k] + (g[k] || 0) * n); });
+// Chỉ số hiệp khách = gốc (theo cấp) × (1 + tổng % các Duyên đang đạt) (+ trang bị khi có).
+// Người dùng chốt 2026-11-12 theo game mẫu: Duyên tính % trên chỉ số gốc, không nhân trang bị; nhiều Duyên thì CỘNG các %.
+// base = true: chỉ số gốc, bỏ Duyên.
+function heroSt(h, base) {
+  const o = {}, g = h.grow || {}, n = (h.lv || 1) - 1, d = base ? {} : duyenBonus(h);
+  Object.keys(h.st).forEach(k => { o[k] = Math.round((h.st[k] + (g[k] || 0) * n) * (1 + (d[k] || 0))); });
+  return o;
+}
+// tổng % cộng thêm từ các Duyên đang đạt: { hp: 5, atk: 2, ... } (chỉ các chỉ số có trong st: hp, atk, def, hoi, spd)
+function duyenBonus(h) {
+  const o = {};
+  (h.duyen || []).forEach(d => { if (d.eff && duyenOk(h.id, d)) Object.keys(d.eff).forEach(k => { o[k] = (o[k] || 0) + d.eff[k]; }); });
   return o;
 }
 const homePng = n => `<img src="game/img/icon/${n}.png" alt="" draggable="false">`;
