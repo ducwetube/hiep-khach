@@ -202,6 +202,63 @@ function vhList() {
     <nav class="hm-nav">${homeNav('hiep_khach')}</nav>
   </div>`, 'vh-list');
 }
+/* ---------- ĐỘI NGŨ (2026-11-12, theo ảnh mẫu người dùng) ----------
+   5 thẻ dọc (ô trống "Chọn Tướng Ra Trận"),
+   hàng Hỗ Trợ 6 ô (ô 1 mở, các ô sau mở ở cấp 27 / 36 / 45 / 54 / 63, chưa có chức năng), nút Duyên / Chỉ Số / Thần Thú (sắp mở).
+   Bấm thẻ → "Chọn Võ Hiệp" (doiPick): Gỡ Ra + hiệp khách chưa ra trận, bấm là đưa vào ô đó. */
+const DOI_HOTRO = [0, 27, 36, 45, 54, 63];
+function doiNgu() {
+  if (!P) return renderTitle();
+  hkEnsure();
+  closeModalSilent(); aiStyle(); homeStyle(); tcStyle(); vhStyle(); homeNoDrag();
+  const tb = el('topbar'); if (tb) tb.classList.add('hidden');
+  const cards = hkTeam().map((h, i) => {
+    if (!h) return `<button class="dn-card empty" onclick="G.doiPick(${i})"><b>Chọn<br>Tướng<br>Ra<br>Trận</b></button>`;
+    const H = NGU_HANH[h.hanh] || {};
+    return `<button class="dn-card q-${HOME_Q[h.q]}" onclick="G.doiPick(${i})">
+      <img class="${h.art ? 'art' : ''}" src="${heroImg(h)}" alt="" draggable="false">
+      ${H.color ? `<i class="tc-hanh dn-hanh" style="--hc:${H.color}"></i>` : ''}
+      <span class="dn-name">${h.name}</span>
+      <span class="dn-foot"><b>${h.lv}</b><span class="tc-st">${'<i></i>'.repeat(h.star || 1)}</span></span></button>`;
+  }).join('');
+  const ht = DOI_HOTRO.map(lv => P.lv >= lv ? `<button class="dn-ht open" onclick="G.homeSoon('Hỗ trợ')"></button>`
+    : `<span class="dn-ht"><i class="dn-lock"></i><small>Cấp ${lv} mở</small></span>`).join('');
+  show(`<div class="home tc dn">
+    <div class="hm-bg"></div>
+    ${homeHead()}
+    <div class="tc-bar"><button class="al-back" onclick="G.home()">Trở về</button><b>Đội Ngũ</b>
+      <button class="dn-btn blue" onclick="G.homeSoon('Thần thú')">Thần Thú</button></div>
+    <div class="dn-cards">${cards}</div>
+    <div class="dn-band"><b>Hỗ Trợ</b><span>Có thể kích hoạt duyên phận</span></div>
+    <div class="dn-hts">${ht}</div>
+    <div class="dn-acts"><button class="dn-btn green" onclick="G.homeSoon('Duyên')">Duyên</button><button class="dn-btn blue" onclick="G.homeSoon('Chỉ số đội')">Chỉ Số</button></div>
+  </div>`, 'doi-ngu');
+}
+let dnSlot = 0, dnSort = 'lv', dnBack = 'G.doiNgu()'; // dnBack: màn quay về sau khi chọn (Đội Ngũ hoặc Trang chủ)
+function doiPick(i, sort, from) {
+  if (i != null) { dnSlot = i; dnBack = from === 'home' ? 'G.home()' : 'G.doiNgu()'; }
+  if (sort) dnSort = dnSort === 'lv' ? 'star' : 'lv';
+  hkEnsure();
+  closeModalSilent(); aiStyle(); homeStyle(); tcStyle(); vhStyle(); homeNoDrag();
+  const own = Object.keys(P.hk).filter(id => HIEP_KHACH[id] && !P.doi.includes(id)).map(hkGet)
+    .sort((a, b) => dnSort === 'star' ? (b.star - a.star) || b.lv - a.lv : (b.lv - a.lv) || b.star - a.star);
+  const cells = own.map(h => `<div class="dn-pk"><button class="tc-cell q-${HOME_Q[h.q]}" onclick="G.doiSet('${h.id}')">${tcTile(h, `<b class="tc-lv">${h.lv}</b>`)}</button><b>${h.name}</b></div>`).join('');
+  const off = P.doi[dnSlot] ? `<div class="dn-pk"><button class="tc-cell dn-off" onclick="G.doiSet(null)"><b>Gỡ Ra</b></button></div>` : '';
+  show(`<div class="home tc dn">
+    <div class="hm-bg"></div>
+    ${homeHead()}
+    <div class="tc-bar"><button class="al-back" onclick="${dnBack}">Trở về</button><b>Chọn Võ Hiệp</b>
+      <button class="dn-btn green sm" onclick="G.doiPick(null, 1)">Cấp Sao</button></div>
+    <div class="tc-grid hd-scroll vh-list dn-grid">${off}${cells || (off ? '' : '<p class="tc-empty">Chưa có hiệp khách nào khác. Chiêu mộ thêm để ra trận.</p>')}</div>
+    <nav class="hm-nav">${homeNav('hiep_khach')}</nav>
+  </div>`, 'doi-pick');
+}
+function doiSet(id) {
+  if (!id && P.doi.filter(Boolean).length <= 1) return toast('Đội cần ít nhất một hiệp khách');
+  P.doi[dnSlot] = id;
+  if (typeof saveGame === 'function') saveGame();
+  if (dnBack === 'G.home()') renderHome(); else doiNgu();
+}
 function vhStyle() {
   if (document.getElementById('vh-style')) return;
   const st = document.createElement('style');
@@ -218,9 +275,46 @@ function vhStyle() {
   .vh-cnt { margin-left: 4cqw; }
   .vh-sell { margin-left: auto; padding: 2cqw 5cqw; border-radius: 2.4cqw !important; font: 4.6cqw 'Pattaya', serif !important; color: #fff !important; background: linear-gradient(#5aa8e8, #1f5aa0) !important; border: .6cqw solid #a8d4ff !important; box-shadow: 0 .6cqw 1cqw #0008; }
   .vh-list { padding-bottom: calc(30cqw + env(safe-area-inset-bottom)); }
+  .dn-btn { padding: 2cqw 4.5cqw; border-radius: 2.4cqw !important; font: 5cqw 'Pattaya', serif !important; color: #fff !important; box-shadow: 0 .6cqw 1cqw #0008; white-space: nowrap; text-shadow: 0 .3cqw 0 #0006; }
+  .dn-btn.blue { background: linear-gradient(#5aa8e8, #1f5aa0) !important; border: .6cqw solid #a8d4ff !important; }
+  .dn-btn.green { background: linear-gradient(#5fbf4a, #2a7a22) !important; border: .6cqw solid #c9e08a !important; }
+  .tc-bar .dn-btn { margin-left: auto; } .dn-btn.sm { font-size: 4.4cqw !important; padding: 1.6cqw 5cqw; }
+  .dn-flag { display: block; width: 9cqw; height: 6.5cqw; background: linear-gradient(#e0392b, #9a1a10); clip-path: polygon(0 0, 100% 10%, 82% 50%, 100% 90%, 0 80%); border-left: .8cqw solid #6a3a10; }
+  .dn-cap { display: flex; flex-direction: column; align-items: center; margin-left: auto; }
+  .dn-cap em { font-style: normal; font-size: 3cqw; font-weight: 800; color: #ffe39a; text-shadow: 0 .3cqw 0 #000; margin-top: -.6cqw; }
+  .dn-cap + .dn-btn { margin-left: 3cqw; }
+  .dn-cards { margin-top: 2cqw; display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.4cqw; padding: 2cqw 1.4cqw; background: #0006; }
+  .dn-card { position: relative; aspect-ratio: 170 / 375; border-radius: 1cqw !important; overflow: visible; padding: 0; background: linear-gradient(#8a5ad0, #3a1e6a) !important; border: .6cqw solid #c9a0ff !important; box-shadow: 0 .6cqw 1cqw #000a; }
+  .dn-card.q-hiem { background: linear-gradient(#4a7ad8, #1a3a6a) !important; border-color: #8ab0f0 !important; }
+  .dn-card.q-truyen { background: linear-gradient(#d8a03a, #6a4010) !important; border-color: #ffd76a !important; }
+  .dn-card > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; border-radius: .6cqw; }
+  .dn-card > img:not(.art) { object-fit: contain; object-position: 50% 100%; }
+  .dn-card.empty { background: radial-gradient(circle at 50% 45%, #9a9a9a, #5e5e5e) !important; border-color: #b8b8b8 !important; }
+  .dn-card.empty b { font: 4cqw/1.4 'Pattaya', serif; color: #4a3a2a; text-shadow: 0 .2cqw 0 #ddd; }
+  .dn-card .dn-flag { position: absolute; z-index: 3; left: 10%; top: -4cqw; transform: rotate(-14deg); }
+  .dn-hanh { left: auto; right: .8cqw; top: .8cqw; width: 4.6cqw; height: 4.6cqw; z-index: 2; }
+  .dn-name { position: absolute; z-index: 2; right: .6cqw; top: 7cqw; writing-mode: vertical-rl; font: 3.4cqw 'Pattaya', serif; color: #fff; text-shadow: 0 0 .6cqw #000, 0 .2cqw 0 #000; max-height: 50cqw; }
+  .dn-foot { position: absolute; z-index: 2; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: space-between; padding: .8cqw 1cqw; background: linear-gradient(transparent, #3a1e6acc 40%); border-radius: 0 0 .6cqw .6cqw; }
+  .dn-foot b { font-size: 3.6cqw; color: #fff; text-shadow: 0 .2cqw 0 #000; }
+  .dn-foot .tc-st { position: static; }
+  .dn-band { display: flex; align-items: center; gap: 3cqw; margin-top: 4cqw; background: linear-gradient(90deg, #3a2410, #2a1a0ccc); border-block: .4cqw solid #8a6a3a; }
+  .dn-band b { padding: 1.2cqw 6cqw 1.2cqw 3cqw; font: 4cqw 'Pattaya', serif; color: #4a2a0a; background: linear-gradient(#ffe39a, #d8a84a); clip-path: polygon(0 0, 88% 0, 100% 50%, 88% 100%, 0 100%); }
+  .dn-band span { font-size: 4.2cqw; font-weight: 800; color: #f3e7c9; text-shadow: 0 .3cqw 0 #000; }
+  .dn-hts { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1.2cqw; padding: 1.4cqw; background: #0006; }
+  .dn-ht { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .6cqw; border-radius: 1.4cqw !important; background: linear-gradient(#8a8a8a, #5a5a5a) !important; border: .6cqw solid #b8b8b8 !important; }
+  .dn-ht.open { background: linear-gradient(#b89668, #6a4a2a) !important; border-color: #ffe39a !important; }
+  .dn-ht small { font-size: 2.6cqw; font-weight: 800; color: #eee; white-space: nowrap; text-shadow: 0 .2cqw 0 #000; }
+  .dn-lock { width: 6cqw; height: 6cqw; border-radius: 1cqw; background: #cfcfcf; position: relative; margin-top: 2cqw; }
+  .dn-lock::before { content: ''; position: absolute; left: 1.2cqw; top: -3cqw; width: 2.6cqw; height: 3cqw; border: .7cqw solid #cfcfcf; border-bottom: 0; border-radius: 2cqw 2cqw 0 0; }
+  .dn-acts { display: flex; justify-content: center; gap: 8cqw; padding: 12cqw 0 calc(5cqw + env(safe-area-inset-bottom)); }
+  .dn-acts .dn-btn { min-width: 26cqw; font-size: 6cqw !important; padding: 2.4cqw 4cqw; }
+  .dn-pk { display: flex; flex-direction: column; min-width: 0; }
+  .dn-pk > b { font-size: 3.4cqw; font-weight: 700; line-height: 1.2; margin-top: .6cqw; text-shadow: 0 .3cqw 0 #000, 0 0 .8cqw #000; }
+  .dn-off { background: linear-gradient(#6a6a6a, #3a3a3a) !important; border-color: #9a9a9a !important; display: grid; place-items: center; }
+  .dn-off b { font: 4.6cqw 'Pattaya', serif; color: #eee; }
   .vh-disc img.km { width: 100%; height: 100%; object-fit: cover; filter: none; }
   .vh-t:active .vh-disc { transform: scale(.95); }
   `;
   document.head.appendChild(st);
 }
-const TANG_CAP_G = { tangCap, tcPick, tcToggle, tcHop, tcLieuInfo, voHiep, vhList };
+const TANG_CAP_G = { tangCap, tcPick, tcToggle, tcHop, tcLieuInfo, voHiep, vhList, doiNgu, doiPick, doiSet };

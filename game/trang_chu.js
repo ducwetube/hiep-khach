@@ -114,7 +114,7 @@ function renderHome() {
   homeNoDrag();
   const tb = el('topbar'); if (tb) tb.classList.add('hidden');
   if (hasSnd()) SND.music('village');
-  const cards = hkTeam().map((h, i) => !h ? `<button class="hm-card empty" onclick="G.homeSoon('Chiêu mộ thêm hiệp khách')" aria-label="Ô trống"><i>+</i></button>` : `<button class="hm-card q-${HOME_Q[h.q]}" onclick="G.heroView('${h.id}')" aria-label="${h.name}">
+  const cards = hkTeam().map((h, i) => !h ? `<button class="hm-card empty" onclick="G.doiPick(${i}, 0, 'home')" aria-label="Ô trống"><i>+</i></button>` : `<button class="hm-card q-${HOME_Q[h.q]}" onclick="G.heroView('${h.id}')" aria-label="${h.name}">
       <img class="${h.art ? 'art' : ''}" src="${heroImg(h)}" alt="" draggable="false" style="${h.art ? heroPos(h, 22) : ''}">
       <span class="hm-band"><span class="hm-lv">${h.lv}</span><span class="hm-star">${'<i></i>'.repeat(h.star)}</span></span></button>`).join('');
   // Hàng nút nhanh: 4 ô (người dùng chốt 2026-11-12), icon ảnh Gemini nhanh_<mã>.png
@@ -126,7 +126,7 @@ function renderHome() {
   ].map(([f, ic, n]) => `<button class="hm-q" onclick="${f}"><span class="hm-ic">${homePng('nhanh_' + ic)}</span><b>${n}</b></button>`).join('');
   // Dải chức năng: cuộn ngang, mũi tên bên phải cuộn tiếp
   const funcs = [
-    ['G.heroView(0)', homePng('cn_doi_ngu'), 'Đội Ngũ'],
+    ['G.doiNgu()', homePng('cn_doi_ngu'), 'Đội Ngũ'],
     ['G.tangCap()', homePng('cn_tang_cap'), 'Tăng Cấp'],
     ["G.menuChar('gear')", homePng('cn_trang_bi'), 'Trang Bị'],
     ["G.homeSoon('Bảo vật')", homePng('cn_bao_vat'), 'Bảo Vật'],
