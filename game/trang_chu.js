@@ -133,13 +133,7 @@ function renderHome() {
     ['G.menuInv()', homePng('cn_tui_do'), 'Túi Đồ'],
   ].map(([f, ic, t]) => `<button class="hm-f" onclick="${f}"><span class="hm-ic">${ic}</span><b>${t}</b></button>`).join('');
   // Thanh dưới: icon ảnh Gemini nav_<mã>.png (2026-11-12), 5 ô (Hệ Thống mở bằng bảng tên trên cùng)
-  const nav = [
-    ['', 'trang_chu', 'Trang Chủ', true],
-    ['G.heroView(0)', 'hiep_khach', 'Hiệp Khách'],
-    ["G.homeSoon('Chiêu mộ')", 'chieu_mo', 'Chiêu Mộ'],
-    ["G.homeSoon('Kỳ ngộ')", 'ky_ngo', 'Kỳ Ngộ'],
-    ['G.homeShops()', 'cua_tiem', 'Cửa Tiệm'],
-  ].map(([f, ic, t, on]) => `<button class="${on ? 'on' : ''}" ${f ? `onclick="${f}"` : ''}><span class="hm-ic">${homePng('nav_' + ic)}</span><b>${t}</b></button>`).join('');
+  const nav = homeNav('trang_chu');
   const last = (worldLog[worldLog.length - 1] || '').replace(/<[^>]+>/g, '').replace(/\[\[[a-z0-9_]+\]\]/g, '');
   show(`<div class="home">
     <div class="hm-bg"></div>
@@ -156,6 +150,16 @@ function renderHome() {
     <nav class="hm-nav">${nav}</nav>
   </div>`, 'home');
 }
+// Thanh dưới dùng chung (Trang chủ, Quản lý Võ Hiệp): `on` = ô đang sáng
+function homeNav(on) {
+  return [
+    ['G.home()', 'trang_chu', 'Trang Chủ'],
+    ['G.voHiep()', 'hiep_khach', 'Hiệp Khách'],
+    ["G.homeSoon('Chiêu mộ')", 'chieu_mo', 'Chiêu Mộ'],
+    ["G.homeSoon('Kỳ ngộ')", 'ky_ngo', 'Kỳ Ngộ'],
+    ['G.homeShops()', 'cua_tiem', 'Cửa Tiệm'],
+  ].map(([f, ic, t]) => `<button class="${ic === on ? 'on' : ''}" ${ic === on ? '' : `onclick="${f}"`}><span class="hm-ic">${homePng('nav_' + ic)}</span><b>${t}</b></button>`).join('');
+}
 // Điện thoại (nhất là iPhone) vẫn kéo nảy cả trang dù không có gì để cuộn: chặn kéo trên Trang chủ, trừ dải chức năng vuốt ngang
 function homeNoDrag() {
   if (window._hmNoDrag) return; window._hmNoDrag = 1;
@@ -170,7 +174,9 @@ function homeMore() { const s = document.getElementById('hm-fscroll'); if (s) s.
    gốc y = 390 của bản phác), phần dưới (chỉ số, tuyệt chiêu, duyên) xếp dọc và cuộn được. Không có thanh nút dưới.
    Số liệu lấy từ HIEP_KHACH + P.hk (cấp, sao); Nâng Cấp, Bảo Vật, Trang bị, Linh chưa có chức năng. */
 let heroSel = null; // mã hiệp khách đang xem
-function heroView(i) {
+let heroBack = 'G.home()'; // nút Trở về của màn chi tiết quay về đâu
+function heroView(i, from) {
+  if (from !== undefined) heroBack = from === 'vh' ? 'G.vhList()' : 'G.home()';
   if (!P) return renderTitle();
   const mem = hkMembers();
   heroSel = typeof i === 'string' && P.hk[i] ? i : (mem[i | 0] || mem[0]).id;
@@ -196,7 +202,7 @@ function heroView(i) {
     ${homeHead()}
     <div class="hd-scroll">
       <div class="hd-body">
-        <button class="hd-back" style="${box(18, 395, 257, 90)}" onclick="G.home()">Trở về</button>
+        <button class="hd-back" style="${box(18, 395, 257, 90)}" onclick="${heroBack}">Trở về</button>
         <div class="hd-lv" style="${box(420, 400, 380, 80)}"><span class="hd-stars">${stars}</span><b>Lv ${h.lv}</b></div>
         <button class="hd-up" style="${box(812, 395, 285, 90)}" onclick="G.tcPick('${h.id}')">${homePng('lo_ren')}<b>Nâng Cấp</b></button>
         <div class="hd-name" style="${box(338, 480, 464, 68)}"><i class="hd-hanh" style="--hc:${H.color}" title="Ngũ hành: ${H.name}">${H.name}</i><b style="${h.name.length > 14 ? `font-size:${(3.4 * 14 / h.name.length).toFixed(2)}cqw` : ''}">${h.name}</b></div>

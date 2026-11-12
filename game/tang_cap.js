@@ -156,4 +156,71 @@ function tcStyle() {
   document.head.appendChild(st);
 }
 function tcLieuInfo() { toast('Nguyên liệu dùng để thăng cấp hiệp khách khác'); }
-const TANG_CAP_G = { tangCap, tcPick, tcToggle, tcHop, tcLieuInfo };
+/* ---------- QUẢN LÝ VÕ HIỆP (2026-11-12, người dùng chốt theo ảnh mẫu) ----------
+   Bấm "Hiệp Khách" ở thanh dưới. Phần đầu + thanh dưới giữ như Trang chủ, giữa là 8 ô (2 cột × 4 hàng).
+   Kinh Mạch mở luôn (không khóa cấp 30). Icon ảnh Gemini của người dùng game/img/icon/vh_<mã>.png (gốc luu_tru/trang_chu/icon_vo_hiep.png). */
+function voHiep() {
+  if (!P) return renderTitle();
+  hkEnsure();
+  closeModalSilent(); aiStyle(); homeStyle(); tcStyle(); vhStyle(); homeNoDrag();
+  const tb = el('topbar'); if (tb) tb.classList.add('hidden');
+  const tiles = [
+    ['G.vhList()', 'vo_hiep', 'Võ Hiệp'],
+    ["G.homeSoon('Ghép mảnh')", 'ghep_manh', 'Ghép Mảnh'],
+    ["G.homeSoon('Tăng sao')", 'tang_sao', 'Tăng Sao'],
+    ['G.tangCap()', 'boi_duong', 'Bồi Dưỡng'],
+    ["G.homeSoon('Đột phá')", 'dot_pha', 'Đột Phá'],
+    ["G.homeSoon('Kỹ năng')", 'ky_nang', 'Kỹ Năng'],
+    ["G.menuChar('km')", 'kinh_mach', 'Kinh Mạch'],
+    ["G.homeSoon('Giang Hồ Ký')", 'giang_ho_ky', 'Giang Hồ Ký'],
+  ].map(([f, ic, t]) => `<button class="vh-t" onclick="${f}"><span class="vh-disc vh-${ic}">${homePng('vh_' + ic)}</span><b>${t}</b></button>`).join('');
+  show(`<div class="home tc vh">
+    <div class="hm-bg"></div>
+    ${tcHead('Quản lý Võ Hiệp', 'G.home()')}
+    <div class="vh-grid">${tiles}</div>
+    <nav class="hm-nav">${homeNav('hiep_khach')}</nav>
+  </div>`, 'vo-hiep');
+}
+// Lưới mọi hiệp khách đang có (theo ảnh mẫu): đội ra trận trước, rồi hiệp khách nguyên liệu; sức chứa 60 (Claude đặt)
+const VH_CAP = 60;
+function vhList() {
+  if (!P) return renderTitle();
+  hkEnsure(); tcEnsure();
+  closeModalSilent(); aiStyle(); homeStyle(); tcStyle(); vhStyle(); homeNoDrag();
+  const tb = el('topbar'); if (tb) tb.classList.add('hidden');
+  const own = Object.keys(P.hk).filter(id => HIEP_KHACH[id]).map(hkGet)
+    .sort((a, b) => (P.doi.includes(b.id) - P.doi.includes(a.id)) || (b.q - a.q) || b.lv - a.lv);
+  const heroes = own.map(h => `<button class="tc-cell q-${HOME_Q[h.q]}" onclick="G.heroView('${h.id}', 'vh')">${tcTile(h,
+    `${P.doi.includes(h.id) ? '<em class="tc-doi">Đội</em>' : ''}<b class="tc-lv">${h.lv}</b>`)}</button>`).join('');
+  const L = TANG_CAP.lieu, lieu = Array.from({ length: P.lieu }, () =>
+    `<button class="tc-cell lieu" onclick="G.tcLieuInfo()">${tcTile({ img: L.img, star: 1 })}</button>`).join('');
+  show(`<div class="home tc vh">
+    <div class="hm-bg"></div>
+    ${homeHead()}
+    <div class="tc-bar"><button class="al-back" onclick="G.voHiep()">Trở về</button><b>Võ Hiệp</b><b class="vh-cnt">${own.length + P.lieu}/${VH_CAP}</b></div>
+    <div class="tc-grid hd-scroll vh-list">${heroes}${lieu}</div>
+    <nav class="hm-nav">${homeNav('hiep_khach')}</nav>
+  </div>`, 'vh-list');
+}
+function vhStyle() {
+  if (document.getElementById('vh-style')) return;
+  const st = document.createElement('style');
+  st.id = 'vh-style';
+  st.textContent = `
+  .vh-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: 3cqw 3cqw; align-content: center; padding: 2cqw 3cqw calc(30cqw + env(safe-area-inset-bottom)); }
+  .vh-t { position: relative; display: flex; align-items: center; min-width: 0; max-height: 25cqw; }
+  .vh-t b { position: relative; flex: 1; margin-left: -7cqw; padding: 4.4cqw 1cqw 4.4cqw 8cqw; border-radius: 2.4cqw; text-align: center; white-space: nowrap; font-size: 4.1cqw; font-weight: 800; line-height: 1.15; color: #fff3d6; text-shadow: 0 .3cqw 0 #000, 0 0 1cqw #000;
+    background: linear-gradient(#7a4a26, #4e2c12); border: .6cqw solid #3a200c; box-shadow: inset 0 .5cqw 0 #a06a3a, 0 .8cqw 1cqw #0009; }
+  .vh-disc { position: relative; z-index: 1; flex: none; width: 19cqw; height: 19cqw; border-radius: 50%; display: grid; place-items: center; overflow: hidden;
+    background: radial-gradient(circle at 50% 40%, #6a7a6a, #2a342c 70%); border: 1.3cqw solid #b89668; box-shadow: inset 0 0 0 .5cqw #5a3a1a, inset 0 1cqw 2cqw #0008, 0 .8cqw 1.4cqw #000a; }
+  .vh-disc img, .vh-disc svg { width: 84%; height: 84%; object-fit: contain; filter: drop-shadow(0 .4cqw .6cqw #000a); }
+  .vh-vo_hiep img { scale: 1.2; }
+  .vh-cnt { margin-left: 4cqw; }
+  .vh-sell { margin-left: auto; padding: 2cqw 5cqw; border-radius: 2.4cqw !important; font: 4.6cqw 'Pattaya', serif !important; color: #fff !important; background: linear-gradient(#5aa8e8, #1f5aa0) !important; border: .6cqw solid #a8d4ff !important; box-shadow: 0 .6cqw 1cqw #0008; }
+  .vh-list { padding-bottom: calc(30cqw + env(safe-area-inset-bottom)); }
+  .vh-disc img.km { width: 100%; height: 100%; object-fit: cover; filter: none; }
+  .vh-t:active .vh-disc { transform: scale(.95); }
+  `;
+  document.head.appendChild(st);
+}
+const TANG_CAP_G = { tangCap, tcPick, tcToggle, tcHop, tcLieuInfo, voHiep, vhList };
