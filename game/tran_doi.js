@@ -78,10 +78,17 @@ function tdStart(def) {
   tdS = {
     def: def || TD_TEST, wave: 0, round: 1, phase: 'ta', busy: false, target: 0, deaths: 0,
     auto: !!(tdS && tdS.auto), fast: !!(tdS && tdS.fast), loot: { bac: 0, luong: 0, manh: 0 }, over: null,
-    ta: team.map(({ h }, i) => tdUnit('ta', i, { name: h.name, img: h.img, art: h.art, face: h.face, sprite: h.sprite, spFlip: h.spFlip, hand: h.hand, ult: h.ult, role: h.role, skill: h.skill,
+    ta: team.map(({ h }, i) => tdUnit('ta', i, { name: h.name, img: h.img, art: h.art, face: h.face, sprite: h.sprite, spFlip: h.spFlip, hand: h.hand, ult: h.ult, anim: h.anim, spSize: h.spSize, role: h.role, skill: h.skill,
       ...(st => ({ maxHp: st.hp, atk: st.atk, def: st.def, hoi: st.hoi, spd: st.spd, mi: st.mi }))(heroSt(h)) })),
   };
   tdS.ta.forEach(u => { if (u.role === 'ky_nang') u.no = TD.noMax; });
+  // tải trước hình động / hiệu ứng Blender của đội để lúc tung chiêu không bị trống
+  tdS.ta.forEach(u => {
+    const list = u.anim ? [u.anim.idle.src, u.anim.atk.src] : [];
+    if (u.ult && u.ult.fx === 'chi') list.push(TD_BURST.src);
+    if (u.ult && TD_SHIELD[u.ult.shield]) list.push(TD_SHIELD[u.ult.shield].back, TD_SHIELD[u.ult.shield].front);
+    list.forEach(src => { const im = new Image(); im.src = src; });
+  });
   const keys = typeof SAN_DAU !== 'undefined' ? Object.keys(SAN_DAU.sets) : [];
   tdS.bg = keys.length ? SAN_DAU.sets[tdRand(keys)].mb : { src: TD.bg };
   tdS.dich = tdWave(0);
@@ -157,6 +164,7 @@ function tdSync() {
       el2.classList.toggle('tgt', u.side === 'dich' && u.i === s.target && !u.dead);
       el2.classList.toggle('stun', u.stun > 0);
       const b = el2.querySelector('.td-hb i'); if (b) b.style.width = (u.hp / u.maxHp * 100).toFixed(1) + '%';
+      tdFxSync(u);
     }
   });
   s.ta.forEach(u => {
@@ -273,13 +281,83 @@ function tdHand(u) {
   const frac = img.classList.contains('nf') ? h[0] : 1 - h[0];
   return { x: r.left + r.width * frac - R.left, y: r.top + r.height * h[1] - R.top };
 }
+/* ---------- hình động + hiệu ứng làm bằng Blender (tools/blender/) ----------
+   Mỗi tấm là một dải ngang N khung; phát bằng cách trượt dải theo từng khung (steps). */
+const TD_SHIELD = { nuoc: { back: 'game/img/blender/fx_bl_khien_sau.webp', front: 'game/img/blender/fx_bl_khien_truoc.webp', n: 20, ms: 1000, ar: 224 / 280 } };
+const TD_BURST = { src: 'game/img/blender/fx_bl_no_vang.webp', n: 16, ms: 560 };
+function tdStrip(src, n, ms, loop) {
+  const d = document.createElement('div'); d.className = 'td-sheet';
+  const im = document.createElement('img'); im.className = 'td-strip'; im.src = src; im.alt = ''; im.draggable = false; d.appendChild(im);
+  const fr = []; for (let i = 0; i < n; i++) fr.push({ transform: `translateX(${(-i * 100 / n).toFixed(3)}%)` });
+  const anim = im.animate ? im.animate(fr, { duration: ms, iterations: loop ? Infinity : 1, easing: `steps(${n}, jump-none)`, fill: 'forwards' }) : null;
+  return { el: d, anim };
+}
+// khung chứa phần hình thật của nhân vật (tọa độ trong ô .td-u), tính từ chiều cao ảnh, không cần ảnh đã tải xong
+function tdBody(u) {
+  const e = document.getElementById(`td-${u.side}-${u.i}`), img = e && e.querySelector('img');
+  if (!img) return null;
+  const R = e.getBoundingClientRect(), r = img.getBoundingClientRect();
+  const [iw, ih] = u.anim ? [u.anim.iw, u.anim.ih] : (u.spSize || [img.naturalWidth || 3, img.naturalHeight || 4]);
+  const h = Math.min(r.height, 1.9 * R.width * ih / iw), w = h * iw / ih;   // ảnh rộng bị bó ở 190% bề ngang ô
+  const cx = r.left + r.width / 2 - R.left, bot = r.bottom - R.top;
+  return { e, img, k: h / ih, x: cx - w / 2, y: bot - h, w, h, cx, bot };
+}
+// phát hình động 'idle' (lặp) hoặc 'atk' (một lần, xong tự về 'idle'); trả về đối tượng hoạt ảnh
+function tdAnimPlay(u, which) {
+  const A = u.anim, b = A && tdBody(u); if (!b) return null;
+  b.e.classList.add('has-anim');
+  b.e.querySelectorAll('.td-sheet.body').forEach(x => x.remove());
+  const S = A[which], loop = which === 'idle';
+  const s = tdStrip(S.src, S.n, S.ms * (!loop && tdS && tdS.fast ? 0.5 : 1), loop);
+  s.el.classList.add('body');
+  const [x0, y0, x1, y1] = A.box;
+  Object.assign(s.el.style, { left: b.x + x0 * b.k + 'px', top: b.y + y0 * b.k + 'px', width: (x1 - x0) * b.k + 'px', height: (y1 - y0) * b.k + 'px' });
+  b.e.appendChild(s.el);
+  if (!loop && s.anim) s.anim.onfinish = () => { if (s.el.isConnected && !u.dead) tdAnimPlay(u, 'idle'); };
+  return s.anim;
+}
+// khiên quanh người (Ngạc Thần Hộ Thể): lớp sau lưng + lớp trước người
+function tdShield(u, on) {
+  const b = tdBody(u); if (!b) return;
+  const cur = [...b.e.querySelectorAll('.td-sheet.shield:not(.out)')];
+  if (!on) { cur.forEach(x => { x.classList.add('out'); setTimeout(() => x.remove(), 400); }); return; }
+  if (cur.length) return;
+  const S = TD_SHIELD[u.ult.shield]; if (!S) return;
+  const H = b.h * 1.5, W = H * S.ar;
+  ['back', 'front'].forEach(l => {
+    const s = tdStrip(S[l], S.n, S.ms, true); s.el.classList.add('shield', l);
+    Object.assign(s.el.style, { left: b.cx - W / 2 + 'px', top: b.bot - H * 0.81 + 'px', width: W + 'px', height: H + 'px' });
+    b.e.appendChild(s.el);
+  });
+}
+// gọi trong tdSync: gắn hình động / khiên cho đúng trạng thái (sau khi vẽ lại màn, qua đợt, hết hiệu lực, chết)
+function tdFxSync(u) {
+  const e = document.getElementById(`td-${u.side}-${u.i}`); if (!e) return;
+  if (u.anim && !u.dead && !e.querySelector('.td-sheet.body')) tdAnimPlay(u, 'idle');
+  if (u.ult && u.ult.shield) {
+    const want = !u.dead && !!u.buf.hp, has = !!e.querySelector('.td-sheet.shield:not(.out)');
+    if (want !== has) tdShield(u, want);
+  }
+}
+function tdBurst(box, p, cq) {
+  const s = tdStrip(TD_BURST.src, TD_BURST.n, TD_BURST.ms * (tdS && tdS.fast ? 0.6 : 1), false), sz = 24 * cq;
+  Object.assign(s.el.style, { left: p.x - sz / 2 + 'px', top: p.y - sz / 2 + 'px', width: sz + 'px', height: sz + 'px' });
+  box.appendChild(s.el);
+  setTimeout(() => s.el.remove(), TD_BURST.ms + 250);
+}
 async function tdChi(u, foes, onHit) {
   const box = document.getElementById('td-fx'); if (!box || !foes.length) return;
-  const a = tdHand(u), fast = tdS && tdS.fast, cq = box.clientWidth / 100;
+  const fast = tdS && tdS.fast, cq = box.clientWidth / 100, A = u.anim;
+  // có hình động: lấy đà, giơ tay chĩa ngón về phía trước, đứng giữ thế trong lúc bắn, bắn xong mới hạ tay
+  const an = A && A.atk ? tdAnimPlay(u, 'atk') : null;
+  if (an) await tdWait(A.atk.fire);
+  const a = tdHand(u);
+  if (an) { const b = tdBody(u); if (b) { a.x += (b.img.classList.contains('nf') ? 1 : -1) * A.tip[0] * b.k; a.y += A.tip[1] * b.k; } }
   const orb = document.createElement('div');
   orb.className = 'td-chi-orb'; orb.style.left = a.x + 'px'; orb.style.top = a.y + 'px';
   box.appendChild(orb);
-  await tdWait(380);
+  await tdWait(an ? 100 : 380);
+  if (an) { an.pause(); an.currentTime = A.atk.hold / A.atk.n * an.effect.getTiming().duration; }
   // mỗi kẻ địch 3 tia chỉ lực (ảnh fx_chi_luc.png, đầu tia ở mép phải ảnh), bắn tùm lum xen kẽ
   const shots = [];
   foes.forEach((t, j) => { const n = (u.ult && u.ult.split || [1, 1, 1]).length; for (let k = 0; k < n; k++) shots.push({ t, k, at: j * 70 + k * 190 + Math.random() * 90 }); });
@@ -295,9 +373,7 @@ async function tdChi(u, foes, onHit) {
     let fin = false;
     const end = () => {
       if (fin) return; fin = true; img.remove();
-      const hit = document.createElement('div');
-      hit.className = 'td-chi-hit'; hit.style.left = e.x + 'px'; hit.style.top = e.y + 'px';
-      box.appendChild(hit); setTimeout(() => hit.remove(), 600);
+      tdBurst(box, e, cq);   // nổ chùm sáng vàng (Blender)
       if (onHit) onHit(sh.t, sh.k);
       done();
     };
@@ -306,6 +382,7 @@ async function tdChi(u, foes, onHit) {
   }, fast ? sh.at / 2 : sh.at))));
   await tdWait(220);
   orb.remove();
+  if (an && an.playState === 'paused') an.play();   // hạ tay về thế đứng
 }
 function tdHitFx(u) {
   const e = document.getElementById(`td-${u.side}-${u.i}`); if (!e) return;
@@ -402,6 +479,7 @@ async function tdUltDo(u) {
     if (u.buf.hp) { u.maxHp -= u.buf.hp.add; u.hp = Math.min(u.hp, u.maxHp); }
     const add = Math.round(u.maxHp * U.selfHp);
     u.maxHp += add; u.hp += add; u.buf.hp = { v: U.selfHp, t: U.turns, add };
+    if (U.shield) tdShield(u, true);
     tdPop(u, 'HP tối đa +' + Math.round(U.selfHp * 100) + '%', 'heal');
     const pool = tdAlive(tdFoe(u)).sort(() => Math.random() - 0.5).slice(0, U.n);
     await tdWait(260);
@@ -579,6 +657,20 @@ function tdStyle() {
   .td-num.heal { color: #6f6; }
   .td-u.ta img.nf { transform: translateX(-50%); }
   .td-u.ta.hit img.nf { animation: tdHitE .32s; }
+  /* hình động + hiệu ứng Blender: dải khung trượt trong khung cắt */
+  .td-sheet { position: absolute; overflow: hidden; pointer-events: none; }
+  .td-sheet > img.td-strip, .td-u .td-sheet > img.td-strip { position: absolute; left: 0; top: 0; bottom: auto; height: 100%; width: auto; max-width: none; object-fit: fill; transform: none; animation: none; filter: none; scale: none; }
+  .td-u > img { z-index: 1; }
+  .td-u.has-anim > img { visibility: hidden; animation: none; }
+  .td-u .td-sheet.body { z-index: 1; }
+  .td-u.hit .td-sheet.body { animation: tdHitB .32s; }
+  .td-u.stun .td-sheet.body { filter: grayscale(.6) brightness(.8); }
+  @keyframes tdHitB { 30% { filter: brightness(2) sepia(1) hue-rotate(-30deg) saturate(4); translate: -1.2cqw 0; } }
+  .td-u .td-sheet.shield { z-index: 0; animation: tdShIn .45s ease-out; transition: opacity .35s; }
+  .td-u .td-sheet.shield.front { z-index: 2; opacity: .85; }
+  .td-u .td-sheet.shield.out { opacity: 0; }
+  @keyframes tdShIn { from { scale: .3; opacity: 0; } }
+  .td-hb { z-index: 3; }
   .td-chi-orb { position: absolute; width: 9cqw; height: 9cqw; margin: -4.5cqw 0 0 -4.5cqw; border-radius: 50%; background: radial-gradient(circle, #fff, #fff3a0 30%, #ffc23a 55%, #ffb00000 72%); animation: tdChiOrb .5s ease-in-out infinite alternate; }
   @keyframes tdChiOrb { from { transform: scale(.6); opacity: .7; } to { transform: scale(1.25); opacity: 1; } }
   .td-bolt { position: absolute; left: 0; top: 0; height: auto; pointer-events: none; transform-origin: 0 0; filter: drop-shadow(0 0 1.5cqw #ffb000aa); }

@@ -32,6 +32,11 @@ const HIEP_KHACH = {
     ex: { crit: 10, critDmg: 150, acc: 100, dodge: 5 },
     skill: { grade: 'S', name: 'Đoàn Thị Chỉ Pháp', desc: 'Bắn chỉ lực vào toàn địch, mỗi kẻ trúng 4 tia (20 / 20 / 20 / 40% của tổng 70% công), gây chảy máu 2 hiệp (mỗi hiệp mất máu bằng 10% công)' },
     ult: { kind: 'all', pow: 0.7, bleed: { pct: 0.1, turns: 2 }, fx: 'chi', split: [0.2, 0.2, 0.2, 0.4] },
+    // hình động làm bằng Blender (tools/blender/doan_dien_khanh.py): iw/ih = cỡ hình gốc, box = vùng xuất (px hình gốc),
+    // atk: tấm tung chỉ pháp, fire = ms tới lúc giơ tay chĩa ngón, hold = khung đứng giữ thế lúc bắn; tip = đầu ngón so với `hand` (px gốc)
+    anim: { iw: 446, ih: 700, box: [-110, -40, 556, 740], tip: [91, -66],
+      idle: { src: 'game/img/blender/doan_idle.webp', n: 24, ms: 1300 },
+      atk: { src: 'game/img/blender/doan_atk.webp', n: 26, ms: 1300, fire: 470, hold: 11.5 } },
     duyen: [{ name: 'Phụ Tử', desc: 'Cùng ra trận Công +150%', with: [], ok: false }] },
 
   // Hiệp khách thật thứ hai (2026-11-12, người dùng gửi tranh + ảnh nền đen): chỉ số cấp 1 khớp ảnh mẫu (1306 / 345 / 238 / 242, tốc 53, Mị 300),
@@ -41,7 +46,8 @@ const HIEP_KHACH = {
     grow: { hp: 65.3, atk: 17.3, def: 11.9, hoi: 12.1 },
     ex: { crit: 0, critDmg: 150, acc: 100, dodge: 5, ben: 10 },
     skill: { grade: 'S', name: 'Ngạc Thần Hộ Thể', desc: 'Tăng 55% khí huyết tối đa bản thân, giảm 20% Công của 2 kẻ địch ngẫu nhiên trong 2 hiệp' },
-    ult: { kind: 'guard', selfHp: 0.55, n: 2, atkDown: 0.2, turns: 2 },
+    ult: { kind: 'guard', selfHp: 0.55, n: 2, atkDown: 0.2, turns: 2, shield: 'nuoc' },  // shield: khiên nước xoáy (Blender) suốt lúc còn tác dụng
+    spSize: [730, 700],
     duyen: [{ name: 'Thầy Trò', desc: 'Cùng ra trận HP +200%', with: [], ok: false }] },
 
   hoang_y_nu: { name: 'Hoàng Y Nữ', img: 'tm_hoang_y_kiem_nu', role: 'ho_tro', q: 2, lv: 1, star: 1, hanh: 'hoa', tuChat: 11,
