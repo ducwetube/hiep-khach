@@ -296,7 +296,7 @@ const HIEP_KHACH = {
     duyen: [   // số theo ảnh 10 sao, tên người theo ảnh 1 sao (Miêu Nhân Phụng theo ảnh Duyên của Tả Lãnh Thiền)
       { name: 'Tấu Nhạc', desc: 'Cùng ra trận Công +130%', with: [{ ten: 'Đông Tà' }], eff: { atk: 1.3 } },
       { name: 'Hư Vô', desc: 'Cùng ra trận Công +150% HP +200%', with: [{ ten: 'Miêu Nhân Phụng' }, 'thien_mon'], eff: { atk: 1.5, hp: 2 } },
-      { name: 'Ngũ Nhạc', desc: 'Cùng ra trận Công +250% HP +250%', with: ['nhac_bat_quan', 'ta_lanh_thien', 'thien_mon', { ten: 'Định Nhàn Sư Thái' }], eff: { atk: 2.5, hp: 2.5 } },
+      { name: 'Ngũ Nhạc', desc: 'Cùng ra trận Công +250% HP +250%', with: ['nhac_bat_quan', 'ta_lanh_thien', 'thien_mon', 'dinh_nhan'], eff: { atk: 2.5, hp: 2.5 } },
       { name: 'Võ Lâm Bí Sử', desc: 'Sử dụng Công +100%', with: [{ ten: 'Võ Lâm Bí Sử', loai: 'bao' }], eff: { atk: 1 } },
       { name: 'Cô Tô Bí Kỹ', desc: 'Sử dụng Phá Giáp +2000', with: [{ ten: 'Cô Tô Bí Kỹ', loai: 'bao' }], eff: { phaGiap: 2000 } },
       { name: 'Kỳ Môn Lục', desc: 'Sử dụng HP +150%', with: [{ ten: 'Kỳ Môn Lục', loai: 'bao' }], eff: { hp: 1.5 } },
@@ -321,7 +321,7 @@ const HIEP_KHACH = {
     duyen: [   // theo ảnh 10 sao
       { name: 'Ảo Kiếm', desc: 'Cùng ra trận Công +130%', with: [{ ten: 'Miêu Nhân Phụng' }], eff: { atk: 1.3 } },
       { name: 'Kỳ Chức', desc: 'Cùng ra trận Thủ +250%', with: ['to_tinh_ha'], eff: { def: 2.5 } },
-      { name: 'Ngũ Nhạc', desc: 'Cùng ra trận Công +250% HP +250%', with: ['nhac_bat_quan', 'thien_mon', { ten: 'Định Nhàn Sư Thái' }, 'mac_dai'], eff: { atk: 2.5, hp: 2.5 } },
+      { name: 'Ngũ Nhạc', desc: 'Cùng ra trận Công +250% HP +250%', with: ['nhac_bat_quan', 'thien_mon', 'dinh_nhan', 'mac_dai'], eff: { atk: 2.5, hp: 2.5 } },
       { name: 'Quỳ Hoa Lục', desc: 'Sử dụng Công +100%', with: [{ ten: 'Quỳ Hoa Lục', loai: 'bao' }], eff: { atk: 1 } },
       { name: 'Quân Tử Kiếm', desc: 'Sử dụng Bạo +25%', with: [{ ten: 'Quân Tử Kiếm', loai: 'bao' }], eff: { crit: 25 } },
       { name: 'Minh Chủ Lệnh', desc: 'Sử dụng HP +150%', with: [{ ten: 'Minh Chủ Lệnh', loai: 'bao' }], eff: { hp: 1.5 } },
@@ -346,7 +346,7 @@ const HIEP_KHACH = {
     duyen: [   // theo ảnh 10 sao
       { name: 'Sư Đồ', desc: 'Cùng ra trận Thủ +250%', with: ['lenh_ho_xung'], eff: { def: 2.5 } },
       { name: 'Đối Địch', desc: 'Cùng ra trận Công +130%', with: ['nham_nga_hanh'], eff: { atk: 1.3 } },
-      { name: 'Ngũ Nhạc', desc: 'Cùng ra trận Công +250% HP +250%', with: ['ta_lanh_thien', 'thien_mon', { ten: 'Định Nhàn Sư Thái' }, 'mac_dai'], eff: { atk: 2.5, hp: 2.5 } },
+      { name: 'Ngũ Nhạc', desc: 'Cùng ra trận Công +250% HP +250%', with: ['ta_lanh_thien', 'thien_mon', 'dinh_nhan', 'mac_dai'], eff: { atk: 2.5, hp: 2.5 } },
       { name: 'Quỳ Hoa Lục', desc: 'Sử dụng Công +100%', with: [{ ten: 'Quỳ Hoa Lục', loai: 'bao' }], eff: { atk: 1 } },
       { name: 'Quân Tử Kiếm', desc: 'Sử dụng Bạo +25%', with: [{ ten: 'Quân Tử Kiếm', loai: 'bao' }], eff: { crit: 25 } },
       { name: 'Hoa Sơn Lục', desc: 'Sử dụng Bạo +28%', with: [{ ten: 'Hoa Sơn Lục', loai: 'bao' }], eff: { crit: 28 } },
@@ -371,13 +371,38 @@ const HIEP_KHACH = {
     duyen: [   // theo ảnh 10 sao
       { name: 'Đồng Đạo', desc: 'Cùng ra trận Thủ +250%', with: [{ ten: 'Lý Mạc Sầu' }], eff: { def: 2.5 } },
       { name: 'Hư Vô', desc: 'Cùng ra trận Công +150% HP +200%', with: [{ ten: 'Miêu Nhân Phụng' }, 'mac_dai'], eff: { atk: 1.5, hp: 2 } },
-      { name: 'Ngũ Nhạc', desc: 'Cùng ra trận Công +250% HP +250%', with: ['nhac_bat_quan', 'ta_lanh_thien', { ten: 'Định Nhàn Sư Thái' }, 'mac_dai'], eff: { atk: 2.5, hp: 2.5 } },
+      { name: 'Ngũ Nhạc', desc: 'Cùng ra trận Công +250% HP +250%', with: ['nhac_bat_quan', 'ta_lanh_thien', 'dinh_nhan', 'mac_dai'], eff: { atk: 2.5, hp: 2.5 } },
       { name: 'Phất Trần', desc: 'Sử dụng Bền +35%', with: [{ ten: 'Phất Trần', loai: 'bao' }], eff: { ben: 35 } },
       { name: 'Lạc Anh Phổ', desc: 'Sử dụng Thủ +100%', with: [{ ten: 'Lạc Anh Phổ', loai: 'bao' }], eff: { def: 1 } },
       { name: 'Thái Cực Đồ', desc: 'Sử dụng Hồi +35%', with: [{ ten: 'Thái Cực Đồ', loai: 'bao' }], eff: { hoi: 0.35 } },
       { name: 'Tôn Sư Ký', desc: 'Sử dụng Né +35%', with: [{ ten: 'Tôn Sư Ký', loai: 'bao' }], eff: { dodge: 35 } },
       { name: 'Dịch Cân Kinh', desc: 'Sử dụng Đỡ Đòn +10%', with: [{ ten: 'Dịch Cân Kinh', loai: 'bao' }], eff: { doDon: 10 } },
       { name: 'Tiểu Hùng', desc: 'Sử dụng HP +100%', with: [{ ten: 'Tiểu Hùng', loai: 'linh' }], eff: { hp: 1 } },
+    ] },
+
+  // Hiệp khách thứ mười sáu (2026-11-13): từ ảnh mẫu 10 sao (÷ 1,2⁹); Hỗ Trợ hệ Quang, Tư chất 13.
+  // Nộ Hằng Sơn Kiếm Trận cấp 1 (người dùng: "giảm 30%"): giảm 30% khí huyết tối đa toàn địch 3 hiệp (tăng HP toàn đội chỉ ở sao cao).
+  dinh_nhan: { name: 'Định Nhàn Sư Thái', img: 'tm_nu_tim', art: 'game/img/hk/dinh_nhan.jpg', face: [0.5, 0.24], sprite: 'game/img/hk/dinh_nhan_sd.png', hand: [0.68, 0.48], role: 'ho_tro', q: 4, lv: 1, star: 1, hanh: 'quang', tuChat: 13,
+    st: { hp: 1010.1, atk: 416.1, def: 190.1, hoi: 170.2, spd: 56, mi: 200 },
+    grow: { hp: 50.5, atk: 20.8, def: 9.5, hoi: 8.5 },
+    ex: { crit: 0, critDmg: 150, acc: 100, dodge: 7.5, ben: 5 },
+    skill: { grade: 'A', name: 'Hằng Sơn Kiếm Trận', desc: 'Giảm 30% khí huyết tối đa toàn bộ địch trong 3 hiệp' },
+    ult: { kind: 'swordcage', hpDown: 0.3, turns: 3 },
+    // hình động Blender (tools/blender/dinh_nhan.py): chem = giơ kiếm bổ chéo xuống (khung hit), tran = dựng kiếm chỉ trời gọi kiếm trận (khung fx)
+    anim: { iw: 474, ih: 700, box: [-90, -110, 600, 760],
+      idle: { src: 'game/img/blender/dn_idle.webp', n: 24, ms: 1300 },
+      chem: { src: 'game/img/blender/dn_chem.webp', n: 16, ms: 750, hit: 8, slash: 'nuoc' },
+      tran: { src: 'game/img/blender/dn_tran.webp', n: 24, ms: 1300, fx: 8 } },
+    duyen: [   // theo ảnh 10 sao
+      { name: 'Tương Khắc', desc: 'Cùng ra trận HP +250%', with: ['to_tinh_ha'], eff: { hp: 2.5 } },
+      { name: 'Vô Can', desc: 'Cùng ra trận Thủ +250%', with: [{ ten: 'Chưa rõ' }], eff: { def: 2.5 } },
+      { name: 'Ngũ Nhạc', desc: 'Cùng ra trận Công +250% HP +250%', with: ['nhac_bat_quan', 'ta_lanh_thien', 'thien_mon', 'mac_dai'], eff: { atk: 2.5, hp: 2.5 } },
+      { name: 'Phất Trần', desc: 'Sử dụng Tốc +5%', with: [{ ten: 'Phất Trần', loai: 'bao' }], eff: { spd: 0.05 } },
+      { name: 'Thần Ni Phổ', desc: 'Sử dụng Thủ +100%', with: [{ ten: 'Thần Ni Phổ', loai: 'bao' }], eff: { def: 1 } },
+      { name: 'Võ Lâm Bí Sử', desc: 'Sử dụng HP +150%', with: [{ ten: 'Võ Lâm Bí Sử', loai: 'bao' }], eff: { hp: 1.5 } },
+      { name: 'Vương Bài', desc: 'Sử dụng Bền +30%', with: [{ ten: 'Vương Bài', loai: 'bao' }], eff: { ben: 30 } },
+      { name: 'Càn Khôn Ký', desc: 'Sử dụng Tốc +7%', with: [{ ten: 'Càn Khôn Ký', loai: 'bao' }], eff: { spd: 0.07 } },
+      { name: 'Tiểu Hồ', desc: 'Sử dụng Tốc +10%', with: [{ ten: 'Tiểu Hồ', loai: 'linh' }], eff: { spd: 0.1 } },
     ] },
 
   hoang_y_nu: { name: 'Hoàng Y Nữ', img: 'tm_hoang_y_kiem_nu', role: 'ho_tro', q: 2, lv: 1, star: 1, hanh: 'hoa', tuChat: 11,
@@ -406,7 +431,7 @@ HK_XANH.forEach(([id, name, img, hanh, all]) => {
     duyen: [] };
 });
 // Nhân vật mới được tặng sẵn (người dùng chốt 2026-11-12: Đoàn Diên Khánh + Nam Hải Ngạc Thần)
-const HK_START = ['doan_dien_khanh', 'nam_hai_ngac_than', 'diep_nhi_nuong', 'doan_du', 'van_trung_hac', 'nham_doanh_doanh', 'nham_nga_hanh', 'lenh_ho_xung', 'dong_phuong', 'huong_van_thien', 'to_tinh_ha', 'mac_dai', 'ta_lanh_thien', 'nhac_bat_quan', 'thien_mon'];
+const HK_START = ['doan_dien_khanh', 'nam_hai_ngac_than', 'diep_nhi_nuong', 'doan_du', 'van_trung_hac', 'nham_doanh_doanh', 'nham_nga_hanh', 'lenh_ho_xung', 'dong_phuong', 'huong_van_thien', 'to_tinh_ha', 'mac_dai', 'ta_lanh_thien', 'nhac_bat_quan', 'thien_mon', 'dinh_nhan'];
 // Hiệp khách đã có (P.hk[mã] = {lv, star}) + đội ra trận 5 ô (P.doi, null = ô trống). Bản lưu chưa có thì tặng Đoàn Diên Khánh.
 function hkEnsure() {
   if (!P) return;
@@ -485,6 +510,12 @@ function hkEnsure() {
       if (!P.hk[id]) P.hk[id] = { lv: 1, star: 1 };
       const k = P.doi.indexOf(null); if (k >= 0 && !P.doi.includes(id)) P.doi[k] = id;
     });
+  }
+  // tặng Định Nhàn Sư Thái (2026-11-13), xếp vào ô trống nếu có
+  if (!P.hkTang14) {
+    P.hkTang14 = true;
+    if (!P.hk.dinh_nhan) P.hk.dinh_nhan = { lv: 1, star: 1 };
+    const k = P.doi.indexOf(null); if (k >= 0 && !P.doi.includes('dinh_nhan')) P.doi[k] = 'dinh_nhan';
   }
   // tặng 15 hiệp khách phẩm xanh lá (2026-11-13), không xếp vào đội
   if (!P.hkTang11) {

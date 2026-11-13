@@ -93,6 +93,7 @@ function tdStart(def) {
     if (u.ult && u.ult.kind === 'frost') list.push(TD_BANG.song.src, TD_BANG.tru.src);
     if (u.ult && u.ult.kind === 'blink') list.push(TD_NN.hoa.src, TD_BURST.src);
     if (u.ult && u.ult.kind === 'taiji') list.push(TD_NN.thuan.src);
+    if (u.ult && u.ult.kind === 'swordcage') list.push(TD_KIEMTRAN.src);
     if (u.ult && u.ult.kind === 'volley' && TD_SHOT[u.ult.shot]) list.push(TD_SHOT[u.ult.shot].src, TD_SHOT[u.ult.shot].hit.src);
     if (u.ult && u.ult.kind === 'flute') list.push(TD_AM.truc.src);
     if (u.anim && u.anim.danh && TD_SHOT[u.anim.danh.shot]) list.push(TD_SHOT[u.anim.danh.shot].src, TD_SHOT[u.anim.danh.shot].hit.src);
@@ -446,6 +447,9 @@ function tdBlink(u, t, hold) {
     { translate: '0 0', opacity: 1 },
   ], { duration: tot, easing: 'linear' });
 }
+// Hằng Sơn Kiếm Trận (Định Nhàn Sư Thái): 6 kiếm sáng từ trời cắm thành vòng quanh chân kẻ địch, vòng trận nối lại rồi bừng sáng
+// (tấm 256x320, chân ở 80%; khung 14 = trận phát động)
+const TD_KIEMTRAN = { src: 'game/img/blender/fx_bl_kiem_tran.webp', n: 24, ms: 1400, ar: 320 / 256, foot: 0.8, size: 26, fire: 14 };
 // Lăng Ba Vi Bộ (Đoàn Dự): sóng nước + gió dưới chân từng đồng đội
 const TD_LANGBA = { src: 'game/img/blender/fx_bl_song_nuoc.webp', n: 20, ms: 1000, ar: 250 / 200, foot: 0.8, size: 30 };
 function tdGroundFx(t, N) {
@@ -575,7 +579,7 @@ function tdDome(u) {
   b.e.appendChild(s.el); setTimeout(() => s.el.remove(), TD_DOME.ms * k + 200);
 }
 // biểu tượng hiệu ứng trên đầu khi còn hiệu lực: tăng Thủ / tăng Công (có lợi), giảm Thủ = sơ hở / giảm Công = suy yếu (bất lợi)
-const TD_BUFF_IC = [['def', 'tang_thu', 1], ['atk', 'tang_cong', 1], ['def', 'so_ho', -1], ['atk', 'suy_yeu', -1]];
+const TD_BUFF_IC = [['def', 'tang_thu', 1], ['atk', 'tang_cong', 1], ['def', 'so_ho', -1], ['atk', 'suy_yeu', -1], ['hpd', 'phe_hon', -1]];
 function tdBuffIcons(u, e) {
   let box = e.querySelector('.td-bf');
   if (!box) { box = document.createElement('i'); box.className = 'td-bf'; e.appendChild(box); }
@@ -870,6 +874,22 @@ async function tdUltDo(u) {
     setTimeout(() => tdPop(u, 'Thủ +' + Math.round(U.selfDef * 100) + '%', 'st'), 250);
     tdSync();
     await tdWait(400);
+  } else if (U.kind === 'swordcage') {
+    // Hằng Sơn Kiếm Trận (Định Nhàn Sư Thái) — kiểu "kiếm trận giam người": phất kiếm chỉ trời, kiếm sáng lần lượt rơi cắm thành vòng
+    // quanh từng kẻ địch, trận phát động thì khí huyết TỐI ĐA của chúng giảm vài hiệp (máu hiện tại không vượt mức mới), sau chỉ còn biểu tượng
+    const foes = tdAlive(tdFoe(u)), A = u.anim && u.anim.tran, k = tdS && tdS.fast ? 0.5 : 1, N = TD_KIEMTRAN;
+    if (A) { tdAnimPlay(u, 'tran'); await tdWait(A.fx / A.n * A.ms); } else await tdWait(150);
+    foes.forEach((t, j) => setTimeout(() => { if (tdS) tdGroundFx(t, N); }, j * 90 * k));
+    await tdWait(N.fire / N.n * N.ms + (foes.length - 1) * 90);
+    foes.forEach(t => {
+      if (t.dead) return;
+      if (t.buf.hpd) { t.maxHp -= t.buf.hpd.add; }
+      const add = -Math.round(t.maxHp * U.hpDown);
+      t.maxHp += add; t.hp = Math.min(t.hp, t.maxHp); t.buf.hpd = { v: -U.hpDown, t: U.turns, add };
+      tdHitFx(t); tdPop(t, 'HP tối đa −' + Math.round(U.hpDown * 100) + '%', 'st');
+    });
+    tdSync();
+    await tdWait(450);
   } else if (U.kind === 'frost') {
     // Hàn Băng Chưởng (Tả Lãnh Thiền) — kiểu "lan theo mặt đất": đẩy chưởng xuống, hàn khí lướt sát đất tỏa tới từng kẻ địch (lệch nhịp),
     // tới đâu cột băng trồi lên tới đó, kẻ địch bị đông cứng (nhuộm lam) rồi băng vỡ tung; sát thương lúc băng đâm
