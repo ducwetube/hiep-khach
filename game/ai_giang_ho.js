@@ -42,6 +42,25 @@ const AI_CHUONG = [
 // chương khai báo gọn [tên, boss] -> đủ trường; ghim xếp chữ chi từ dưới lên
 AI_CHUONG.forEach(C => { C.ai = C.ai.map((A, i, arr) => Array.isArray(A) ? { name: A[0], boss: A[1], tang: 10, x: i % 2 ? 26 : 72, y: Math.round(84 - i * 72 / (arr.length - 1)) } : A); });
 // sức địch nhân theo chương (Claude đặt, chờ duyệt): mỗi chương gấp 2,5 lần chương trước; bạc gấp đôi
+// Quái thường = 15 hiệp khách phẩm xanh (HK_XANH, mỗi chương một nhóm 2 hệ … trộn); tinh anh / boss = tướng thật (người dùng chốt 2026-11-14).
+// AI_TUONG[c] = nhóm tướng của chương (Claude xếp theo nhóm truyện, chờ duyệt): boss ải a = nhóm[a % n], tinh anh thứ k của ải a = nhóm[(a + k + 1) % n].
+const AI_TUONG = [
+  ['doan_dien_khanh', 'nam_hai_ngac_than', 'diep_nhi_nuong', 'van_trung_hac', 'doan_du'],
+  ['nham_nga_hanh', 'huong_van_thien', 'nham_doanh_doanh', 'lenh_ho_xung', 'dong_phuong'],
+  ['ta_lanh_thien', 'mac_dai', 'thien_mon', 'dinh_nhan', 'nhac_bat_quan', 'to_tinh_ha'],
+  ['dong_phuong', 'nham_nga_hanh', 'nhac_bat_quan', 'ta_lanh_thien', 'doan_dien_khanh', 'van_trung_hac', 'lenh_ho_xung', 'huong_van_thien', 'nam_hai_ngac_than'],
+  ['dong_phuong', 'nhac_bat_quan', 'nham_nga_hanh', 'doan_dien_khanh', 'ta_lanh_thien', 'dinh_nhan', 'thien_mon', 'mac_dai', 'to_tinh_ha', 'doan_du', 'diep_nhi_nuong', 'nham_doanh_doanh'],
+];
+const aiMobs = () => HK_XANH.map(x => x[0]);
+function aiTuong(c, a, t) {
+  const G = AI_TUONG[c] || AI_TUONG[0];
+  if (aiIsBoss(c, a, t)) return G[a % G.length];
+  const k = aiElite(c, a).slice().sort((x, y) => x - y).indexOf(t);
+  return k < 0 ? null : G[(a + k + 1) % G.length];
+}
+// Thưởng (người dùng 2026-11-14: cửa 1–2 game mẫu đã 1500–1800 bạc và lương thực, sau còn nhiều hơn): mỗi kẻ địch rơi aiLootV bạc + lương thực
+// (boss / tinh anh ×4), một cửa ~7 kẻ => cửa 1 ≈ 1.600; mỗi cửa +5%, mỗi chương ×2. Quét = aiBac (ước lượng cả cửa).
+const aiLootV = (c, a, t) => Math.round(125 * (1 + aiIdx(c, a, t) * 0.05) * Math.pow(2, c));
 const AI_POW = [1, 2.5, 6, 15, 36];
 const AI = { tlMax: 200, tlMin: 6, tlCost: 5, tlBoss: 10, bossPerDay: 3, bac: 60, expPerTL: 10,
   // địch cấp 1 của ải (đặt cho Đoàn Diên Khánh cấp 1 một mình qua được ải 1; mỗi tầng sau mạnh thêm 5%)
@@ -107,7 +126,7 @@ function aiDoRoll(c, a, t) {
 // Đá màu thăng bậc (người dùng chốt 2026-11-13): mỗi chương một loại, chỉ rơi ở tầng boss (và tinh anh khi có). Claude đặt: mỗi lần thắng / quét boss 1 viên.
 const AI_DA = ['luc', 'lam', 'tim', 'cam', 'vang'];
 function aiDaBoss(c, a, t) { const k = AI_DA[c]; if (!k || !aiSpec(c, a, t)) return ''; doDa()[k]++; return DO_DA[k]; }
-function aiBac(c, a, t) { return Math.round(AI.bac * Math.pow(2, c) * (1 + aiIdx(c, a, t) * 0.15) * (aiSpec(c, a, t) ? 2 : 1)); }
+function aiBac(c, a, t) { return Math.round(aiLootV(c, a, t) * (aiSpec(c, a, t) ? 17 : 13)); }   // 13 kẻ mỗi cửa thường; cửa đặc biệt 14 kẻ, một kẻ rơi ×4
 
 /* ---------- bản đồ chương ---------- */
 let aiCur = 0;
@@ -148,15 +167,15 @@ function aiList(a) {
   const rows = [];
   for (let t = A.tang - 1; t >= 0; t--) {
     const open = aiTangOpen(c, aiSel, t), st = aiStar(c, aiSel, t), boss = aiIsBoss(c, aiSel, t), tinh = aiIsElite(c, aiSel, t);
-    const face = boss ? A.boss : AI_CHUONG[c].mobs[(aiSel * 3 + t) % AI_CHUONG[c].mobs.length];
+    const face = aiTuong(c, aiSel, t) || aiMobs()[(aiSel * 3 + t) % 15], FH = HIEP_KHACH[face];
     const left = aiLeft(c, aiSel, t);
     // bấm cả ô tầng là vào đánh; nút tròn bên phải: chưa qua = Chiến, đã qua = Quét (người dùng chốt 2026-11-13, theo ảnh mẫu)
     const btn = !open ? '<span class="al-lock">Chưa mở</span>'
       : st ? `<button class="al-rb" onclick="event.stopPropagation();G.aiSweep(${t})"><img src="game/img/icon/nut_quet.png" alt="Quét"></button>`
       : `<button class="al-rb" onclick="event.stopPropagation();G.aiFight(${t})"><img src="game/img/icon/nut_chien.png" alt="Chiến"></button>`;
     rows.push(`<div class="al-row ${open ? '' : 'lock'} ${boss ? 'boss' : tinh ? 'tinh' : ''}" ${open ? `onclick="G.aiFight(${t})"` : ''}>
-      <span class="al-face">${typeof tdPortrait === 'function' ? tdPortrait(face) : ''}</span>
-      <div class="al-head"><b>${A.name} ${t + 1}${tinh ? ' <i class="al-tag">Tinh Anh</i>' : boss ? ' <i class="al-tag b">Boss</i>' : ''}</b>${boss || tinh ? `<em>Còn <big>${Math.max(0, left)}</big> lần</em>` : ''}</div>
+      <span class="al-face">${typeof tdPortrait === 'function' ? tdPortrait(FH.img, FH.art, FH.face) : ''}</span>
+      <div class="al-head"><b>${boss || tinh ? FH.name : A.name + ' ' + (t + 1)}${tinh ? ' <i class="al-tag">Tinh Anh</i>' : boss ? ' <i class="al-tag b">Boss</i>' : ''}</b>${boss || tinh ? `<em>Còn <big>${Math.max(0, left)}</big> lần</em>` : ''}</div>
       <div class="al-body">
         <div class="al-mid">
           <span class="al-tl">Thể Lực: ${aiCost(c, aiSel, t)}</span>
@@ -184,15 +203,14 @@ function aiFight(t) {
   if (!aiCheck(t)) return;
   const c = aiCur, a = aiSel, A = AI_CHUONG[c].ai[a], g = aiIdx(c, a, t), boss = aiIsBoss(c, a, t), tinh = aiIsElite(c, a, t);
   tdStart({
-    name: `${A.name} ${t + 1}`, mobs: AI_CHUONG[c].mobs, boss: boss ? A.boss : tinh ? AI_CHUONG[c].mobs[(a * 3 + t) % AI_CHUONG[c].mobs.length] : null,
-    mob: AI.mob, waveN: boss ? [2, 3, 3] : tinh ? [2, 2, 3] : [2, 2, 3], pow: (1 + g * 0.03) * (AI_POW[c] || 1), bossHp: tinh ? 2 : 3, bossAtk: tinh ? 1.2 : 1.4,   // 70 cửa: mỗi cửa +3%; tinh anh = một kẻ địch máu ×2, công ×1,2 ở đợt cuối
+    name: `${A.name} ${t + 1}`, mobs: aiMobs(), boss: aiTuong(c, a, t), lootV: aiLootV(c, a, t),
+    mob: AI.mob, waveN: boss || tinh ? [4, 5, 5] : [4, 4, 5]   /* người dùng chốt 2026-11-14: cửa nào cũng 4–5 địch mỗi đợt */, pow: (1 + g * 0.03) * (AI_POW[c] || 1), bossHp: tinh ? 2 : 3, bossAtk: tinh ? 1.2 : 1.4,   // 70 cửa: mỗi cửa +3%; tinh anh = một kẻ địch máu ×2, công ×1,2 ở đợt cuối
     onEnd(win, stars) {
       if (!win) return;
       const S = aiState(), k = aiKey(c, a, t);
       S.stars[k] = Math.max(S.stars[k] || 0, stars);
       if (boss) S.used[k] = (S.used[k] || 0) + 1;
       aiTL(); P.theLuc -= aiCost(c, a, t);
-      P.gold += aiBac(c, a, t);
       P.lieu = (P.lieu || 0) + (boss ? 2 : 1); // hiệp khách nguyên liệu để tăng cấp (tang_cap.js)
       gainExp(aiCost(c, a, t) * AI.expPerTL); // kinh nghiệm nhân vật = Thể Lực tốn × 10 (Claude đặt)
       const roi = [aiDoRoll(c, a, t), aiDaBoss(c, a, t)].filter(Boolean).join(', '); if (roi) setTimeout(() => toast('Nhận ' + roi), 400);
@@ -206,7 +224,7 @@ function aiSweep(t) {
   if (!aiCheck(t)) return;
   aiTL(); P.theLuc -= aiCost(c, a, t);
   if (aiSpec(c, a, t)) { const S = aiState(), k = aiKey(c, a, t); S.used[k] = (S.used[k] || 0) + 1; }
-  const bac = aiBac(c, a, t) + 60;
+  const bac = aiBac(c, a, t);
   P.gold += bac; P.luongThuc = (P.luongThuc || 0) + bac; P.lieu = (P.lieu || 0) + (aiSpec(c, a, t) ? 2 : 1); gainExp(aiCost(c, a, t) * AI.expPerTL);
   if (typeof saveGame === 'function') saveGame();
   const da = Math.random() < 0.4 ? 1 : 0; if (da) doDa().huyen += da;
@@ -249,7 +267,7 @@ function aiStyle() {
   .al-row { position: relative; margin: 0 0 3.4cqw 9cqw; border-radius: 1.6cqw; background: linear-gradient(#2a5a9a, #12305a); border: .5cqw solid #a8b8c8; box-shadow: 0 .6cqw 1.2cqw #0008; cursor: pointer; }
   .al-row.boss { background: linear-gradient(#2a5a9a, #12305a); border-color: #e8c35a; }
   .al-row.tinh { border-color: #c08aff; } .al-row.tinh .al-face { border-color: #c08aff; box-shadow: 0 0 1.4cqw #c08aff88, 0 .4cqw 1cqw #000a; }
-  .al-tag { flex: none; white-space: nowrap; font-style: normal; font-size: 3cqw; font-weight: 800; padding: .2cqw 1.4cqw; margin-left: 1cqw; border-radius: 1cqw; background: #7a3ab8; vertical-align: middle; } .al-tag.b { background: #b8862a; }
+  .al-tag { position: absolute; z-index: 3; left: -8cqw; bottom: -1.6cqw; width: 20cqw; text-align: center; white-space: nowrap; font-style: normal; font-size: 3cqw; font-weight: 800; padding: .3cqw 0; border-radius: 1cqw; background: #7a3ab8; border: .3cqw solid #e0c8ff; text-shadow: none; } .al-tag.b { background: #b8862a; }
   .al-row.lock { filter: grayscale(.8) brightness(.6); cursor: default; }
   .al-face { position: absolute; z-index: 2; left: -9cqw; top: 50%; transform: translateY(-50%); width: 22cqw; height: 22cqw; border-radius: 50%; overflow: hidden; background: #3a2a1a; border: .8cqw solid #8a7a6a; box-shadow: 0 .4cqw 1cqw #000a; }
   .al-row.boss .al-face { border-color: #e8c35a; box-shadow: 0 0 1.6cqw #e8c35a99, 0 .4cqw 1cqw #000a; }

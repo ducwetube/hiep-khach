@@ -61,8 +61,12 @@ function tdWave(n) {
   for (let i = 0; i < cnt; i++) {
     const boss = !!T.boss && n === TD.waves - 1 && i === 0;
     const k = boss ? T.boss : tdRand(T.mobs), m = T.mob, f = (1 + n * 0.12) * (T.pow || 1);
+    const HK = typeof HIEP_KHACH !== 'undefined' && HIEP_KHACH[k];
     list.push(tdUnit('dich', i, {
-      name: (ENEMY_IMG[k] && ENEMY_IMG[k].label) || k, img: k, role: boss ? 'cong_kich' : null, boss,
+      // địch là hiệp khách (người dùng chốt 2026-11-14): 15 tướng xanh làm quái, tinh anh / boss là tướng thật, dùng chiêu nộ của mình khi đầy Nộ.
+      // Kỹ Năng phe địch tính như Công Kích (không tự đầy Nộ mỗi lượt, vẫn nhận cục xanh).
+      ...(HK ? { art: HK.art, face: HK.face, sprite: HK.sprite, spFlip: HK.spFlip, hand: HK.hand, ult: HK.ult, anim: HK.anim, spSize: HK.spSize, skill: HK.skill } : {}),
+      name: HK ? HK.name : (ENEMY_IMG[k] && ENEMY_IMG[k].label) || k, img: HK ? HK.img : k, role: boss ? 'cong_kich' : null, boss,
       maxHp: Math.round(m.hp * f * (boss ? (T.bossHp || 3) : 1)), atk: Math.round(m.atk * f * (boss ? (T.bossAtk || 1.4) : 1)), def: Math.round(m.def * f),
       hoi: m.hoi, spd: m.spd, mi: m.mi,
     }));
@@ -82,6 +86,7 @@ function tdStart(def) {
       ...(st => ({ maxHp: st.hp, atk: st.atk, def: st.def, hoi: st.hoi, spd: st.spd, mi: st.mi }))(heroSt(h)) })),
   };
   tdS.ta.forEach(u => { if (u.role === 'ky_nang') u.no = TD.noMax; });
+  { const B = tdS.def.boss && typeof HIEP_KHACH !== 'undefined' && HIEP_KHACH[tdS.def.boss]; if (B && B.anim) Object.values(B.anim).forEach(v => { if (v && v.src) new Image().src = v.src; }); }
   // tải trước hình động / hiệu ứng Blender của đội để lúc tung chiêu không bị trống
   tdS.ta.forEach(u => {
     const list = u.anim ? Object.values(u.anim).filter(v => v && v.src).map(v => v.src) : [];
@@ -297,7 +302,7 @@ function tdHand(u) {
   if (!root || !img) return tdPos(u);
   const R = root.getBoundingClientRect(), r = img.getBoundingClientRect(), h = u.hand || [0.85, 0.45];
   // h = vị trí bàn tay trên ảnh quay sang phải; ảnh bị lật (quái quay trái) thì lấy đối xứng
-  const frac = img.classList.contains('nf') ? h[0] : 1 - h[0];
+  const frac = (u.side === 'ta') === img.classList.contains('nf') ? h[0] : 1 - h[0];
   return { x: r.left + r.width * frac - R.left, y: r.top + r.height * h[1] - R.top };
 }
 /* ---------- hình động + hiệu ứng làm bằng Blender (tools/blender/) ----------
@@ -366,7 +371,7 @@ const TD_SHOT = {
 function tdShotFrom(u, tip) {
   const a = tdHand(u); if (!tip) return a;
   const b = tdBody(u); if (!b) return a;
-  a.x += (b.img.classList.contains('nf') ? 1 : -1) * tip[0] * b.k; a.y += tip[1] * b.k;
+  a.x += (u.side === 'ta' ? 1 : -1) * tip[0] * b.k; a.y += tip[1] * b.k;
   return a;
 }
 function tdShoot(u, t, kind, from) {
@@ -544,7 +549,7 @@ function tdAnimPlay(u, which) {
   s.el.classList.add('body');
   const [x0, y0, x1, y1] = A.box;
   // ảnh gốc quay trái mà đứng phe ta (lật ngang như hình tĩnh) thì lật cả khung hình động, vùng xuất lấy đối xứng
-  const flip = u.side === 'ta' && !b.img.classList.contains('nf');
+  const flip = (u.side === 'ta') !== b.img.classList.contains('nf');
   const left = flip ? b.x + (A.iw - x1) * b.k : b.x + x0 * b.k;
   Object.assign(s.el.style, { left: left + 'px', top: b.y + y0 * b.k + 'px', width: (x1 - x0) * b.k + 'px', height: (y1 - y0) * b.k + 'px', transform: flip ? 'scaleX(-1)' : '' });
   b.e.appendChild(s.el);
@@ -614,7 +619,7 @@ async function tdChi(u, foes, onHit) {
   const an = A && A.atk ? tdAnimPlay(u, 'atk') : null;
   if (an) await tdWait(A.atk.fire);
   const a = tdHand(u);
-  if (an) { const b = tdBody(u); if (b) { a.x += (b.img.classList.contains('nf') ? 1 : -1) * A.tip[0] * b.k; a.y += A.tip[1] * b.k; } }
+  if (an) { const b = tdBody(u); if (b) { a.x += (u.side === 'ta' ? 1 : -1) * A.tip[0] * b.k; a.y += A.tip[1] * b.k; } }
   const orb = document.createElement('div');
   orb.className = 'td-chi-orb'; orb.style.left = a.x + 'px'; orb.style.top = a.y + 'px';
   box.appendChild(orb);
@@ -693,7 +698,7 @@ function tdKill(t, a) {
   else {
     // chiến lợi phẩm rơi xuống đất, hết lượt mới bay lên ô đếm trên cùng
     // bạc và lương thực cùng một mức gốc, mỗi thứ dao động riêng ±10% (người dùng chốt 2026-11-12)
-    const v = 30 + (t.boss ? 100 : 0), jit = () => Math.round(v * (0.9 + Math.random() * 0.2));
+    const v = (tdS.def.lootV || 30) * (t.boss ? 4 : 1), jit = () => Math.round(v * (0.9 + Math.random() * 0.2));
     tdDrop(a, t, 'bac', jit()); tdDrop(a, t, 'luong', jit());
     if (t.boss || Math.random() < 0.1) tdDrop(a, t, 'manh', 1);
     if (Math.random() < 0.2) tdDrop(a, t, 'da', 1);   // Huyền Thạch (đá thăng bậc trang bị): rơi như bạc / lương thực nhưng tỉ lệ thấp hơn (20% mỗi kẻ, Claude đặt)
@@ -728,7 +733,7 @@ async function tdNormal(u) {
 async function tdUltDo(u) {
   const U = u.ult || (u.side === 'ta' ? TD_ULT[u.role] : { kind: 'one', pow: 1.6 });
   if (!U) return tdNormal(u);
-  tdBanner(u, u.side === 'ta' ? (u.skill ? u.skill.name : 'Tuyệt chiêu') : u.name);
+  tdBanner(u, u.skill ? u.skill.name : u.side === 'ta' ? 'Tuyệt chiêu' : u.name);
   if (u.role !== 'ky_nang') u.no = 0;
   await tdWait(500);
   if (U.kind === 'all') {
@@ -1148,6 +1153,8 @@ function tdStyle() {
   .td-sheet { position: absolute; overflow: hidden; pointer-events: none; }
   .td-sheet > img.td-strip, .td-u .td-sheet > img.td-strip { position: absolute; left: 0; top: 0; bottom: auto; height: 100%; width: auto; max-width: none; object-fit: fill; transform: none; animation: none; filter: none; scale: none; }
   .td-u > img { z-index: 1; }
+  .td-u.dich img.nf { transform: translateX(-50%) scaleX(-1); }
+  .td-u.dich.hit img.nf { animation: tdHit .32s; }
   .td-u.has-anim > img { visibility: hidden; animation: none; }
   .td-u .td-sheet.body { z-index: 1; }
   .td-u.hit .td-sheet.body { animation: tdHitB .32s; }
