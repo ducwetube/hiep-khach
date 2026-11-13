@@ -136,6 +136,9 @@ function tbStyle() {
   .tb-tab { padding: 1.6cqw 2.2cqw 1.2cqw; border-radius: 1.6cqw 1.6cqw 0 0 !important; font: 3.9cqw 'Pattaya', serif !important; color: #fff !important; background: linear-gradient(#8a8478, #5e584e) !important; border: .5cqw solid #b8b0a0 !important; border-bottom: 0 !important; text-shadow: 0 .3cqw 0 #000; white-space: nowrap; }
   .tb-tab.on { background: linear-gradient(#f0d8a8, #c8a868) !important; border-color: #fff0c8 !important; color: #3a2410 !important; text-shadow: none; padding-bottom: 2cqw; }
   .tb-main { flex: 1; min-height: 0; display: flex; gap: 2cqw; padding: 0 2.5cqw 0 3cqw; }
+  /* .hd-scroll (cần để vuốt cuộn được) có flex: 1 + padding riêng ở màn chi tiết: ghi đè lại */
+  .tb-main .tb-heroes.hd-scroll { flex: none; padding: 2.5cqw 1cqw 2cqw 0; }
+  .tb-main .tb-grid.hd-scroll { padding: 2cqw; }
   .tb-heroes { flex: none; width: 17cqw; overflow: hidden auto; display: flex; flex-direction: column; gap: 1.6cqw; padding: 2.5cqw 1cqw 2cqw 0; }
   .tb-hero { flex: none; width: 15cqw; height: 15cqw; min-height: 0 !important; margin-left: .6cqw; }
   .tb-hero.on { box-shadow: 0 0 0 .6cqw #ffd43b, 0 0 2cqw #ffd43b; }
