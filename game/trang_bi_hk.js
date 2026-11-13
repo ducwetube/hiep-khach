@@ -140,7 +140,7 @@ function tbNang() {
   D.huyen -= U[0]; D[U[1]] -= U[2]; it.t++;
   tbSave(); trangBi(); toast('Thăng bậc thành công');
 }
-const DA_SRC = { huyen: 'Rơi khi hạ địch ở ải Giang Hồ', luc: 'Boss ải Chương 1', lam: 'Boss ải Chương 2', tim: 'Boss ải Chương 3', cam: 'Boss ải Chương 4', vang: 'Boss ải Chương 5' };
+const DA_SRC = { huyen: 'Rơi khi hạ địch ở ải Giang Hồ', luc: 'Tinh anh, boss Chương 1', lam: 'Tinh anh, boss Chương 2', tim: 'Tinh anh, boss Chương 3', cam: 'Tinh anh, boss Chương 4', vang: 'Tinh anh, boss Chương 5' };
 const tbDaInfo = k => toast(`${DO_DA[k]}: ${DA_SRC[k]}`);
 const tbHeroSet = id => { tbHero = id; tbPick = null; trangBi(); };
 const tbSlotSet = k => { tbSlot = k; tbPick = null; tbTab = 'ch'; trangBi(); };

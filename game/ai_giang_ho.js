@@ -20,7 +20,29 @@ const AI_CHUONG = [
       { name: 'Thanh Vân Sơn Môn', x: 70, y: 10, tang: 10, boss: 'that_sat_huong_chu' },
     ],
   },
+  // Map 2–5 (2026-11-13, người dùng yêu cầu; tên chương / ải, quái, boss Claude đặt, chờ duyệt; tranh nền mượn tranh bản đồ vùng cũ, chờ ảnh Gemini).
+  // Chỉ khai báo tên ải + boss; vị trí ghim tự xếp chữ chi (aiAuto). Map 2, 3: 7 ải; map 4, 5: 9 ải; mỗi ải 10 cửa.
+  { name: 'Chương 2 · Sa Mạc Man Hoang', img: 'game/img/ban_do/mh_doc.jpg',
+    mobs: ['sa_tac_mh', 'huyet_no', 'de_tu_truong_sinh', 'huyet_anh_sat_thu', 'truong_sinh_ho_ve', 'huyet_luyen_dao_si'],
+    ai: [['Hoàng Sa Cổ Đạo', 'sa_tac_dau_linh'], ['Lưu Sa Hải', 'sa_tac_dau_linh'], ['Ốc Đảo Chết', 'huyet_thi_tuong'], ['Tàn Thành Lâu Lan', 'huyet_thi_tuong'],
+      ['Huyết Trì Ngoại Điện', 'truong_sinh_ho_phap'], ['Huyết Trì Nội Điện', 'truong_sinh_ho_phap'], ['Trường Sinh Đường', 'ngoc_duong_tu']] },
+  { name: 'Chương 3 · Đầm Lầy Hiệp Xuyên', img: 'game/img/ban_do/hx_doc.jpg',
+    mobs: ['doc_thi', 'de_tu_van_doc', 'doc_nu_van_doc', 'van_doc_ho_ve', 'luyen_co_su', 'huyet_no'],
+    ai: [['Chướng Khí Lâm', 'van_doc_huong_chu'], ['Hắc Thủy Đầm', 'van_doc_huong_chu'], ['Bến Thuyền Mục', 'van_doc_huong_chu'], ['Vạn Độc Trại', 'van_doc_ho_phap'],
+      ['Luyện Cổ Phòng', 'van_doc_ho_phap'], ['Độc Long Động', 'van_doc_ho_phap'], ['Vạn Độc Môn', 'van_doc_ho_phap']] },
+  { name: 'Chương 4 · Thung Lũng Tiêu Dao', img: 'game/img/ban_do/td_doc.jpg',
+    mobs: ['de_tu_hop_hoan', 'cam_nu', 'hop_hoan_thi_ve', 'mi_anh_sat_thu', 'thuy_mi', 'si_tinh'],
+    ai: [['Đào Hoa Lâm', 'on_tuyen_thuy_mi'], ['Lạc Anh Kiều', 'on_tuyen_thuy_mi'], ['Ôn Tuyền Cốc', 'on_tuyen_thuy_mi'], ['Mê Hương Viên', 'me_am_huong_chu'], ['Tiêu Dao Lầu', 'me_am_huong_chu'],
+      ['Cầm Âm Các', 'me_am_huong_chu'], ['Hợp Hoan Ngoại Điện', 'hop_hoan_ho_phap'], ['Hợp Hoan Nội Điện', 'hop_hoan_ho_phap'], ['Hợp Hoan Phái', 'hop_hoan_thanh_nu']] },
+  { name: 'Chương 5 · Hồ Kỳ Sơn', img: 'game/img/ban_do/th_doc.jpg',
+    mobs: ['ks_tu_si', 'ks_ma_tang', 'ks_de_tu_qvt', 'ks_cau_hon_su', 'ks_luyen_hon_su', 'ks_thuy_quy'],
+    ai: [['Âm Phong Lĩnh', 'ks_thuy_quy_dau_linh'], ['Vong Hồn Than', 'ks_thuy_quy_dau_linh'], ['Quỷ Khốc Lâm', 'ks_thuy_quy_dau_linh'], ['U Minh Cốc', 'ks_phan_quan'], ['Câu Hồn Điện', 'ks_phan_quan'],
+      ['Luyện Hồn Trì', 'ks_phan_quan'], ['Phong Ma Tế Đàn', 'ks_ho_phap'], ['Quỷ Vương Ngoại Điện', 'ks_ho_phap'], ['Quỷ Vương Tông', 'ks_ho_phap']] },
 ];
+// chương khai báo gọn [tên, boss] -> đủ trường; ghim xếp chữ chi từ dưới lên
+AI_CHUONG.forEach(C => { C.ai = C.ai.map((A, i, arr) => Array.isArray(A) ? { name: A[0], boss: A[1], tang: 10, x: i % 2 ? 26 : 72, y: Math.round(84 - i * 72 / (arr.length - 1)) } : A); });
+// sức địch nhân theo chương (Claude đặt, chờ duyệt): mỗi chương gấp 2,5 lần chương trước; bạc gấp đôi
+const AI_POW = [1, 2.5, 6, 15, 36];
 const AI = { tlMax: 200, tlMin: 6, tlCost: 5, tlBoss: 10, bossPerDay: 3, bac: 60, expPerTL: 10,
   // địch cấp 1 của ải (đặt cho Đoàn Diên Khánh cấp 1 một mình qua được ải 1; mỗi tầng sau mạnh thêm 5%)
   mob: { hp: 430, atk: 160, def: 100, hoi: 70, spd: 40, mi: 100 } };
@@ -85,7 +107,7 @@ function aiDoRoll(c, a, t) {
 // Đá màu thăng bậc (người dùng chốt 2026-11-13): mỗi chương một loại, chỉ rơi ở tầng boss (và tinh anh khi có). Claude đặt: mỗi lần thắng / quét boss 1 viên.
 const AI_DA = ['luc', 'lam', 'tim', 'cam', 'vang'];
 function aiDaBoss(c, a, t) { const k = AI_DA[c]; if (!k || !aiSpec(c, a, t)) return ''; doDa()[k]++; return DO_DA[k]; }
-function aiBac(c, a, t) { return Math.round(AI.bac * (1 + aiIdx(c, a, t) * 0.15) * (aiSpec(c, a, t) ? 2 : 1)); }
+function aiBac(c, a, t) { return Math.round(AI.bac * Math.pow(2, c) * (1 + aiIdx(c, a, t) * 0.15) * (aiSpec(c, a, t) ? 2 : 1)); }
 
 /* ---------- bản đồ chương ---------- */
 let aiCur = 0;
@@ -107,9 +129,10 @@ function aiMap(c) {
     <button class="am-back" onclick="G.home()">Trở về</button>
     <span class="am-tl">Thể lực ${aiTL()}/${AI.tlMax}</span>
     ${pins}
-    <div class="am-title"><b>${C.name}</b><button class="am-next ${AI_CHUONG[aiCur + 1] ? '' : 'off'}" onclick="G.aiNext()">&raquo;</button></div>
+    <div class="am-title"><button class="am-next am-prev ${aiCur > 0 ? '' : 'off'}" onclick="G.aiPrev()">&laquo;</button><b>${C.name}</b><button class="am-next ${AI_CHUONG[aiCur + 1] ? '' : 'off'}" onclick="G.aiNext()">&raquo;</button></div>
   </div>`, 'ai-map-' + aiCur);
 }
+function aiPrev() { if (aiCur > 0) aiMap(aiCur - 1); }
 function aiNext() {
   if (AI_CHUONG[aiCur + 1] && aiAiDone(aiCur, AI_CHUONG[aiCur].ai.length - 1)) return aiMap(aiCur + 1);
   toast(AI_CHUONG[aiCur + 1] ? 'Vượt hết ải chương này để mở chương sau' : 'Chương sau sắp mở');
@@ -162,7 +185,7 @@ function aiFight(t) {
   const c = aiCur, a = aiSel, A = AI_CHUONG[c].ai[a], g = aiIdx(c, a, t), boss = aiIsBoss(c, a, t), tinh = aiIsElite(c, a, t);
   tdStart({
     name: `${A.name} ${t + 1}`, mobs: AI_CHUONG[c].mobs, boss: boss ? A.boss : tinh ? AI_CHUONG[c].mobs[(a * 3 + t) % AI_CHUONG[c].mobs.length] : null,
-    mob: AI.mob, waveN: boss ? [2, 3, 3] : tinh ? [2, 2, 3] : [2, 2, 3], pow: 1 + g * 0.03, bossHp: tinh ? 2 : 3, bossAtk: tinh ? 1.2 : 1.4,   // 70 cửa: mỗi cửa +3%; tinh anh = một kẻ địch máu ×2, công ×1,2 ở đợt cuối
+    mob: AI.mob, waveN: boss ? [2, 3, 3] : tinh ? [2, 2, 3] : [2, 2, 3], pow: (1 + g * 0.03) * (AI_POW[c] || 1), bossHp: tinh ? 2 : 3, bossAtk: tinh ? 1.2 : 1.4,   // 70 cửa: mỗi cửa +3%; tinh anh = một kẻ địch máu ×2, công ×1,2 ở đợt cuối
     onEnd(win, stars) {
       if (!win) return;
       const S = aiState(), k = aiKey(c, a, t);
@@ -215,8 +238,9 @@ function aiStyle() {
   .am-st, .al-stars i { display: inline-block; width: 4.4cqw; height: 4.4cqw; background: #ffd43b; clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
   .am-pin.lock { filter: grayscale(.9) brightness(.7); }
   .am-title { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; display: flex; align-items: center; justify-content: center; padding: 3cqw 4cqw calc(3cqw + env(safe-area-inset-bottom)); background: linear-gradient(#0000, #000b 40%); }
-  .am-title b { font-size: 6cqw; font-weight: 800; text-shadow: 0 .3cqw 0 #000, 0 0 1cqw #000; }
+  .am-title b { padding: 0 9cqw; text-align: center; white-space: nowrap; font-size: 4.8cqw; font-weight: 800; text-shadow: 0 .3cqw 0 #000, 0 0 1cqw #000; }
   .am-next { position: absolute; right: 4cqw; font-size: 9cqw !important; line-height: 1; color: #ddd !important; }
+  .am-prev { right: auto; left: 4cqw; }
   .am-next.off { opacity: .35; }
   .home.al { padding-bottom: env(safe-area-inset-bottom); }
   .al-bar { display: flex; align-items: center; gap: 2cqw; padding: 2.5cqw 2cqw; }
@@ -225,13 +249,13 @@ function aiStyle() {
   .al-row { position: relative; margin: 0 0 3.4cqw 9cqw; border-radius: 1.6cqw; background: linear-gradient(#2a5a9a, #12305a); border: .5cqw solid #a8b8c8; box-shadow: 0 .6cqw 1.2cqw #0008; cursor: pointer; }
   .al-row.boss { background: linear-gradient(#2a5a9a, #12305a); border-color: #e8c35a; }
   .al-row.tinh { border-color: #c08aff; } .al-row.tinh .al-face { border-color: #c08aff; box-shadow: 0 0 1.4cqw #c08aff88, 0 .4cqw 1cqw #000a; }
-  .al-tag { font-style: normal; font-size: 3cqw; font-weight: 800; padding: .2cqw 1.4cqw; margin-left: 1cqw; border-radius: 1cqw; background: #7a3ab8; vertical-align: middle; } .al-tag.b { background: #b8862a; }
+  .al-tag { flex: none; white-space: nowrap; font-style: normal; font-size: 3cqw; font-weight: 800; padding: .2cqw 1.4cqw; margin-left: 1cqw; border-radius: 1cqw; background: #7a3ab8; vertical-align: middle; } .al-tag.b { background: #b8862a; }
   .al-row.lock { filter: grayscale(.8) brightness(.6); cursor: default; }
   .al-face { position: absolute; z-index: 2; left: -9cqw; top: 50%; transform: translateY(-50%); width: 22cqw; height: 22cqw; border-radius: 50%; overflow: hidden; background: #3a2a1a; border: .8cqw solid #8a7a6a; box-shadow: 0 .4cqw 1cqw #000a; }
   .al-row.boss .al-face { border-color: #e8c35a; box-shadow: 0 0 1.6cqw #e8c35a99, 0 .4cqw 1cqw #000a; }
   .al-face img { width: 100%; }
   .al-head { display: flex; align-items: center; justify-content: space-between; gap: 2cqw; padding: 1.2cqw 3cqw 1.2cqw 16cqw; border-radius: 1.2cqw 1.2cqw 0 0; background: linear-gradient(90deg, #0a1428 0%, #1a3050cc 55%, #4a78b0aa 100%); border-bottom: .3cqw solid #ffffff22; }
-  .al-head b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 4.4cqw; font-weight: 800; white-space: nowrap; text-shadow: 0 .3cqw 0 #000; }
+  .al-head b { flex: 1; min-width: 0; overflow: hidden; display: flex; align-items: center; font-size: 4.2cqw; font-weight: 800; white-space: nowrap; text-shadow: 0 .3cqw 0 #000; }
   .al-head em { flex: none; font-style: normal; font-size: 3.4cqw; font-weight: 700; color: #fff4d0; white-space: nowrap; text-shadow: 0 .3cqw 0 #000; }
   .al-head big { font-size: 4.4cqw; color: #fff; margin: 0 .6cqw; }
   .al-body { display: flex; align-items: center; min-height: 19cqw; padding: 1cqw 2cqw 1cqw 16cqw; }
@@ -250,4 +274,4 @@ function aiStyle() {
   `;
   document.head.appendChild(st);
 }
-const AI_G = { aiMap, aiNext, aiList, aiFight, aiSweep };
+const AI_G = { aiMap, aiNext, aiPrev, aiList, aiFight, aiSweep };
