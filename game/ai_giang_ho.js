@@ -63,11 +63,11 @@ function aiDo(c, a, t) {
   for (let i = 0; i < a; i++) n += AI_CHUONG[c].ai[i].tang - 1;
   n += t;
   if (n % 3 === 2) return null;
-  return DO_SLOTS[(n - Math.floor(n / 3)) % DO_SLOTS.length].k;
+  return DO_SLOTS[(n - Math.floor(n / 3)) % 4].k;   // 4 ô đầu (Vũ khí, Mũ, Giáp, Đai); giày kiếm riêng
 }
 function aiDoRoll(c, a, t) {
   const k = aiDo(c, a, t); if (!k || Math.random() >= AI_DO.rate) return '';
-  doTui()[k]++;
+  doAdd(k, 1);
   return `${doSlot(k).loai} ${DO_TIERS[0].name}`;
 }
 function aiBac(c, a, t) { return Math.round(AI.bac * (1 + aiIdx(c, a, t) * 0.15) * (aiIsBoss(c, a, t) ? 2 : 1)); }
