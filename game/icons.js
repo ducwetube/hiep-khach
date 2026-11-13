@@ -1120,6 +1120,8 @@ const TB_STEP = 200;
 const tbIcon = (k, i, n) => `<svg x="0" y="0" width="48" height="48" viewBox="${(i - 1) * TB_STEP} 0 192 192"><image href="game/img/icon/tb_${k}.png" x="0" y="0" width="${(n - 1) * TB_STEP + 192}" height="192"/></svg>`;
 [['gang', 12], ['kiem', 12], ['con', 10], ['mu', 12], ['ao', 12], ['quan', 12], ['giay', 12], ['day_chuyen', 12], ['nhan', 12], ['boi', 12], ['phi_phong', 12], ['dai_lung', 12], ['htk', 12]]
   .forEach(([k, n]) => { for (let i = 1; i <= n; i++) ICONS[k + '_' + i] = tbIcon(k, i, n); });
+// Trang bị hiệp khách (game xếp đội): 10 bậc x 5 món, ảnh lẻ 192 px game/img/icon/hk_do/<loại>_<bậc>.png
+['kiem', 'mu', 'ao', 'dai', 'giay'].forEach(k => { for (let i = 1; i <= 10; i++) ICONS[`hkdo_${k}_${i}`] = `<image href="game/img/icon/hk_do/${k}_${i}.png" x="0" y="0" width="48" height="48"/>`; });
 ['bac', 'kinh_nghiem', 'truy_na'].forEach(k => {
   ICONS[k] = `<image href="game/img/icon/${k}.png" x="0" y="0" width="48" height="48"/>`;
 });

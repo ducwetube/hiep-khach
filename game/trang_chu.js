@@ -547,7 +547,86 @@ const heroPos = (h, base) => { const [fx, fy] = heroFace(h); return `object-posi
 function heroSt(h, base) {
   const o = {}, g = h.grow || {}, n = (h.lv || 1) - 1, d = base ? {} : duyenBonus(h);
   Object.keys(h.st).forEach(k => { o[k] = Math.round((h.st[k] + (g[k] || 0) * n) * (1 + (d[k] || 0))); });
+  if (!base) Object.entries(doBonus(h)).forEach(([k, v]) => { o[k] = (o[k] || 0) + v; });   // trang bị cộng thẳng, sau Duyên
   return o;
+}
+/* ---------- TRANG BỊ HIỆP KHÁCH (2026-11-13, người dùng chốt theo game mẫu) ----------
+   5 ô: Vũ khí, Mũ, Áo, Đai rơi từ ải (chỉ rơi đồ bậc 1 Xám), bậc cao hơn có được bằng cách nâng cấp đồ đang mặc;
+   Giày kiếm riêng (chưa làm). Màu khung theo bậc để nhìn là biết mức.
+   Claude đặt, chờ duyệt: 6 bậc màu, chỉ số mỗi bậc gấp đôi bậc trước (bậc 1 theo ảnh mẫu "Bách Chiến": Công 100, HP 500, Thủ 100, Hồi 100),
+   tên bậc, giá nâng cấp, cấp hiệp khách cần có, tỉ lệ rơi. */
+const DO_SLOTS = [
+  { k: 'vk', name: 'Vũ khí', loai: 'Kiếm', ic: 'kiem', st: 'atk', base: 100 },
+  { k: 'mu', name: 'Mũ', loai: 'Mũ', ic: 'mu', st: 'hp', base: 500 },
+  { k: 'ao', name: 'Giáp', loai: 'Áo', ic: 'ao', st: 'def', base: 100 },
+  { k: 'dai', name: 'Đai lưng', loai: 'Đai', ic: 'dai', st: 'hoi', base: 100 },
+];
+const DO_TIERS = [   // 10 bậc theo 10 bộ ảnh Gemini của người dùng (2026-11-13, gốc luu_tru/trang_bi_hk/bo_1..5.png, cắt bằng tools/blender/cat_trang_bi.py
+  // thành game/img/icon/hk_do/<loại>_<bậc>.png; icons.js đăng ký hkdo_<loại>_<bậc>). Mỗi bậc một bộ 5 món (Kiếm, Mũ, Áo, Đai, Giày).
+  // Tên bộ (trừ Bách Chiến) Claude đặt tạm; chỉ số các bậc trên + cách lên bậc: CHỜ NGƯỜI DÙNG HƯỚNG DẪN (DO_NANG = false).
+  { name: 'Bách Chiến', color: '#9a9a9a' },
+  { name: 'Thanh Phong', color: '#4fbf5a' },
+  { name: 'Bích Lâm', color: '#4fbf5a' },
+  { name: 'Lam Vân', color: '#4f8aff' },
+  { name: 'Thương Hải', color: '#4f8aff' },
+  { name: 'Tử Điện', color: '#b77bff' },
+  { name: 'Huyết Ngọc', color: '#e0406a' },
+  { name: 'Xích Diệm', color: '#ff7a2a' },
+  { name: 'Kim Diệm', color: '#ffbf3a' },
+  { name: 'Hoàng Long', color: '#ffd76a' },
+];
+const DO_NANG = false;   // nâng bậc chưa mở: người dùng sẽ hướng dẫn chỉ số + cách lên bậc
+const DO_DROP = { rate: 0.25, boss: 1 };  // CHƯA DÙNG: người dùng chưa nói đồ rơi ở đâu (2026-11-13); doDrop để sẵn
+const doSlot = k => DO_SLOTS.find(s => s.k === k);
+const doVal = (s, t) => Math.round(s.base * Math.pow(1.5, t - 1));   // mỗi bậc ×1,5 (Claude đặt, chờ duyệt)
+const doIcon = (s, t) => `hkdo_${s.ic}_${t}`;
+function doBonus(h) {
+  const o = {}, eq = (h && h.do) || {};
+  DO_SLOTS.forEach(s => { const t = eq[s.k]; if (t) o[s.st] = (o[s.st] || 0) + doVal(s, t); });
+  return o;
+}
+function doTui() { if (!P.doTui) P.doTui = { vk: 0, mu: 0, ao: 0, dai: 0 }; return P.doTui; }
+// rơi đồ khi thắng / quét ải; trả về tên món rơi (hoặc '')
+function doDrop(boss) {
+  if (!boss && Math.random() >= DO_DROP.rate) return '';
+  const s = DO_SLOTS[Math.floor(Math.random() * DO_SLOTS.length)];
+  doTui()[s.k]++;
+  return `${s.loai} ${DO_TIERS[0].name}`;
+}
+const DO_ST_NAME = { atk: 'Công', hp: 'HP', def: 'Thủ', hoi: 'Hồi' };
+function doSheet(k) {
+  const h = hkGet(heroSel); if (!h) return;
+  if (k === 'giay') return homeSoon('Giày');
+  const s = doSlot(k), t = (h.do && h.do[k]) || 0, bag = doTui()[k], T = DO_TIERS[t - 1], N = DO_TIERS[t];
+  const cell = (tt, dim) => `<span class="do-ic" style="--dc:${DO_TIERS[tt - 1].color}${dim ? ';opacity:.45' : ''}">[[${doIcon(s, tt)}]]</span>`;
+  let body;
+  if (!t) {
+    body = `<div class="do-row">${cell(1, !bag)}<div><b style="color:${DO_TIERS[0].color}">${s.loai} ${DO_TIERS[0].name}</b><small>${DO_ST_NAME[s.st]} +${doVal(s, 1).toLocaleString('vi-VN')}</small><small>Trong túi: ${bag}</small></div></div>
+      <button class="btn do-btn" ${bag ? '' : 'disabled'} onclick="G.doMac('${k}')">Mặc</button>`;
+  } else {
+    body = `<div class="do-row">${cell(t)}<div><b style="color:${T.color}">${s.loai} ${T.name}</b><small>${DO_ST_NAME[s.st]} +${doVal(s, t).toLocaleString('vi-VN')}</small></div></div>`;
+    if (N && DO_NANG) {   // nâng bậc + chỉ số các bậc trên: chờ người dùng hướng dẫn (2026-11-13), tạm tắt
+      const okLv = h.lv >= N.lv, okBac = (P.gold || 0) >= N.cost;
+      body += `<div class="do-arrow">➜</div><div class="do-row">${cell(t + 1)}<div><b style="color:${N.color}">${s.loai} ${N.name}</b><small>${DO_ST_NAME[s.st]} +${doVal(s, t + 1).toLocaleString('vi-VN')}</small>
+        <small style="${okLv ? '' : 'color:#ff7a6a'}">Cần Lv ${N.lv}</small><small style="${okBac ? '' : 'color:#ff7a6a'}">[[bac]] ${N.cost.toLocaleString('vi-VN')}</small></div></div>
+        <button class="btn do-btn" ${okLv && okBac ? '' : 'disabled'} onclick="G.doNang('${k}')">Nâng Cấp</button>`;
+    } else if (!N) body += `<p class="do-max">Đã đạt bậc cao nhất</p>`;
+  }
+  openModal(`<h3>${h.name} · ${s.name}</h3><div class="do-sheet">${body}</div>`);
+}
+function doMac(k) {
+  const id = heroSel, tui = doTui(); if (!P.hk[id] || !tui[k]) return;
+  tui[k]--; P.hk[id].do = P.hk[id].do || {}; P.hk[id].do[k] = 1;
+  if (typeof saveGame === 'function') saveGame();
+  heroView(id); doSheet(k);
+}
+function doNang(k) {
+  const id = heroSel, h = hkGet(id), t = (h.do && h.do[k]) || 0, N = DO_TIERS[t];
+  if (!DO_NANG || !t || !N || h.lv < N.lv || (P.gold || 0) < N.cost) return;
+  P.gold -= N.cost; P.hk[id].do[k] = t + 1;
+  if (typeof saveGame === 'function') saveGame();
+  heroView(id); doSheet(k);
+  toast(`${doSlot(k).loai} ${N.name}`);
 }
 // tổng % cộng thêm từ các Duyên đang đạt: { hp: 5, atk: 2, ... } (chỉ các chỉ số có trong st: hp, atk, def, hoi, spd)
 function duyenBonus(h) {
@@ -662,8 +741,11 @@ function heroView(i, from) {
   const stars = Array.from({ length: 5 }, (_, k) => `<i class="${k < h.star ? 'on' : ''}"></i>`).join('');
   const bao = [[640, 'Bảo Vật 1', ''], [905, 'Bảo Vật 2', ''], [1165, 'Bảo Vật 3', '3 sao mở']].map(([y, t, lock]) =>
     `<button class="hd-bao ${lock && h.star < 3 ? 'lock' : ''}" style="${box(92, y + 12, 200, 205, true)}" onclick="G.homeSoon('Bảo vật')"><b>${t}</b>${lock && h.star < 3 ? `<small>${lock}</small>` : ''}</button>`).join('');
-  const eq = [['mu_1', 'Mũ'], ['kiem_1', 'Vũ khí'], ['ao_1', 'Giáp'], ['dai_lung_1', 'Đai lưng'], ['giay_1', 'Giày']].map(([ic, t], k) =>
-    `<button class="hd-eq" style="${box(885, 572 + k * 152, 137, 137)}" onclick="G.homeSoon('Trang bị')"><span class="hd-eqi">[[${ic}]]</span><b>${t}</b></button>`).join('');
+  const eq = [['mu', 'hkdo_mu_1', 'Mũ'], ['vk', 'hkdo_kiem_1', 'Vũ khí'], ['ao', 'hkdo_ao_1', 'Giáp'], ['dai', 'hkdo_dai_1', 'Đai lưng'], ['giay', 'hkdo_giay_1', 'Giày']].map(([sk, ic, t], k) => {
+    const tier = (h.do && h.do[sk]) || 0, S = doSlot(sk), bag = S ? doTui()[sk] : 0;
+    return tier ? `<button class="hd-eq on" style="${box(885, 572 + k * 152, 137, 137)};--dc:${DO_TIERS[tier - 1].color}" onclick="G.doSheet('${sk}')"><span class="hd-eqi">[[${doIcon(S, tier)}]]</span></button>`
+      : `<button class="hd-eq" style="${box(885, 572 + k * 152, 137, 137)}" onclick="G.doSheet('${sk}')"><span class="hd-eqi">[[${ic}]]</span><b>${t}</b>${bag ? '<i class="hd-eqn"></i>' : ''}</button>`;
+  }).join('');
   const ST = [['hp', 'Khí huyết'], ['atk', 'Công'], ['def', 'Thủ'], ['hoi', 'Hồi'], ['spd', 'Tốc'], ['mi', 'Mị']];
   const hs = heroSt(h), sts = ST.map(([k, t]) => `<span><small>${t}</small><b>${(hs[k] || 0).toLocaleString('vi-VN')}</b></span>`).join('');
   // chân dung trong duyên: mã hiệp khách; chưa có thì mờ (vẫn hiện hình)
@@ -745,6 +827,7 @@ function heroStyle() {
   .hd-eqi { width: 7.5cqw; height: 7.5cqw; opacity: .35; filter: grayscale(.4); }
   .hd-eqi svg, .hd-eqi .ic { width: 100%; height: 100%; }
   .hd-eq b { margin-top: -.6cqw; font-size: 2.6cqw; font-weight: 700; color: #e8d8b0; }
+.hd-eq.on { border-color: var(--dc) !important; background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--dc) 45%, #2a2018), #1e1812 75%) !important; box-shadow: inset 0 0 2cqw #0008, 0 0 1.4cqw color-mix(in srgb, var(--dc) 60%, transparent); }  .hd-eq.on .hd-eqi { width: 10.5cqw; height: 10.5cqw; opacity: 1; filter: none; }  .hd-eqn { position: absolute; top: .6cqw; right: .6cqw; width: 2.2cqw; height: 2.2cqw; border-radius: 50%; background: #ff3a2a; box-shadow: 0 0 .6cqw #ff3a2a; }  .do-sheet { display: flex; flex-direction: column; align-items: center; gap: 2vw; }  .do-row { display: flex; align-items: center; gap: 3vw; width: 100%; }  .do-row > div { display: flex; flex-direction: column; gap: .5vw; }  .do-row small { opacity: .9; }  .do-ic { flex: none; width: 17vw; max-width: 84px; aspect-ratio: 1; border-radius: 10px; border: 3px solid var(--dc); background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--dc) 45%, #2a2018), #1e1812 75%); display: grid; place-items: center; }  .do-ic svg, .do-ic .ic { width: 82%; height: 82%; }  .do-arrow { font-size: 6vw; color: #e8c35a; line-height: 1; }  .do-btn { margin-top: 2vw; min-width: 40%; }  .do-max { margin: 2vw 0 0; color: #e8c35a; }
   .hd-art { border-radius: 1.6cqw; overflow: hidden; border: .6cqw solid #c9a24a; background: radial-gradient(ellipse at 50% 60%, #ffffff22, #0006 70%), linear-gradient(#2a3a30aa, #101a14cc); box-shadow: 0 .6cqw 1.6cqw #000a; }
   .hd-art img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 100%; transform: scaleX(-1) scale(1.12); transform-origin: 50% 96%; }
   .hd-art img.art { object-fit: cover; object-position: 50% 40%; transform: none; }
@@ -900,4 +983,4 @@ function homeStyle() {
   document.head.appendChild(st);
 }
 
-const TRANG_CHU_G = { home: renderHome, homeGo, homeTeam, homeChallenge, homeDaily, homeShops, homeSoon, homeMore, heroView };
+const TRANG_CHU_G = { home: renderHome, homeGo, homeTeam, homeChallenge, homeDaily, homeShops, homeSoon, homeMore, heroView, doSheet, doMac, doNang };
