@@ -88,6 +88,8 @@ function tdStart(def) {
     if (u.anim && u.anim.chem && TD_SLASH[u.anim.chem.slash]) list.push(TD_SLASH[u.anim.chem.slash].src);
     if (u.ult && u.ult.kind === 'claw') list.push(TD_SLASH.caox.src);
     if (u.ult && u.ult.kind === 'drain') list.push(TD_AM.xoay.src);
+    if (u.ult && u.ult.kind === 'thunder') list.push(TD_LOI.co.src, TD_LOI.set.src);
+    if (u.ult && u.ult.kind === 'rain') list.push(TD_VU.src, TD_SLASH.nuoc.src);
     if (u.ult && u.ult.kind === 'volley' && TD_SHOT[u.ult.shot]) list.push(TD_SHOT[u.ult.shot].src, TD_SHOT[u.ult.shot].hit.src);
     if (u.ult && u.ult.kind === 'flute') list.push(TD_AM.truc.src);
     if (u.anim && u.anim.danh && TD_SHOT[u.anim.danh.shot]) list.push(TD_SHOT[u.anim.danh.shot].src, TD_SHOT[u.anim.danh.shot].hit.src);
@@ -341,6 +343,9 @@ const TD_SHOT = {
   // nốt nhạc tím (Nhậm Doanh Doanh), đầu đạn ở 78% ngang
   not_nhac: { src: 'game/img/blender/fx_bl_not_nhac.webp', n: 8, ms: 400, size: 17, ax: 0.78, ay: 0.5, fly: 320,
     hit: { src: 'game/img/blender/fx_bl_no_tim_nho.webp', n: 16, ms: 520, size: 16 } },
+  // quân cờ trắng phát sáng (Tô Tinh Hà), tấm 2:1, đầu đạn ở 80% ngang
+  quan_co: { src: 'game/img/blender/fx_bl_quan_co.webp', n: 8, ms: 400, size: 18, ar: 0.5, ax: 0.8, ay: 0.5, fly: 300,
+    hit: { src: 'game/img/blender/fx_bl_no_vang.webp', n: 16, ms: 480, size: 15 } },
   // kim thêu vàng có chỉ đỏ (Đông Phương Bất Bại), tấm 2:1, mũi kim ở 85% ngang
   kim: { src: 'game/img/blender/fx_bl_kim.webp', n: 8, ms: 400, size: 24, ar: 0.5, ax: 0.85, ay: 0.5, fly: 260,
     hit: { src: 'game/img/blender/fx_bl_no_do_nho.webp', n: 16, ms: 480, size: 15 } },
@@ -377,6 +382,13 @@ function tdShoot(u, t, kind, from) {
     setTimeout(end, fly + 150);   // dự phòng
   });
 }
+// Diệt Tuyệt Thiên Lôi (Tô Tinh Hà): ván cờ trên đầu đội hình địch (tấm 256x160) + sét giáng (tấm 140x280, chân ở 88%)
+const TD_LOI = {
+  co: { src: 'game/img/blender/fx_bl_ban_co.webp', n: 22, ms: 1400, ar: 160 / 256 },
+  set: { src: 'game/img/blender/fx_bl_set.webp', n: 16, ms: 700, ar: 280 / 140, foot: 0.88, size: 16 },
+};
+// Tiêu Tương Dạ Vũ (Mạc Đại Tiên Sinh): đám mây mưa đêm trên đầu đội hình địch (tấm 320x280, mây ở trên, mưa rơi tới đáy; khung 18 = chớp)
+const TD_VU = { src: 'game/img/blender/fx_bl_da_vu.webp', n: 24, ms: 1300, ar: 280 / 320, flash: 18 };
 // Lăng Ba Vi Bộ (Đoàn Dự): sóng nước + gió dưới chân từng đồng đội
 const TD_LANGBA = { src: 'game/img/blender/fx_bl_song_nuoc.webp', n: 20, ms: 1000, ar: 250 / 200, foot: 0.8, size: 30 };
 function tdGroundFx(t, N) {
@@ -505,12 +517,12 @@ function tdDome(u) {
   Object.assign(s.el.style, { left: b.cx - W / 2 + 'px', top: b.bot - H * TD_DOME.foot + 'px', width: W + 'px', height: H + 'px' });
   b.e.appendChild(s.el); setTimeout(() => s.el.remove(), TD_DOME.ms * k + 200);
 }
-// biểu tượng hiệu ứng có lợi trên đầu (tăng Thủ / tăng Công) khi còn hiệu lực
-const TD_BUFF_IC = [['def', 'tang_thu'], ['atk', 'tang_cong']];
+// biểu tượng hiệu ứng trên đầu khi còn hiệu lực: tăng Thủ / tăng Công (có lợi), giảm Thủ = sơ hở / giảm Công = suy yếu (bất lợi)
+const TD_BUFF_IC = [['def', 'tang_thu', 1], ['atk', 'tang_cong', 1], ['def', 'so_ho', -1], ['atk', 'suy_yeu', -1]];
 function tdBuffIcons(u, e) {
   let box = e.querySelector('.td-bf');
   if (!box) { box = document.createElement('i'); box.className = 'td-bf'; e.appendChild(box); }
-  const on = u.dead ? [] : TD_BUFF_IC.filter(([k]) => u.buf[k] && u.buf[k].v > 0).map(([, ic]) => ic);
+  const on = u.dead ? [] : TD_BUFF_IC.filter(([k, , s]) => u.buf[k] && u.buf[k].v * s > 0).map(([, ic]) => ic);
   const key = on.join(',');
   if (box.dataset.k === key) return;
   box.dataset.k = key;
@@ -718,6 +730,57 @@ async function tdUltDo(u) {
       u.buf.atk = { v: U.selfAtk, t: U.turns }; tdPop(u, 'Công +' + Math.round(U.selfAtk * 100) + '%', 'st');
       if (!t.dead) { t.buf.def = { v: -U.defDown, t: U.turns }; setTimeout(() => tdPop(t, 'Thủ −' + Math.round(U.defDown * 100) + '%', 'st'), 250); }
     }
+  } else if (U.kind === 'thunder') {
+    // Diệt Tuyệt Thiên Lôi (Tô Tinh Hà) — cùng kiểu Hoán Hồn Khúc: ván cờ Trân Lung hiện lơ lửng trên đầu đội hình địch làm dấu ấn,
+    // rồi búng quân cờ: sét vàng giáng xuống từng kẻ; chỉ giảm Thủ (không sát thương), sau đó chỉ còn biểu tượng giảm Thủ trên đầu
+    const foes = tdAlive(tdFoe(u)), A = u.anim && u.anim.loi, k = tdS && tdS.fast ? 0.5 : 1;
+    const at = f => (A ? f / A.n * A.ms : 0);
+    if (A) tdAnimPlay(u, 'loi');
+    await tdWait(A ? at(A.board) : 200);
+    const box = document.getElementById('td-fx');
+    if (box && foes.length) {
+      const cq = box.clientWidth / 100, R = box.getBoundingClientRect();
+      const tops = foes.map(t => { const e = document.getElementById(`td-${t.side}-${t.i}`), img = e && e.querySelector('img'); return img ? img.getBoundingClientRect().top - R.top : tdPos(t).y; });
+      const cx = foes.reduce((s, t) => s + tdPos(t).x, 0) / foes.length, w = 40 * cq, h = w * TD_LOI.co.ar;
+      const co = tdStrip(TD_LOI.co.src, TD_LOI.co.n, TD_LOI.co.ms * k, false);
+      Object.assign(co.el.style, { left: cx - w / 2 + 'px', top: Math.max(0, Math.min(...tops) - h * 0.95) + 'px', width: w + 'px', height: h + 'px' });
+      box.appendChild(co.el); setTimeout(() => co.el.remove(), TD_LOI.co.ms * k + 250);
+    }
+    await tdWait(A ? at(A.strike) - at(A.board) : 900);
+    foes.forEach((t, j) => setTimeout(() => { if (tdS) tdGroundFx(t, TD_LOI.set); }, j * 70 * k));
+    await tdWait(180);
+    foes.forEach(t => {
+      if (t.dead) return;
+      tdHitFx(t); t.buf.def = { v: -U.defDown, t: U.turns };
+      tdPop(t, 'Thủ −' + Math.round(U.defDown * 100) + '%', 'st');
+    });
+    tdSync();
+    await tdWait(300);
+  } else if (U.kind === 'rain') {
+    // Tiêu Tương Dạ Vũ (Mạc Đại Tiên Sinh) — cùng kiểu Hoán Hồn Khúc: kéo đàn, mây mưa đêm kéo tới trên đầu đội hình địch,
+    // mưa trút xuống; đâm cần đàn (kiếm giấu trong đàn) thì chớp lóe trong mây và kiếm khí nước chém từng kẻ (sát thương toàn địch)
+    const foes = tdAlive(tdFoe(u)), A = u.anim && u.anim.vu, k = tdS && tdS.fast ? 0.5 : 1;
+    const at = f => (A ? f / A.n * A.ms * k : 0);
+    if (A) tdAnimPlay(u, 'vu');
+    await tdWait(A ? at(A.cloud) : 150);
+    const box = document.getElementById('td-fx');
+    if (box && foes.length) {
+      const cq = box.clientWidth / 100, R = box.getBoundingClientRect();
+      const tops = foes.map(t => { const e = document.getElementById(`td-${t.side}-${t.i}`), img = e && e.querySelector('img'); return img ? img.getBoundingClientRect().top - R.top : tdPos(t).y; });
+      const feet = foes.map(t => tdFeet(t).y);
+      const xs = foes.map(t => tdPos(t).x), cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+      const w = Math.max(44 * cq, Math.max(...xs) - Math.min(...xs) + 26 * cq), top = Math.max(0, Math.min(...tops) - 10 * cq);
+      const h = Math.max(w * TD_VU.ar, Math.max(...feet) - top);
+      const v = tdStrip(TD_VU.src, TD_VU.n, TD_VU.ms * k, false);
+      Object.assign(v.el.style, { left: cx - w / 2 + 'px', top: top + 'px', width: w + 'px', height: h + 'px' });
+      box.appendChild(v.el); setTimeout(() => v.el.remove(), TD_VU.ms * k + 250);
+    }
+    await tdWait(A ? at(A.strike) - at(A.cloud) : 800);
+    foes.forEach((t, j) => setTimeout(() => { if (tdS && !t.dead) tdSlash('nuoc', u, t); }, j * 60 * k));
+    await tdWait(160);
+    foes.forEach(t => { if (!t.dead) { const r = tdDmg(u, t, U.pow); tdHurt(u, t, r.d, r.crit); } });
+    tdSync();
+    await tdWait(300);
   } else if (U.kind === 'fortify') {
     // Hấp Công Hộ Thể (Hướng Vấn Thiên): thủ thế gồng người, khiên khí tím bừng lên, Thủ bản thân tăng vài hiệp (khiên còn tới khi hết hiệu lực)
     // (người dùng chốt: chỉ khiên bừng lên một lần lúc tung chiêu, sau đó chỉ còn biểu tượng tăng Thủ trên đầu)
