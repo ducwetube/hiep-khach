@@ -555,12 +555,13 @@ function heroSt(h, base) {
    Giày kiếm riêng (chưa làm). Màu khung theo bậc để nhìn là biết mức.
    Claude đặt, chờ duyệt: 6 bậc màu, chỉ số mỗi bậc gấp đôi bậc trước (bậc 1 theo ảnh mẫu "Bách Chiến": Công 100, HP 500, Thủ 100, Hồi 100),
    tên bậc, giá nâng cấp, cấp hiệp khách cần có, tỉ lệ rơi. */
-const DO_SLOTS = [
-  { k: 'vk', name: 'Vũ khí', loai: 'Kiếm', ic: 'kiem', st: 'atk', base: 100 },
-  { k: 'mu', name: 'Mũ', loai: 'Mũ', ic: 'mu', st: 'hp', base: 500 },
-  { k: 'ao', name: 'Giáp', loai: 'Áo', ic: 'ao', st: 'def', base: 100 },
-  { k: 'dai', name: 'Đai lưng', loai: 'Đai', ic: 'dai', st: 'hoi', base: 100 },
-  { k: 'giay', name: 'Giày', loai: 'Giày', ic: 'giay', st: null, base: 0 },   // giày kiếm riêng (chưa có nguồn, chưa có chỉ số)
+const DO_SLOTS = [   // val = chỉ số bậc 1…10 (người dùng chốt 2026-11-13)
+  { k: 'vk', name: 'Vũ khí', loai: 'Kiếm', ic: 'kiem', st: 'atk', val: [100, 150, 200, 300, 400, 550, 700, 900, 1100, 1350], ch: { gia: 84 } },
+  { k: 'mu', name: 'Mũ', loai: 'Mũ', ic: 'mu', st: 'hp', val: [500, 700, 900, 1400, 1900, 2650, 3400, 4400, 5400, 6650],
+    ch: { gia: 84 } },
+  { k: 'ao', name: 'Giáp', loai: 'Áo', ic: 'ao', st: 'def', val: [100, 150, 200, 275, 350, 450, 550, 675, 800, 950], ch: { gia: 84 } },
+  { k: 'dai', name: 'Đai lưng', loai: 'Đai', ic: 'dai', st: 'hoi', val: [100, 200, 220, 260, 300, 360, 420, 500, 580, 680], ch: { gia: 84 } },   // người dùng xác nhận dùng đúng dãy này
+  { k: 'giay', name: 'Giày', loai: 'Giày', ic: 'giay', st: 'spd', val: [20, 40, 60, 80, 100, 120, 140, 160, 180, 200] },   // Tốc (người dùng chốt); giày kiếm riêng, chưa có nguồn
 ];
 const DO_TIERS = [   // 10 bậc theo 10 bộ ảnh Gemini của người dùng (2026-11-13, gốc luu_tru/trang_bi_hk/bo_1..5.png, cắt bằng tools/blender/cat_trang_bi.py
   // thành game/img/icon/hk_do/<loại>_<bậc>.png; icons.js đăng ký hkdo_<loại>_<bậc>). Mỗi bậc một bộ 5 món (Kiếm, Mũ, Áo, Đai, Giày).
@@ -576,9 +577,22 @@ const DO_TIERS = [   // 10 bậc theo 10 bộ ảnh Gemini của người dùng 
   { name: 'Kim Diệm', color: '#ffbf3a' },
   { name: 'Hoàng Long', color: '#ffd76a' },
 ];
-const DO_NANG = false;   // nâng bậc chưa mở: người dùng sẽ hướng dẫn chỉ số + cách lên bậc
+// THĂNG BẬC (người dùng chốt 2026-11-13, theo game mẫu): lên bậc t cần cường hóa ≥ 6 × (t − 1), không tốn bạc, giữ cấp cường hóa;
+// tốn Huyền Thạch (đá chung) + đá màu của bậc sắp lên. P.da = { huyen, luc, lam, tim, cam, vang }.
+const DO_DA = { huyen: 'Huyền Thạch', luc: 'Lục Nham', lam: 'Lam Thạch', tim: 'Tử Kim', cam: 'Vẫn Tinh', vang: 'Lưu Kim' };
+const DO_UP = {   // bậc đích: [Huyền Thạch, mã đá màu, số đá màu]
+  2: [1, 'luc', 1], 3: [3, 'luc', 2], 4: [6, 'lam', 1], 5: [10, 'lam', 3], 6: [15, 'tim', 2], 7: [20, 'tim', 5], 8: [30, 'cam', 3], 9: [40, 'cam', 8], 10: [50, 'vang', 4],
+};
+function doDa() { if (!P.da) P.da = {}; Object.keys(DO_DA).forEach(k => { if (!P.da[k]) P.da[k] = 0; }); return P.da; }
+const doUpNeed = t => 6 * (t - 1);   // cấp cường hóa cần để lên bậc t
 const doSlot = k => DO_SLOTS.find(s => s.k === k);
-const doVal = (s, t, cp) => Math.round(s.base * Math.pow(1.5, t - 1) * (1 + 0.05 * (cp || 0)));   // mỗi bậc ×1,5 (Claude đặt, chờ duyệt)
+// cường hóa: mỗi cấp cộng 5% chỉ số gốc của bậc đó (người dùng chốt 2026-11-13 cho Vũ khí, Mũ, Giáp, Đai; Giày chưa có), làm tròn
+const doChAdd = (s, t) => Math.round(s.val[t - 1] * 0.05);
+const doVal = (s, t, cp) => s.val[t - 1] + (s.ch && cp ? doChAdd(s, t) * cp : 0);
+// Cường hóa (người dùng chốt 2026-11-13): giá lên cấp kế = giá gốc × (cấp + 1) + 0,5 × cấp³ (công thức Claude đề xuất, gần bảng game mẫu);
+// tối đa = cấp nhân vật; giá bán món = 100 + nửa số bạc đã cường hóa (it.sp)
+const doChCost = (s, cp) => Math.round(s.ch.gia * (cp + 1) + 0.5 * cp * cp * cp);
+const doGia = it => 100 + Math.round((it.sp || 0) / 2);
 const doIcon = (s, t) => `hkdo_${s.ic}_${t}`;
 // Món đồ là từng món riêng: { id, k: ô, t: bậc 1–10, cp: cấp cường hóa }. Chưa mặc nằm ở P.doList; đang mặc ở P.hk[mã].do[ô] = { t, cp }.
 function doFix() {
@@ -594,7 +608,7 @@ function doBonus(h) {
   DO_SLOTS.forEach(s => { const it = eq[s.k]; if (it && s.st && typeof it === 'object') o[s.st] = (o[s.st] || 0) + doVal(s, it.t, it.cp); });
   return o;
 }
-const DO_ST_NAME = { atk: 'Công', hp: 'HP', def: 'Thủ', hoi: 'Hồi' };
+const DO_ST_NAME = { atk: 'Công', hp: 'HP', def: 'Thủ', hoi: 'Hồi', spd: 'Tốc' };
 // tổng % cộng thêm từ các Duyên đang đạt: { hp: 5, atk: 2, ... } (chỉ các chỉ số có trong st: hp, atk, def, hoi, spd)
 function duyenBonus(h) {
   const o = {};

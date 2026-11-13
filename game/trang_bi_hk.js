@@ -51,7 +51,7 @@ function trangBi(hero, slot) {
   </div>`, 'trang-bi');
 }
 const tbIc = (s, t, cls, extra) => `<span class="tb-ic ${cls || ''}" style="--dc:${DO_TIERS[t - 1].color}">[[${doIcon(s, t)}]]${extra || ''}</span>`;
-const tbStat = (s, t, cp) => (s.st ? `${DO_ST_NAME[s.st]} +${doVal(s, t, cp).toLocaleString('vi-VN')}` : 'Chưa có chỉ số');
+const tbStat = (s, t, cp) => `${s.st ? DO_ST_NAME[s.st] : s.name} +${doVal(s, t, cp).toLocaleString('vi-VN')}`;
 // ô trống: danh sách đồ có thể dùng + Mặc Nhanh
 function tbBagPanel(S, bag) {
   const cells = bag.map(it => `<button class="tb-cell ${it.id === tbPick ? 'on' : ''}" onclick="G.tbPickSet(${it.id})">${tbIc(S, it.t, '', it.cp ? `<i class="tb-cp">+${it.cp}</i>` : '')}</button>`).join('');
@@ -67,16 +67,19 @@ function tbWornPanel(S, it) {
     <div class="tb-ch">
       <div class="tb-col">
         <small class="tb-h">Trang Bị</small>${tbIc(S, it.t)}
-        <em class="tb-rib">Cường Hóa ${it.cp}</em><b>${tbStat(S, it.t, it.cp)}</b>
-        <em class="tb-rib">Cấp sau</em><b>${tbStat(S, it.t, it.cp + 1)}</b>
-        <button class="tb-btn g" onclick="G.tbSoon('Cường Hóa')">Cường Hóa</button>
-        <button class="tb-btn b" onclick="G.tbSoon('Cường Hóa')">Cao Nhất</button>
+        <em class="tb-rib">${S.ch ? 'Cường Hóa ' + it.cp : 'Bậc ' + it.t}</em><b>${tbStat(S, it.t, it.cp)}</b>
+        ${S.ch ? `<em class="tb-rib">Cấp sau</em><b>${it.cp >= P.lv ? 'Đã tối đa' : tbStat(S, it.t, it.cp + 1)}</b>` : ''}
+        ${S.ch ? `<button class="tb-btn g ch" ${it.cp >= P.lv || (P.gold || 0) < doChCost(S, it.cp) ? 'disabled' : ''} onclick="G.tbCuong()"><small>${it.cp >= P.lv ? 'Tối đa' : doChCost(S, it.cp).toLocaleString('vi-VN') + ' [[bac]]'}</small>Cường Hóa</button>
+        <button class="tb-btn b" ${it.cp >= P.lv || (P.gold || 0) < doChCost(S, it.cp) ? 'disabled' : ''} onclick="G.tbCuong(true)">Cao Nhất</button>`
+        : '<i class="tb-noch">Giày không cường hóa, chỉ thăng bậc</i>'}
       </div>
       <div class="tb-col">
         <small class="tb-h">Cấp sau</small>${N ? tbIc(S, it.t + 1) : '<span class="tb-ic empty" style="--dc:#555"></span>'}
-        <em class="tb-rib r">Thăng bậc</em><b>${N ? tbStat(S, it.t + 1, 0) : 'Đã cao nhất'}</b>
-        <i class="tb-need">${N ? 'Cấp Cường Hóa: 6' : ''}</i>
-        <button class="tb-btn n" onclick="G.tbSoon('Thăng bậc')">Nâng Cấp</button>
+        <em class="tb-rib r">Thăng bậc</em><b>${N ? tbStat(S, it.t + 1, it.cp) : 'Đã cao nhất'}</b>
+        ${N ? (U => { const D = doDa(), okCp = !S.ch || it.cp >= doUpNeed(it.t + 1), ok = okCp && D.huyen >= U[0] && D[U[1]] >= U[2];
+          return `<i class="tb-need ${okCp ? 'ok' : ''}">${okCp ? 'Yêu cầu' : 'Cấp Cường Hóa: ' + doUpNeed(it.t + 1)}</i>
+        <span class="tb-mats"><span class="tb-mat ${D.huyen >= U[0] ? '' : 'thieu'}" onclick="G.tbDaInfo('huyen')">[[da_huyen]]<b>${D.huyen}/${U[0]}</b></span><span class="tb-mat ${D[U[1]] >= U[2] ? '' : 'thieu'}" onclick="G.tbDaInfo('${U[1]}')">[[da_${U[1]}]]<b>${D[U[1]]}/${U[2]}</b></span></span>
+        <button class="tb-btn n ${ok ? 'ok' : ''}" ${ok ? '' : 'disabled'} onclick="G.tbNang()">Nâng Cấp</button>`; })(DO_UP[it.t + 1]) : ''}
       </div>
     </div>`;
 }
@@ -87,7 +90,7 @@ function tbInfo(S, it, worn) {
   return `<div class="tb-foot">
     <div class="tb-i1"><b class="tb-nm" style="color:${T.color}">${T.name}</b><em>+${it.cp}</em><span>${tbStat(S, it.t, it.cp)}</span></div>
     <div class="tb-i2">
-      <div class="tb-kv"><span><i>Cấp Dùng</i><b>1</b></span><span><i>Loại</i><b>${S.name}</b></span><span><i>Bậc</i><b>${it.t}</b></span></div>
+      <div class="tb-kv"><span><i>Cấp Dùng</i><b>1</b></span><span><i>Loại</i><b>${S.name}</b></span><span><i>Giá</i><b>${doGia(it).toLocaleString('vi-VN')}</b></span></div>
       <button class="tb-btn g tall" ${worn ? 'disabled' : ''} onclick="G.tbMac()">Sử Dụng</button>
       ${tbIc(S, it.t, 'mid')}
       ${worn ? '<button class="tb-btn g tall" onclick="G.tbGo()">Gỡ Ra</button>' : `<button class="tb-btn g tall" onclick="G.tbSoon('Bán trang bị')">Bán Ra</button>`}
@@ -98,8 +101,8 @@ function tbInfo(S, it, worn) {
 function tbSave() { if (typeof saveGame === 'function') saveGame(); }
 function tbWear(k, it) {   // mặc món trong túi vào ô k của hiệp khách đang chọn (món đang mặc, nếu có, trả về túi)
   const H = P.hk[tbHero]; H.do = H.do || {};
-  if (H.do[k]) { const o = doAdd(k, H.do[k].t); o.cp = H.do[k].cp; }
-  H.do[k] = { t: it.t, cp: it.cp };
+  if (H.do[k]) { const o = doAdd(k, H.do[k].t); o.cp = H.do[k].cp; o.sp = H.do[k].sp || 0; }
+  H.do[k] = { t: it.t, cp: it.cp, sp: it.sp || 0 };
   P.doList = P.doList.filter(x => x.id !== it.id);
 }
 function tbMac() {
@@ -115,9 +118,30 @@ function tbMacNhanh() {
 }
 function tbGo() {
   const H = P.hk[tbHero], it = H.do && H.do[tbSlot]; if (!it) return;
-  const o = doAdd(tbSlot, it.t); o.cp = it.cp; delete H.do[tbSlot];
+  const o = doAdd(tbSlot, it.t); o.cp = it.cp; o.sp = it.sp || 0; delete H.do[tbSlot];
   tbPick = o.id; tbSave(); trangBi();
 }
+// Cường hóa món đang mặc ở ô đang chọn: 1 cấp, hoặc (max) liên tục tới khi hết bạc / chạm cấp nhân vật
+function tbCuong(max) {
+  const H = P.hk[tbHero], it = H.do && H.do[tbSlot], S = doSlot(tbSlot); if (!it || !S.ch) return;
+  let n = 0;
+  while (it.cp < P.lv && (P.gold || 0) >= doChCost(S, it.cp)) {
+    const c = doChCost(S, it.cp); P.gold -= c; it.sp = (it.sp || 0) + c; it.cp++; n++;
+    if (!max) break;
+  }
+  if (!n) return toast(it.cp >= P.lv ? 'Cường hóa tối đa bằng cấp nhân vật' : 'Không đủ bạc');
+  tbSave(); trangBi(); toast(`Cường Hóa +${n}`);
+}
+// Thăng bậc món đang mặc: đủ cấp cường hóa + đá; giữ cấp cường hóa, không tốn bạc
+function tbNang() {
+  const H = P.hk[tbHero], it = H.do && H.do[tbSlot], U = it && DO_UP[it.t + 1], D = doDa(); if (!U) return;
+  if (doSlot(tbSlot).ch && it.cp < doUpNeed(it.t + 1)) return toast('Cần Cường Hóa cấp ' + doUpNeed(it.t + 1));
+  if (D.huyen < U[0] || D[U[1]] < U[2]) return toast('Chưa đủ nguyên liệu');
+  D.huyen -= U[0]; D[U[1]] -= U[2]; it.t++;
+  tbSave(); trangBi(); toast('Thăng bậc thành công');
+}
+const DA_SRC = { huyen: 'Rơi khi hạ địch ở ải Giang Hồ', luc: 'Boss ải Chương 1', lam: 'Boss ải Chương 2', tim: 'Boss ải Chương 3', cam: 'Boss ải Chương 4', vang: 'Boss ải Chương 5' };
+const tbDaInfo = k => toast(`${DO_DA[k]}: ${DA_SRC[k]}`);
 const tbHeroSet = id => { tbHero = id; tbPick = null; trangBi(); };
 const tbSlotSet = k => { tbSlot = k; tbPick = null; tbTab = 'ch'; trangBi(); };
 const tbPickSet = id => { tbPick = id; trangBi(); };
@@ -168,6 +192,16 @@ function tbStyle() {
   .tb-rib { align-self: flex-start; font-style: normal; font-size: 3.2cqw; font-weight: 700; padding: .5cqw 3.4cqw .5cqw 1.6cqw; background: #b03a2a; clip-path: polygon(0 0, 88% 0, 100% 50%, 88% 100%, 0 100%); white-space: nowrap; }
   .tb-need { min-height: 4cqw; white-space: nowrap; font-style: normal; font-size: 2.9cqw; font-weight: 800; color: #ff4a3a; text-shadow: 0 .2cqw 0 #000; }
   .tb-btn { padding: 1.4cqw 2cqw; min-width: 70%; border-radius: 2cqw !important; font: 4.2cqw 'Pattaya', serif !important; color: #fff !important; background: linear-gradient(#6fcf5a, #2a7a22) !important; border: .5cqw solid #c9e08a !important; box-shadow: 0 .5cqw .9cqw #0008; text-shadow: 0 .3cqw 0 #1a4a10; white-space: nowrap; }
+  .tb-btn.ch { display: flex; flex-direction: column; align-items: center; line-height: 1.05; padding: .8cqw 2cqw 1cqw; }
+  .tb-btn.ch small { font: 700 3.2cqw/1.1 sans-serif; display: flex; align-items: center; gap: .6cqw; } .tb-btn.ch small svg, .tb-btn.ch small .ic { width: 3.6cqw; height: 3.6cqw; }
+  .tb-noch { margin-top: auto; font-style: normal; font-size: 3cqw; text-align: center; opacity: .85; padding: 0 1cqw 2cqw; }
+  .tb-need.ok { color: #fff; }
+  .tb-mats { display: flex; gap: 1cqw; }
+  .tb-mat { position: relative; width: 11.5cqw; height: 11.5cqw; background: #10200a; border: .4cqw solid #3a5a2a; border-radius: .8cqw; display: grid; place-items: center; }
+  .tb-mat svg, .tb-mat .ic { width: 78%; height: 78%; }
+  .tb-mat b { position: absolute; left: 0; right: 0; bottom: 0; text-align: center; font: 800 2.7cqw/1.2 sans-serif !important; text-shadow: 0 0 .5cqw #000, 0 .2cqw 0 #000; }
+  .tb-mat.thieu b { color: #ff6a5a; }
+  .tb-btn.n.ok { background: linear-gradient(#5aa8f0, #1e4a9a) !important; border-color: #b8d8ff !important; color: #fff !important; }
   .tb-btn.b { background: linear-gradient(#5aa8f0, #1e4a9a) !important; border-color: #b8d8ff !important; text-shadow: 0 .3cqw 0 #0a2050; }
   .tb-btn.n { margin-top: auto; background: linear-gradient(#3a5a8a, #1a2a4a) !important; border-color: #6a8ab0 !important; color: #b8c8e0 !important; }
   .tb-col .tb-btn.g { margin-top: auto; }
@@ -186,4 +220,4 @@ function tbStyle() {
   document.head.appendChild(st);
 }
 
-const TRANG_BI_G = { trangBi, tbHeroSet, tbSlotSet, tbPickSet, tbTabSet, tbMac, tbMacNhanh, tbGo, tbSoon };
+const TRANG_BI_G = { trangBi, tbCuong, tbNang, tbDaInfo, tbHeroSet, tbSlotSet, tbPickSet, tbTabSet, tbMac, tbMacNhanh, tbGo, tbSoon };

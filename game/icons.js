@@ -1122,6 +1122,8 @@ const tbIcon = (k, i, n) => `<svg x="0" y="0" width="48" height="48" viewBox="${
   .forEach(([k, n]) => { for (let i = 1; i <= n; i++) ICONS[k + '_' + i] = tbIcon(k, i, n); });
 // Trang bị hiệp khách (game xếp đội): 10 bậc x 5 món, ảnh lẻ 192 px game/img/icon/hk_do/<loại>_<bậc>.png
 ['kiem', 'mu', 'ao', 'dai', 'giay'].forEach(k => { for (let i = 1; i <= 10; i++) ICONS[`hkdo_${k}_${i}`] = `<image href="game/img/icon/hk_do/${k}_${i}.png" x="0" y="0" width="48" height="48"/>`; });
+// Đá thăng bậc trang bị hiệp khách (ảnh Gemini của người dùng, gốc luu_tru/trang_bi_hk/da_6.png, cắt bằng tools/blender/cat_da.py thành game/img/icon/da_<mã>.png): Huyền Thạch + 5 đá màu
+['huyen', 'luc', 'lam', 'tim', 'cam', 'vang'].forEach(k => { ICONS['da_' + k] = `<image href="game/img/icon/da_${k}.png" x="0" y="0" width="48" height="48"/>`; });
 ['bac', 'kinh_nghiem', 'truy_na'].forEach(k => {
   ICONS[k] = `<image href="game/img/icon/${k}.png" x="0" y="0" width="48" height="48"/>`;
 });

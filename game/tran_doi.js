@@ -63,7 +63,7 @@ function tdWave(n) {
     const k = boss ? T.boss : tdRand(T.mobs), m = T.mob, f = (1 + n * 0.12) * (T.pow || 1);
     list.push(tdUnit('dich', i, {
       name: (ENEMY_IMG[k] && ENEMY_IMG[k].label) || k, img: k, role: boss ? 'cong_kich' : null, boss,
-      maxHp: Math.round(m.hp * f * (boss ? 3 : 1)), atk: Math.round(m.atk * f * (boss ? 1.4 : 1)), def: Math.round(m.def * f),
+      maxHp: Math.round(m.hp * f * (boss ? (T.bossHp || 3) : 1)), atk: Math.round(m.atk * f * (boss ? (T.bossAtk || 1.4) : 1)), def: Math.round(m.def * f),
       hoi: m.hoi, spd: m.spd, mi: m.mi,
     }));
   }
@@ -77,7 +77,7 @@ function tdStart(def) {
   const team = hkMembers().map((h, k) => ({ h, k })).sort((a, b) => (front.includes(b.h.role) - front.includes(a.h.role)) || a.k - b.k);
   tdS = {
     def: def || TD_TEST, wave: 0, round: 1, phase: 'ta', busy: false, target: 0, deaths: 0,
-    auto: !!(tdS && tdS.auto), fast: !!(tdS && tdS.fast), loot: { bac: 0, luong: 0, manh: 0 }, over: null,
+    auto: !!(tdS && tdS.auto), fast: !!(tdS && tdS.fast), loot: { bac: 0, luong: 0, manh: 0, da: 0 }, over: null,
     ta: team.map(({ h }, i) => tdUnit('ta', i, { name: h.name, img: h.img, art: h.art, face: h.face, sprite: h.sprite, spFlip: h.spFlip, hand: h.hand, ult: h.ult, anim: h.anim, spSize: h.spSize, role: h.role, skill: h.skill,
       ...(st => ({ maxHp: st.hp, atk: st.atk, def: st.def, hoi: st.hoi, spd: st.spd, mi: st.mi }))(heroSt(h)) })),
   };
@@ -141,6 +141,7 @@ function tdRender() {
       <span class="td-loot">[[bac]]<b id="td-l-bac">x${s.loot.bac}</b></span>
       <span class="td-loot">${homePng('khung_luong_thuc')}<b id="td-l-luong">x${s.loot.luong}</b></span>
       <span class="td-loot">${homePng('manh_vo_so')}<b id="td-l-manh">x${s.loot.manh}</b></span>
+      <span class="td-loot"><img src="game/img/icon/da_huyen.png" alt=""><b id="td-l-da">x${s.loot.da}</b></span>
       <label class="td-fast" onclick="G.tdFast()"><i class="${s.fast ? 'on' : ''}"></i>Nhanh</label>
     </div>`;
   const cards = s.ta.map(u => `<button class="td-card r-${u.role}" id="td-c-${u.i}" onclick="G.tdTap(${u.i})">
@@ -196,7 +197,7 @@ function tdSync() {
     if (o) o.classList.toggle('ready', !u.dead && u.no >= TD.noMax && !u.acted && s.phase === 'ta');
   });
   const w = document.getElementById('td-wave'); if (w) w.textContent = `${s.wave + 1}/${TD.waves}`;
-  ['bac', 'luong', 'manh'].forEach(k => { const e = document.getElementById('td-l-' + k); if (e) e.textContent = 'x' + s.loot[k]; });
+  ['bac', 'luong', 'manh', 'da'].forEach(k => { const e = document.getElementById('td-l-' + k); if (e) e.textContent = 'x' + s.loot[k]; });
 }
 // tọa độ giữa thân một người (px, so với khung .td)
 function tdPos(u, part) {
@@ -235,7 +236,7 @@ function tdDrop(a, t, kind, val) {
   // điểm rơi: dưới chân kẻ bị đánh, lệch ngẫu nhiên
   const g = { x: p.x + (Math.random() - 0.5) * 16 * cq, y: p.y + (6 + Math.random() * 8) * cq };
   const o = { side: a.side, kind, hoi: Math.round(a.hoi), val, el: null };
-  const LOOT_IMG = { bac: 'game/img/icon/bac.png', luong: 'game/img/icon/khung_luong_thuc.png', manh: 'game/img/icon/manh_vo_so.png' };
+  const LOOT_IMG = { bac: 'game/img/icon/bac.png', luong: 'game/img/icon/khung_luong_thuc.png', manh: 'game/img/icon/manh_vo_so.png', da: 'game/img/icon/da_huyen.png' };
   if (fx) {
     const d = document.createElement('div');
     d.className = 'td-orbf ' + kind + (LOOT_IMG[kind] ? ' loot' : ''); d.style.left = p.x + 'px'; d.style.top = p.y + 'px';
@@ -695,6 +696,7 @@ function tdKill(t, a) {
     const v = 30 + (t.boss ? 100 : 0), jit = () => Math.round(v * (0.9 + Math.random() * 0.2));
     tdDrop(a, t, 'bac', jit()); tdDrop(a, t, 'luong', jit());
     if (t.boss || Math.random() < 0.1) tdDrop(a, t, 'manh', 1);
+    if (Math.random() < 0.2) tdDrop(a, t, 'da', 1);   // Huyền Thạch (đá thăng bậc trang bị): rơi như bạc / lương thực nhưng tỉ lệ thấp hơn (20% mỗi kẻ, Claude đặt)
   }
 }
 async function tdNormal(u) {
@@ -1051,7 +1053,7 @@ function tdEnd(win) {
   s.over = win ? 'win' : 'lose'; s.phase = 'end'; s.auto = false; tdClearGround();
   const stars = win ? Math.max(0, 3 - s.deaths) : 0;
   s.stars = stars;
-  if (win) { P.gold += s.loot.bac; P.luongThuc = (P.luongThuc || 0) + s.loot.luong; if (s.loot.manh && typeof addItem === 'function') addItem('manh_vo_so', s.loot.manh); }
+  if (win) { P.gold += s.loot.bac; P.luongThuc = (P.luongThuc || 0) + s.loot.luong; if (s.loot.manh && typeof addItem === 'function') addItem('manh_vo_so', s.loot.manh); if (s.loot.da && typeof doDa === 'function') doDa().huyen += s.loot.da; }
   if (s.def.onEnd) s.def.onEnd(win, stars);
   if (typeof saveGame === 'function') saveGame();
   if (hasSnd()) SND.jingle(win ? 'win' : 'lose');
@@ -1062,7 +1064,7 @@ function tdEnd(win) {
       <b class="td-end-t">${win ? 'Chiến Thắng' : 'Thất Bại'}</b>
       ${win ? `<div class="td-stars">${[0, 1, 2].map(k => `<i class="${k < stars ? 'on' : ''}"></i>`).join('')}</div>
         <p>${s.deaths ? `${s.deaths} tướng tử trận` : 'Không tướng nào tử trận'}</p>
-        <p class="td-end-loot">[[bac]] +${s.loot.bac} · Lương thực +${s.loot.luong} · Mảnh +${s.loot.manh}</p>` : '<p>Cả đội đã ngã xuống</p>'}
+        <p class="td-end-loot">[[bac]] +${s.loot.bac} · Lương thực +${s.loot.luong} · Mảnh +${s.loot.manh}${s.loot.da ? ` · Huyền Thạch +${s.loot.da}` : ''}</p>` : '<p>Cả đội đã ngã xuống</p>'}
       <div class="td-end-btn"><button onclick="G.tdAgain()">Đánh lại</button><button onclick="G.tdQuit(true)">Trở về</button></div>
     </div>`;
   const root = document.querySelector('.td');
