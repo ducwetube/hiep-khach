@@ -82,7 +82,7 @@ function tbWornPanel(S, it) {
 }
 // thanh thông tin dưới
 function tbInfo(S, it, worn) {
-  if (!it) return `<div class="tb-foot"><div class="tb-i1"><b class="tb-nm">${S.name}</b><span>Chưa có trang bị</span></div></div>`;
+  if (!it) return `<div class="tb-foot"><div class="tb-i1"><b class="tb-nm">${S.name}</b><span>Chưa có trang bị</span></div><div class="tb-i2"></div></div>`;
   const T = DO_TIERS[it.t - 1];
   return `<div class="tb-foot">
     <div class="tb-i1"><b class="tb-nm" style="color:${T.color}">${T.name}</b><em>+${it.cp}</em><span>${tbStat(S, it.t, it.cp)}</span></div>
@@ -130,7 +130,7 @@ function tbStyle() {
   st.id = 'tb-style';
   st.textContent = `
   .home.tb { display: flex; flex-direction: column; }
-  .tb-bar { display: flex; align-items: flex-end; gap: 2.5cqw; padding: 2.5cqw 3cqw 0; }
+  .tb-bar { box-sizing: border-box; display: flex; align-items: flex-end; gap: 2.5cqw; padding: 2.5cqw 3cqw 0; height: 13cqw; }
   .tb-bar > b { font-size: 6.4cqw; font-weight: 800; text-shadow: 0 .3cqw 0 #000, 0 0 1cqw #000; align-self: center; }
   .tb-tabs { margin-left: auto; display: flex; gap: .8cqw; }
   .tb-tab { padding: 1.6cqw 2.2cqw 1.2cqw; border-radius: 1.6cqw 1.6cqw 0 0 !important; font: 3.9cqw 'Pattaya', serif !important; color: #fff !important; background: linear-gradient(#8a8478, #5e584e) !important; border: .5cqw solid #b8b0a0 !important; border-bottom: 0 !important; text-shadow: 0 .3cqw 0 #000; white-space: nowrap; }
@@ -175,9 +175,9 @@ function tbStyle() {
   .tb-btn.tall { min-width: 0; width: 13cqw; height: 16cqw; padding: 0 1cqw; white-space: normal; line-height: 1.15; font-size: 4cqw !important; }
   .tb-btn:disabled { filter: grayscale(.8) brightness(.7); }
   .tb-foot { flex: none; margin: 1.5cqw 0 calc(2cqw + env(safe-area-inset-bottom)); background: #2a2622; border-top: .4cqw solid #5a544c; }
-  .tb-i1 { display: flex; align-items: center; gap: 2.5cqw; white-space: nowrap; padding: .8cqw 3cqw; background: #3a342c; font-size: 3.8cqw; font-weight: 700; }
+  .tb-i1 { box-sizing: border-box; height: 7cqw; display: flex; align-items: center; gap: 2.5cqw; white-space: nowrap; padding: .8cqw 3cqw; background: #3a342c; font-size: 3.8cqw; font-weight: 700; }
   .tb-i1 em { font-style: normal; color: #7dff7a; }
-  .tb-i2 { display: flex; align-items: center; gap: 1.6cqw; padding: 1.4cqw 2cqw; }
+  .tb-i2 { box-sizing: border-box; display: flex; align-items: center; gap: 1.6cqw; padding: 1.4cqw 2cqw; height: 19cqw; }   /* cao cố định: có / không có đồ khung trên vẫn giữ nguyên cỡ */
   .tb-kv { flex: none; width: 27cqw; display: flex; flex-direction: column; gap: .6cqw; }
   .tb-kv span { display: flex; justify-content: space-between; gap: 1cqw; padding: .4cqw 1.4cqw; background: #1a1612; font-size: 3.5cqw; }
   .tb-kv i { font-style: normal; color: #ff9a2a; font-weight: 700; } .tb-kv b { font-weight: 700; white-space: nowrap; }
