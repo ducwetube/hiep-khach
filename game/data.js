@@ -1488,4 +1488,5 @@ const NGU_HANH = {
   tho:  { name: 'Thổ',  color: '#b07a3a' },
   am:   { name: 'Ám',   color: '#9a5aff' },   // hệ thứ sáu (vòng tím trong game mẫu; Nhậm Doanh Doanh, Nhậm Ngã Hành), người dùng đặt tên 2026-11-12
   loi:  { name: 'Lôi',  color: '#ffd23a' },   // hệ sét vàng (Đoàn Diên Khánh, Tô Tinh Hà), người dùng đặt tên 2026-11-13
+  quang: { name: 'Quang', color: '#f4f0c8' }, // hệ ánh sáng trắng (hiệp khách phẩm xanh lá), người dùng đặt tên 2026-11-13
 };

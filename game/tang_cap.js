@@ -119,6 +119,7 @@ function tcStyle() {
   .tc-bar b { font-size: 5.6cqw; font-weight: 800; text-shadow: 0 .3cqw 0 #000, 0 0 1cqw #000; }
   .tc-grid { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(5, 1fr); gap: 2cqw; align-content: start; padding: 1cqw 4cqw 4cqw; }
   .tc-cell { position: relative; aspect-ratio: 1; border-radius: 1.4cqw !important; overflow: hidden; background: linear-gradient(#7a4aa8, #3a1e5a) !important; border: .6cqw solid #b88ae0 !important; box-shadow: 0 .4cqw .8cqw #0008; }
+  .tc-cell.q-thuong { background: linear-gradient(#4f9a3a, #1f4a14) !important; border-color: #9ad870 !important; }
   .tc-cell.q-hiem { background: linear-gradient(#3a6ac8, #1a3a6a) !important; border-color: #8ab0f0 !important; }
   .tc-cell.q-truyen { background: linear-gradient(#c8902a, #6a4010) !important; border-color: #ffd76a !important; }
   .tc-cell.lieu { background: linear-gradient(#6aa83a, #2a5a14) !important; border-color: #a8d870 !important; }
@@ -285,6 +286,7 @@ function vhStyle() {
   .dn-cap + .dn-btn { margin-left: 3cqw; }
   .dn-cards { margin-top: 2cqw; display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.4cqw; padding: 2cqw 1.4cqw; background: #0006; }
   .dn-card { position: relative; aspect-ratio: 170 / 375; border-radius: 1cqw !important; overflow: visible; padding: 0; background: linear-gradient(#8a5ad0, #3a1e6a) !important; border: .6cqw solid #c9a0ff !important; box-shadow: 0 .6cqw 1cqw #000a; }
+  .dn-card.q-thuong { background: linear-gradient(#5aa83a, #1f4a14) !important; border-color: #9ad870 !important; }
   .dn-card.q-hiem { background: linear-gradient(#4a7ad8, #1a3a6a) !important; border-color: #8ab0f0 !important; }
   .dn-card.q-truyen { background: linear-gradient(#d8a03a, #6a4010) !important; border-color: #ffd76a !important; }
   .dn-card > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; border-radius: .6cqw; }

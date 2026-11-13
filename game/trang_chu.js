@@ -171,7 +171,7 @@ const HIEP_KHACH = {
       chem: { src: 'game/img/blender/nnh_danh.webp', n: 16, ms: 750, hit: 7, slash: 'cao_tim' },
       hut: { src: 'game/img/blender/nnh_hut.webp', n: 30, ms: 1600, fx: 7, hit: 22 } },
     duyen: [
-      { name: 'Đối Địch', desc: 'Cùng ra trận Công +130%', with: [{ ten: 'Nhạc Bất Quần' }], eff: { atk: 1.3 } },
+      { name: 'Đối Địch', desc: 'Cùng ra trận Công +130%', with: ['nhac_bat_quan'], eff: { atk: 1.3 } },
       { name: 'Song Đấu', desc: 'Cùng ra trận Thủ +250%', with: ['dong_phuong'], eff: { def: 2.5 } },
       { name: 'Thần Giáo', desc: 'Cùng ra trận Công +200% HP +350%', with: ['nham_doanh_doanh', 'huong_van_thien', 'dong_phuong', 'lenh_ho_xung'], eff: { atk: 2, hp: 3.5 } },
       { name: 'Hắc Mộc Lệnh', desc: 'Sử dụng Công +100%', with: [{ ten: 'Hắc Mộc Lệnh', loai: 'bao' }], eff: { atk: 1 } },
@@ -196,7 +196,7 @@ const HIEP_KHACH = {
       chem: { src: 'game/img/blender/lhx_danh.webp', n: 16, ms: 750, hit: 8, slash: 'nuoc' },
       volley: { src: 'game/img/blender/lhx_kiem.webp', n: 30, ms: 1500, fire: 20 } },
     duyen: [   // theo ảnh game mẫu người dùng gửi 2026-11-12
-      { name: 'Sư Đồ', desc: 'Cùng ra trận Thủ +250%', with: [{ ten: 'Nhạc Bất Quần' }], eff: { def: 2.5 } },
+      { name: 'Sư Đồ', desc: 'Cùng ra trận Thủ +250%', with: ['nhac_bat_quan'], eff: { def: 2.5 } },
       { name: 'Thần Giáo', desc: 'Cùng ra trận Công +300% HP +300%', with: ['nham_doanh_doanh', 'huong_van_thien', 'dong_phuong', 'nham_nga_hanh'], eff: { atk: 3, hp: 3 } },
       { name: 'Tiếu Khán', desc: 'Cùng ra trận Công +130%', with: ['nham_doanh_doanh'], eff: { atk: 1.3 } },
       { name: 'Cửu Kiếm Lục', desc: 'Sử dụng Bạo +12%', with: [{ ten: 'Cửu Kiếm Lục', loai: 'bao' }], eff: { crit: 12 } },
@@ -293,10 +293,10 @@ const HIEP_KHACH = {
       idle: { src: 'game/img/blender/md_idle.webp', n: 24, ms: 1300 },
       danh: { src: 'game/img/blender/md_danh.webp', n: 16, ms: 800, fire: 8, shot: 'kiem_khi' },
       vu: { src: 'game/img/blender/md_vu.webp', n: 30, ms: 1600, cloud: 3, strike: 19 } },
-    duyen: [   // số theo ảnh 10 sao, tên người theo ảnh 1 sao ("Miêu Nhân Phượng": ảnh ghi cụt, Claude đoán)
+    duyen: [   // số theo ảnh 10 sao, tên người theo ảnh 1 sao (Miêu Nhân Phụng theo ảnh Duyên của Tả Lãnh Thiền)
       { name: 'Tấu Nhạc', desc: 'Cùng ra trận Công +130%', with: [{ ten: 'Đông Tà' }], eff: { atk: 1.3 } },
-      { name: 'Hư Vô', desc: 'Cùng ra trận Công +150% HP +200%', with: [{ ten: 'Miêu Nhân Phượng' }, { ten: 'Thiên Môn Đạo Nhân' }], eff: { atk: 1.5, hp: 2 } },
-      { name: 'Ngũ Nhạc', desc: 'Cùng ra trận Công +250% HP +250%', with: [{ ten: 'Nhạc Bất Quần' }, { ten: 'Tả Lãnh Thiền' }, { ten: 'Thiên Môn Đạo Nhân' }, { ten: 'Định Nhàn Sư Thái' }], eff: { atk: 2.5, hp: 2.5 } },
+      { name: 'Hư Vô', desc: 'Cùng ra trận Công +150% HP +200%', with: [{ ten: 'Miêu Nhân Phụng' }, 'thien_mon'], eff: { atk: 1.5, hp: 2 } },
+      { name: 'Ngũ Nhạc', desc: 'Cùng ra trận Công +250% HP +250%', with: ['nhac_bat_quan', 'ta_lanh_thien', 'thien_mon', { ten: 'Định Nhàn Sư Thái' }], eff: { atk: 2.5, hp: 2.5 } },
       { name: 'Võ Lâm Bí Sử', desc: 'Sử dụng Công +100%', with: [{ ten: 'Võ Lâm Bí Sử', loai: 'bao' }], eff: { atk: 1 } },
       { name: 'Cô Tô Bí Kỹ', desc: 'Sử dụng Phá Giáp +2000', with: [{ ten: 'Cô Tô Bí Kỹ', loai: 'bao' }], eff: { phaGiap: 2000 } },
       { name: 'Kỳ Môn Lục', desc: 'Sử dụng HP +150%', with: [{ ten: 'Kỳ Môn Lục', loai: 'bao' }], eff: { hp: 1.5 } },
@@ -305,13 +305,108 @@ const HIEP_KHACH = {
       { name: 'Dã Trư', desc: 'Sử dụng Bạo +30%', with: [{ ten: 'Dã Trư', loai: 'linh' }], eff: { crit: 30 } },
     ] },
 
+  // Hiệp khách thứ mười ba (2026-11-13): từ ảnh mẫu (Cơ Bản ÷ 1,2⁹, khớp ảnh cấp 1 840 / 452 / 188 / 166); Công Kích hệ Thủy, Tư chất 13.
+  // Nộ Hàn Băng Chưởng cấp 1: tấn công toàn địch 85% Công (tăng Công toàn đội + giảm Đỡ 1 địch chỉ ở sao cao).
+  ta_lanh_thien: { name: 'Tả Lãnh Thiền', img: 'tm_hac_rau', art: 'game/img/hk/ta_lanh_thien.jpg', face: [0.54, 0.28], sprite: 'game/img/hk/ta_lanh_thien_sd.png', hand: [0.91, 0.41], role: 'cong_kich', q: 4, lv: 1, star: 1, hanh: 'thuy', tuChat: 13,
+    st: { hp: 840.1, atk: 452.1, def: 188.2, hoi: 166.1, spd: 45, mi: 100 },
+    grow: { hp: 42.0, atk: 22.6, def: 9.41, hoi: 8.3 },
+    ex: { crit: 15, critDmg: 150, acc: 100, dodge: 2.5, ben: 0 },
+    skill: { grade: 'A', name: 'Hàn Băng Chưởng', desc: 'Tấn công toàn bộ địch 85% Công' },
+    ult: { kind: 'frost', pow: 0.85 },
+    // hình động Blender (tools/blender/ta_lanh_thien.py): danh = phóng chưởng bắn băng tiễn (khung fire), chuong = giơ tay tụ hàn khí rồi ấn chưởng xuống đất (khung push = băng lan ra)
+    anim: { iw: 485, ih: 700, box: [-90, -100, 620, 760],
+      idle: { src: 'game/img/blender/tlt_idle.webp', n: 24, ms: 1300 },
+      danh: { src: 'game/img/blender/tlt_danh.webp', n: 16, ms: 800, fire: 7, shot: 'bang_tien' },
+      chuong: { src: 'game/img/blender/tlt_chuong.webp', n: 24, ms: 1200, push: 9 } },
+    duyen: [   // theo ảnh 10 sao
+      { name: 'Ảo Kiếm', desc: 'Cùng ra trận Công +130%', with: [{ ten: 'Miêu Nhân Phụng' }], eff: { atk: 1.3 } },
+      { name: 'Kỳ Chức', desc: 'Cùng ra trận Thủ +250%', with: ['to_tinh_ha'], eff: { def: 2.5 } },
+      { name: 'Ngũ Nhạc', desc: 'Cùng ra trận Công +250% HP +250%', with: ['nhac_bat_quan', 'thien_mon', { ten: 'Định Nhàn Sư Thái' }, 'mac_dai'], eff: { atk: 2.5, hp: 2.5 } },
+      { name: 'Quỳ Hoa Lục', desc: 'Sử dụng Công +100%', with: [{ ten: 'Quỳ Hoa Lục', loai: 'bao' }], eff: { atk: 1 } },
+      { name: 'Quân Tử Kiếm', desc: 'Sử dụng Bạo +25%', with: [{ ten: 'Quân Tử Kiếm', loai: 'bao' }], eff: { crit: 25 } },
+      { name: 'Minh Chủ Lệnh', desc: 'Sử dụng HP +150%', with: [{ ten: 'Minh Chủ Lệnh', loai: 'bao' }], eff: { hp: 1.5 } },
+      { name: 'Phá Thần Cung', desc: 'Sử dụng Tốc +5%', with: [{ ten: 'Phá Thần Cung', loai: 'bao' }], eff: { spd: 0.05 } },
+      { name: 'Xích Lân Kiếm', desc: 'Sử dụng Bạo +30%', with: [{ ten: 'Xích Lân Kiếm', loai: 'bao' }], eff: { crit: 30 } },
+      { name: 'Tiểu Giải', desc: 'Sử dụng Bạo +30%', with: [{ ten: 'Tiểu Giải', loai: 'linh' }], eff: { crit: 30 } },
+    ] },
+
+  // Hiệp khách thứ mười bốn (2026-11-13): từ ảnh mẫu (Cơ Bản 10 sao ÷ 1,2⁹; khớp ảnh Lv 19: Công 1176, Hồi 341); Công Kích hệ Lôi, Tư chất 14.
+  // Nộ Quân Tử Kiếm cấp 1: tấn công mục tiêu 150% Công, Công bản thân +16% 2 hiệp (giảm Thủ mục tiêu chỉ ở sao cao).
+  nhac_bat_quan: { name: 'Nhạc Bất Quần', img: 'tm_kiem_khach', art: 'game/img/hk/nhac_bat_quan.jpg', face: [0.5, 0.3], sprite: 'game/img/hk/nhac_bat_quan_sd.png', hand: [0.23, 0.6], role: 'cong_kich', q: 4, lv: 1, star: 1, hanh: 'loi', tuChat: 14,
+    st: { hp: 1040.2, atk: 619.0, def: 194.0, hoi: 179.1, spd: 50, mi: 100 },
+    grow: { hp: 52.0, atk: 30.95, def: 9.7, hoi: 8.96 },
+    ex: { crit: 15, critDmg: 150, acc: 100, dodge: 2.5, ben: 0 },
+    skill: { grade: 'S', name: 'Quân Tử Kiếm', desc: 'Tấn công mục tiêu 150% Công, tăng 16% Công bản thân trong 2 hiệp' },
+    ult: { kind: 'blink', pow: 1.5, selfAtk: 0.16, turns: 2 },
+    // hình động Blender (tools/blender/nhac_bat_quan.py): chem = chém hất kiếm (khung hit, vệt kiếm vàng tím), kiem = vung kiếm hoa lúc thuấn di tới mục tiêu
+    anim: { iw: 331, ih: 700, box: [-120, -90, 470, 760],
+      idle: { src: 'game/img/blender/nbq_idle.webp', n: 24, ms: 1300 },
+      chem: { src: 'game/img/blender/nbq_chem.webp', n: 16, ms: 750, hit: 8, slash: 'loi' },
+      kiem: { src: 'game/img/blender/nbq_kiem.webp', n: 20, ms: 1000 } },
+    duyen: [   // theo ảnh 10 sao
+      { name: 'Sư Đồ', desc: 'Cùng ra trận Thủ +250%', with: ['lenh_ho_xung'], eff: { def: 2.5 } },
+      { name: 'Đối Địch', desc: 'Cùng ra trận Công +130%', with: ['nham_nga_hanh'], eff: { atk: 1.3 } },
+      { name: 'Ngũ Nhạc', desc: 'Cùng ra trận Công +250% HP +250%', with: ['ta_lanh_thien', 'thien_mon', { ten: 'Định Nhàn Sư Thái' }, 'mac_dai'], eff: { atk: 2.5, hp: 2.5 } },
+      { name: 'Quỳ Hoa Lục', desc: 'Sử dụng Công +100%', with: [{ ten: 'Quỳ Hoa Lục', loai: 'bao' }], eff: { atk: 1 } },
+      { name: 'Quân Tử Kiếm', desc: 'Sử dụng Bạo +25%', with: [{ ten: 'Quân Tử Kiếm', loai: 'bao' }], eff: { crit: 25 } },
+      { name: 'Hoa Sơn Lục', desc: 'Sử dụng Bạo +28%', with: [{ ten: 'Hoa Sơn Lục', loai: 'bao' }], eff: { crit: 28 } },
+      { name: 'Ma Hoàng Trảo', desc: 'Sử dụng Bền +35%', with: [{ ten: 'Ma Hoàng Trảo', loai: 'bao' }], eff: { ben: 35 } },
+      { name: 'Ma Hoàng Mão', desc: 'Sử dụng Bạo Sát +35%', with: [{ ten: 'Ma Hoàng Mão', loai: 'bao' }], eff: { critDmg: 35 } },
+      { name: 'Đại Hổ', desc: 'Sử dụng Bạo Sát +35%', with: [{ ten: 'Đại Hổ', loai: 'linh' }], eff: { critDmg: 35 } },
+    ] },
+
+  // Hiệp khách thứ mười lăm (2026-11-13): từ ảnh mẫu (khớp ảnh cấp 1: Công 328, Thủ 232, Hồi 230, Tốc 53, Mị 300); Hộ Vệ hệ Quang, Tư chất 13.
+  // Nộ Thiên Môn Thần Thuẫn cấp 1: hồi khí huyết bản thân 100% Hồi, Thủ bản thân +43% 3 hiệp (tăng HP bản thân chỉ ở sao cao).
+  thien_mon: { name: 'Thiên Môn Đạo Nhân', img: 'tm_lao_dao_si', art: 'game/img/hk/thien_mon.jpg', face: [0.5, 0.31], sprite: 'game/img/hk/thien_mon_sd.png', hand: [0.79, 0.38], role: 'ho_ve', q: 4, lv: 1, star: 1, hanh: 'quang', tuChat: 13,
+    st: { hp: 1190.2, atk: 328.1, def: 232.2, hoi: 230.0, spd: 53, mi: 300 },
+    grow: { hp: 59.5, atk: 16.4, def: 11.6, hoi: 11.5 },
+    ex: { crit: 0, critDmg: 150, acc: 100, dodge: 5, ben: 10 },
+    skill: { grade: 'A', name: 'Thiên Môn Thần Thuẫn', desc: 'Hồi khí huyết bản thân bằng 100% Hồi, tăng 43% Thủ bản thân trong 3 hiệp' },
+    ult: { kind: 'taiji', heal: 1.0, selfDef: 0.43, turns: 3 },
+    // hình động Blender (tools/blender/thien_mon.py): chem = quất phất trần (khung hit), niem = đẩy tay bắt quyết (khung fx = tấm thái cực hiện)
+    anim: { iw: 335, ih: 700, box: [-90, -90, 450, 760],
+      idle: { src: 'game/img/blender/tmd_idle.webp', n: 24, ms: 1300 },
+      chem: { src: 'game/img/blender/tmd_chem.webp', n: 16, ms: 750, hit: 8, slash: 'nuoc' },
+      niem: { src: 'game/img/blender/tmd_niem.webp', n: 24, ms: 1300, fx: 9 } },
+    duyen: [   // theo ảnh 10 sao
+      { name: 'Đồng Đạo', desc: 'Cùng ra trận Thủ +250%', with: [{ ten: 'Lý Mạc Sầu' }], eff: { def: 2.5 } },
+      { name: 'Hư Vô', desc: 'Cùng ra trận Công +150% HP +200%', with: [{ ten: 'Miêu Nhân Phụng' }, 'mac_dai'], eff: { atk: 1.5, hp: 2 } },
+      { name: 'Ngũ Nhạc', desc: 'Cùng ra trận Công +250% HP +250%', with: ['nhac_bat_quan', 'ta_lanh_thien', { ten: 'Định Nhàn Sư Thái' }, 'mac_dai'], eff: { atk: 2.5, hp: 2.5 } },
+      { name: 'Phất Trần', desc: 'Sử dụng Bền +35%', with: [{ ten: 'Phất Trần', loai: 'bao' }], eff: { ben: 35 } },
+      { name: 'Lạc Anh Phổ', desc: 'Sử dụng Thủ +100%', with: [{ ten: 'Lạc Anh Phổ', loai: 'bao' }], eff: { def: 1 } },
+      { name: 'Thái Cực Đồ', desc: 'Sử dụng Hồi +35%', with: [{ ten: 'Thái Cực Đồ', loai: 'bao' }], eff: { hoi: 0.35 } },
+      { name: 'Tôn Sư Ký', desc: 'Sử dụng Né +35%', with: [{ ten: 'Tôn Sư Ký', loai: 'bao' }], eff: { dodge: 35 } },
+      { name: 'Dịch Cân Kinh', desc: 'Sử dụng Đỡ Đòn +10%', with: [{ ten: 'Dịch Cân Kinh', loai: 'bao' }], eff: { doDon: 10 } },
+      { name: 'Tiểu Hùng', desc: 'Sử dụng HP +100%', with: [{ ten: 'Tiểu Hùng', loai: 'linh' }], eff: { hp: 1 } },
+    ] },
+
   hoang_y_nu: { name: 'Hoàng Y Nữ', img: 'tm_hoang_y_kiem_nu', role: 'ho_tro', q: 2, lv: 1, star: 1, hanh: 'hoa', tuChat: 11,
     st: { hp: 2100, atk: 1350, def: 1100, hoi: 500, spd: 55, mi: 90 },
     skill: { grade: 'A', name: 'Phượng Minh Khúc', desc: 'Tăng 20% Công toàn đội 2 hiệp' },
     duyen: [{ name: 'Tri Kỷ', desc: 'Cùng ra trận Hồi +20%', with: [], ok: true }] },
 };
+// 15 hiệp khách phẩm xanh lá (thấp nhất, người dùng yêu cầu 2026-11-13): cùng chỉ số theo ảnh mẫu "Đệ Tử 9 Túi"
+// (cấp 1: HP 600 / Công 240 / Thủ 120 / Hồi 120, mỗi cấp +5%; Tốc 1, Mị 100, Tư chất 6, Công Kích); hình là ảnh cao thủ tháp không hào quang.
+// Mỗi hệ 3 người: 2 người nộ đánh một mục tiêu 154% Công, 1 người nộ đánh toàn địch 50% Công.
+const HK_XANH = [
+  ['xanh_thanh_hu', 'Thanh Hư Đạo Đồng', 'tm_dao_thai_cuc', 'thuy'], ['xanh_bang_tam', 'Băng Tâm Nữ', 'tm_nu_dao', 'thuy'], ['xanh_thuy_anh', 'Thủy Ảnh Đao Khách', 'tm_song_dao', 'thuy', 1],
+  ['xanh_hong_bao', 'Hồng Bào Kiếm Khách', 'tm_hong_bao', 'hoa'], ['xanh_xich_dien', 'Xích Diễm Nữ', 'tm_nu_mat_na', 'hoa'], ['xanh_xich_huyet', 'Xích Huyết Đao', 'tm_xich_mau', 'hoa', 1],
+  ['xanh_kim_cuong', 'Kim Cương Tăng', 'tm_kim_tang', 'loi'], ['xanh_kim_phat', 'Kim Phát Thiếu Hiệp', 'tm_thieu_hiep_vang', 'loi'], ['xanh_loi_chuy', 'Lôi Chùy Lão', 'tm_lao_chuy', 'loi', 1],
+  ['xanh_bach_sa', 'Bạch Sa Tiên Tử', 'tm_nu_sa', 'quang'], ['xanh_bach_lien', 'Bạch Liên Ca Cơ', 'tm_nu_lua', 'quang'], ['xanh_quang_minh', 'Quang Minh Lão Tăng', 'tm_lao_tang_rau', 'quang', 1],
+  ['xanh_tu_kiem', 'Tử Kiếm Nữ', 'tm_kiem_tim', 'am'], ['xanh_hac_bao', 'Hắc Bào Quỷ Khách', 'tm_hac_bao', 'am'], ['xanh_tu_chu', 'Tử Chu Nữ', 'tm_nu_nhen', 'am', 1],
+];
+HK_XANH.forEach(([id, name, img, hanh, all]) => {
+  HIEP_KHACH[id] = { name, img, role: 'cong_kich', q: 1, lv: 1, star: 1, hanh, tuChat: 6,
+    st: { hp: 600, atk: 240, def: 120, hoi: 120, spd: 1, mi: 100 },
+    grow: { hp: 30, atk: 12, def: 6, hoi: 6 },
+    ex: { crit: 15, critDmg: 150, acc: 100, dodge: 2.5, ben: 0 },
+    skill: all ? { grade: 'C', name: 'Loạn Vũ Tứ Phương', desc: 'Tấn công toàn bộ địch 50% Công' }
+      : { grade: 'C', name: 'Toàn Lực Nhất Kích', desc: 'Tấn công một mục tiêu 154% Công' },
+    ult: all ? { kind: 'all', pow: 0.5 } : { kind: 'one', pow: 1.54 },
+    duyen: [] };
+});
 // Nhân vật mới được tặng sẵn (người dùng chốt 2026-11-12: Đoàn Diên Khánh + Nam Hải Ngạc Thần)
-const HK_START = ['doan_dien_khanh', 'nam_hai_ngac_than', 'diep_nhi_nuong', 'doan_du', 'van_trung_hac', 'nham_doanh_doanh', 'nham_nga_hanh', 'lenh_ho_xung', 'dong_phuong', 'huong_van_thien', 'to_tinh_ha', 'mac_dai'];
+const HK_START = ['doan_dien_khanh', 'nam_hai_ngac_than', 'diep_nhi_nuong', 'doan_du', 'van_trung_hac', 'nham_doanh_doanh', 'nham_nga_hanh', 'lenh_ho_xung', 'dong_phuong', 'huong_van_thien', 'to_tinh_ha', 'mac_dai', 'ta_lanh_thien', 'nhac_bat_quan', 'thien_mon'];
 // Hiệp khách đã có (P.hk[mã] = {lv, star}) + đội ra trận 5 ô (P.doi, null = ô trống). Bản lưu chưa có thì tặng Đoàn Diên Khánh.
 function hkEnsure() {
   if (!P) return;
@@ -376,6 +471,25 @@ function hkEnsure() {
     P.hkTang10 = true;
     if (!P.hk.mac_dai) P.hk.mac_dai = { lv: 1, star: 1 };
     const k = P.doi.indexOf(null); if (k >= 0 && !P.doi.includes('mac_dai')) P.doi[k] = 'mac_dai';
+  }
+  // tặng Tả Lãnh Thiền (2026-11-13), xếp vào ô trống nếu có
+  if (!P.hkTang12) {
+    P.hkTang12 = true;
+    if (!P.hk.ta_lanh_thien) P.hk.ta_lanh_thien = { lv: 1, star: 1 };
+    const k = P.doi.indexOf(null); if (k >= 0 && !P.doi.includes('ta_lanh_thien')) P.doi[k] = 'ta_lanh_thien';
+  }
+  // tặng Nhạc Bất Quần + Thiên Môn Đạo Nhân (2026-11-13), xếp vào ô trống nếu có
+  if (!P.hkTang13) {
+    P.hkTang13 = true;
+    ['nhac_bat_quan', 'thien_mon'].forEach(id => {
+      if (!P.hk[id]) P.hk[id] = { lv: 1, star: 1 };
+      const k = P.doi.indexOf(null); if (k >= 0 && !P.doi.includes(id)) P.doi[k] = id;
+    });
+  }
+  // tặng 15 hiệp khách phẩm xanh lá (2026-11-13), không xếp vào đội
+  if (!P.hkTang11) {
+    P.hkTang11 = true;
+    HK_XANH.forEach(([id]) => { if (!P.hk[id]) P.hk[id] = { lv: 1, star: 1 }; });
   }
 }
 // Duyên đạt: hiệp khách đó và mọi người trong `with` đều đang ở đội ra trận; người / bảo vật / linh thú chưa có ({ ten }) thì chưa đạt
@@ -539,7 +653,7 @@ function heroView(i, from) {
         <button class="hd-back" style="${box(18, 395, 257, 90)}" onclick="${heroBack}">Trở về</button>
         <div class="hd-lv" style="${box(420, 400, 380, 80)}"><span class="hd-stars">${stars}</span><b>Lv ${h.lv}</b></div>
         <button class="hd-up" style="${box(812, 395, 285, 90)}" onclick="G.tcPick('${h.id}')">${homePng('lo_ren')}<b>Nâng Cấp</b></button>
-        <div class="hd-name" style="${box(338, 480, 464, 68)}"><i class="hd-hanh" style="--hc:${H.color}" title="Ngũ hành: ${H.name}">${H.name}</i><b style="${h.name.length > 14 ? `font-size:${(3.4 * 14 / h.name.length).toFixed(2)}cqw` : ''}">${h.name}</b></div>
+        <div class="hd-name" style="${box(338, 480, 464, 68)}"><i class="hd-hanh" style="--hc:${H.color}${H.name.length > 4 ? ";font-size:1.35cqw" : ""}${h.hanh === "quang" ? ";color:#5a4a20;text-shadow:none" : ""}" title="Ngũ hành: ${H.name}">${H.name}</i><b style="${h.name.length > 14 ? `font-size:${(3.4 * 14 / h.name.length).toFixed(2)}cqw` : ''}">${h.name}</b></div>
         <div class="hd-tu" style="${box(60, 500, 270, 55)}">Tư chất: ${h.tuChat}</div>
         <div class="hd-role" style="${box(60, 562, 270, 60)}"><img src="game/img/icon/loai_${h.role}.png" alt="" draggable="false"><b style="color:${R.color || '#fff'}">${R.name || ''}</b></div>
         ${bao}

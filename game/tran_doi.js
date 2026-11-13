@@ -90,6 +90,9 @@ function tdStart(def) {
     if (u.ult && u.ult.kind === 'drain') list.push(TD_AM.xoay.src);
     if (u.ult && u.ult.kind === 'thunder') list.push(TD_LOI.co.src, TD_LOI.set.src);
     if (u.ult && u.ult.kind === 'rain') list.push(TD_VU.src, TD_SLASH.nuoc.src);
+    if (u.ult && u.ult.kind === 'frost') list.push(TD_BANG.song.src, TD_BANG.tru.src);
+    if (u.ult && u.ult.kind === 'blink') list.push(TD_NN.hoa.src, TD_BURST.src);
+    if (u.ult && u.ult.kind === 'taiji') list.push(TD_NN.thuan.src);
     if (u.ult && u.ult.kind === 'volley' && TD_SHOT[u.ult.shot]) list.push(TD_SHOT[u.ult.shot].src, TD_SHOT[u.ult.shot].hit.src);
     if (u.ult && u.ult.kind === 'flute') list.push(TD_AM.truc.src);
     if (u.anim && u.anim.danh && TD_SHOT[u.anim.danh.shot]) list.push(TD_SHOT[u.anim.danh.shot].src, TD_SHOT[u.anim.danh.shot].hit.src);
@@ -307,6 +310,7 @@ const TD_SLASH = {
   cao: { src: 'game/img/blender/fx_bl_cao.webp', n: 12, ms: 480, size: 26 },     // 3 vệt cào móng thép (Vân Trung Hạc)
   caox: { src: 'game/img/blender/fx_bl_cao_x.webp', n: 16, ms: 640, size: 38 },  // vệt cào chéo chữ X (Hạc Trảo Công)
   cao_tim: { src: 'game/img/blender/fx_bl_cao_tim.webp', n: 12, ms: 480, size: 26 }, // vuốt tím đỏ (Nhậm Ngã Hành)
+  loi: { src: 'game/img/blender/fx_bl_chem_loi.webp', n: 12, ms: 480, size: 30 },     // nhát kiếm vàng tím + tia sét (Nhạc Bất Quần)
 };
 // hệ Ám: vòng xoáy hút khí (Hấp Tinh Đại Pháp) và lốc lá trúc + sóng âm (Trúc Hải Triều Thanh; khung 14 = sóng âm nổ)
 const TD_AM = {
@@ -349,6 +353,9 @@ const TD_SHOT = {
   // kim thêu vàng có chỉ đỏ (Đông Phương Bất Bại), tấm 2:1, mũi kim ở 85% ngang
   kim: { src: 'game/img/blender/fx_bl_kim.webp', n: 8, ms: 400, size: 24, ar: 0.5, ax: 0.85, ay: 0.5, fly: 260,
     hit: { src: 'game/img/blender/fx_bl_no_do_nho.webp', n: 16, ms: 480, size: 15 } },
+  // băng tiễn (Tả Lãnh Thiền), tấm 2:1, mũi ở 86% ngang; chạm thì cột băng nhỏ trồi lên vỡ
+  bang_tien: { src: 'game/img/blender/fx_bl_bang_tien.webp', n: 8, ms: 400, size: 24, ar: 0.5, ax: 0.86, ay: 0.5, fly: 260,
+    hit: { src: 'game/img/blender/fx_bl_no_xanh_nho.webp', n: 16, ms: 480, size: 16 } },
   // Lục Mạch Thần Kiếm (Đoàn Dự): kiếm khí xanh băng, tấm 2:1, mũi kiếm ở 85% ngang
   kiem_khi: { src: 'game/img/blender/fx_bl_kiem_khi.webp', n: 8, ms: 400, size: 30, ar: 0.5, ax: 0.85, ay: 0.5, fly: 240,
     hit: { src: 'game/img/blender/fx_bl_no_xanh_nho.webp', n: 16, ms: 480, size: 16 } },
@@ -389,6 +396,56 @@ const TD_LOI = {
 };
 // Tiêu Tương Dạ Vũ (Mạc Đại Tiên Sinh): đám mây mưa đêm trên đầu đội hình địch (tấm 320x280, mây ở trên, mưa rơi tới đáy; khung 18 = chớp)
 const TD_VU = { src: 'game/img/blender/fx_bl_da_vu.webp', n: 24, ms: 1300, ar: 280 / 320, flash: 18 };
+// Hàn Băng Chưởng (Tả Lãnh Thiền): luồng hàn khí lướt sát mặt đất từ chân người ra chiêu tới chân từng kẻ địch (tấm 192x96, đầu ở 85% ngang,
+// đáy ở 70% cao, lặp), tới nơi thì cột băng nhọn trồi lên (tấm 200x250, chân ở 85%; khung 4 = băng đâm, 12 = vỡ tung)
+const TD_BANG = {
+  song: { src: 'game/img/blender/fx_bl_bang_song.webp', n: 8, ms: 400, size: 26, ar: 0.5, ax: 0.85, ay: 0.7, fly: 520 },
+  tru: { src: 'game/img/blender/fx_bl_bang_tru.webp', n: 20, ms: 1000, ar: 250 / 200, foot: 0.85, size: 24, hit: 4, shatter: 12 },
+};
+function tdFrostWave(a, t) {
+  const box = document.getElementById('td-fx'), S = TD_BANG.song;
+  if (!box) return Promise.resolve();
+  return new Promise(done => {
+    const cq = box.clientWidth / 100, k = tdS && tdS.fast ? 0.5 : 1, p = tdFeet(a), q = tdFeet(t);
+    const w = S.size * cq, h = w * S.ar, ang = Math.atan2(q.y - p.y, q.x - p.x) * 180 / Math.PI;
+    const s = tdStrip(S.src, S.n, S.ms, true);
+    Object.assign(s.el.style, { left: p.x - w * S.ax + 'px', top: p.y - h * S.ay + 'px', width: w + 'px', height: h + 'px', transformOrigin: `${S.ax * 100}% ${S.ay * 100}%` });
+    box.appendChild(s.el);
+    let fin = false;
+    const end = () => { if (fin) return; fin = true; s.el.remove(); done(); };
+    const fly = S.fly * k;
+    if (s.el.animate) s.el.animate([{ transform: `translate(0, 0) rotate(${ang}deg) scaleX(.5)`, opacity: .3 }, { transform: `translate(0, 0) rotate(${ang}deg) scaleX(1)`, opacity: 1, offset: .2 },
+      { transform: `translate(${q.x - p.x}px, ${q.y - p.y}px) rotate(${ang}deg) scaleX(1.15)`, opacity: 1 }], { duration: fly, easing: 'ease-in', fill: 'forwards' }).onfinish = end;
+    setTimeout(end, fly + 150);
+  });
+}
+// Quân Tử Kiếm (Nhạc Bất Quần): kiếm hoa — 6 nhát kiếm vàng tím chớp quanh mục tiêu rồi bung đóa hoa sét (tấm 256 vuông, khung 15 = bung)
+// Thiên Môn Thần Thuẫn (Thiên Môn Đạo Nhân): tấm thái cực dựng đứng xoay trước người, tan thành hạt sáng (tấm 256 vuông, khung 16 = tan)
+const TD_NN = {
+  hoa: { src: 'game/img/blender/fx_bl_kiem_hoa.webp', n: 20, ms: 1000, size: 36, burst: 15 },
+  thuan: { src: 'game/img/blender/fx_bl_thai_cuc.webp', n: 24, ms: 1300, size: 34, fade: 16 },
+};
+// thuấn di: nhân vật tan biến trong chớp sáng, hiện ra ngay sát mục tiêu, giữ `hold` ms rồi lại chớp về chỗ cũ
+function tdBlink(u, t, hold) {
+  const e = document.getElementById(`td-${u.side}-${u.i}`); if (!e || !e.animate) return;
+  const k = tdS && tdS.fast ? 0.5 : 1, a = tdPos(u), b = tdPos(t), cq = (document.getElementById('td-fx') || e).clientWidth / 100;
+  const dx = b.x - a.x - Math.sign(b.x - a.x) * 11 * cq, dy = b.y - a.y + 1.5 * cq;
+  const flash = p => tdFxAt({ src: TD_BURST.src, n: TD_BURST.n, ms: 420, size: 14 }, p, k);
+  const go = 140 * k, tot = go * 2 + hold * k;
+  flash({ x: a.x, y: a.y - 6 * cq });
+  setTimeout(() => flash({ x: a.x + dx, y: a.y + dy - 6 * cq }), go * 0.6);
+  setTimeout(() => flash({ x: a.x + dx, y: a.y + dy - 6 * cq }), go + hold * k);
+  e.animate([
+    { translate: '0 0', opacity: 1 },
+    { translate: '0 0', opacity: 0, offset: go * 0.5 / tot },
+    { translate: `${dx}px ${dy}px`, opacity: 0, offset: go * 0.55 / tot },
+    { translate: `${dx}px ${dy}px`, opacity: 1, offset: go / tot },
+    { translate: `${dx}px ${dy}px`, opacity: 1, offset: (go + hold * k) / tot },
+    { translate: `${dx}px ${dy}px`, opacity: 0, offset: (go * 1.5 + hold * k) / tot },
+    { translate: '0 0', opacity: 0, offset: (go * 1.55 + hold * k) / tot },
+    { translate: '0 0', opacity: 1 },
+  ], { duration: tot, easing: 'linear' });
+}
 // Lăng Ba Vi Bộ (Đoàn Dự): sóng nước + gió dưới chân từng đồng đội
 const TD_LANGBA = { src: 'game/img/blender/fx_bl_song_nuoc.webp', n: 20, ms: 1000, ar: 250 / 200, foot: 0.8, size: 30 };
 function tdGroundFx(t, N) {
@@ -781,6 +838,55 @@ async function tdUltDo(u) {
     foes.forEach(t => { if (!t.dead) { const r = tdDmg(u, t, U.pow); tdHurt(u, t, r.d, r.crit); } });
     tdSync();
     await tdWait(300);
+  } else if (U.kind === 'blink') {
+    // Quân Tử Kiếm (Nhạc Bất Quần) — kiểu "thuấn di": tan biến trong chớp sáng, hiện ra sát mục tiêu, kiếm hoa 6 nhát chớp quanh mục tiêu,
+    // đóa hoa sét bung thì trúng đòn, rồi chớp về chỗ cũ; Công bản thân tăng vài hiệp (chỉ còn biểu tượng trên đầu)
+    const t = tdTarget(u), k = tdS && tdS.fast ? 0.5 : 1, H = TD_NN.hoa;
+    if (t) {
+      const A = u.anim && u.anim.kiem;
+      tdBlink(u, t, H.ms + 150);
+      await tdWait(160);
+      if (A) tdAnimPlay(u, 'kiem');
+      const p = tdPos(t), cq = (document.getElementById('td-fx') || document.body).clientWidth / 100;
+      tdFxAt(H, { x: p.x, y: p.y - 9 * cq }, k);
+      await tdWait(H.burst / H.n * H.ms);
+      const r = tdDmg(u, t, U.pow); tdHurt(u, t, r.d, r.crit); tdSync();
+      await tdWait((H.n - H.burst) / H.n * H.ms + 300);
+    }
+    u.buf.atk = { v: U.selfAtk, t: U.turns }; tdPop(u, 'Công +' + Math.round(U.selfAtk * 100) + '%', 'st');
+    tdSync();
+  } else if (U.kind === 'taiji') {
+    // Thiên Môn Thần Thuẫn (Thiên Môn Đạo Nhân) — kiểu "ấn phù trước mặt": niệm quyết, tấm thái cực dựng đứng hiện ra trước người xoay tròn,
+    // bừng sáng rồi tan thành hạt sáng rơi xuống người: hồi máu bản thân + tăng Thủ vài hiệp (sau đó chỉ còn biểu tượng)
+    const A = u.anim && u.anim.niem, k = tdS && tdS.fast ? 0.5 : 1, T = TD_NN.thuan;
+    if (A) { tdAnimPlay(u, 'niem'); await tdWait(A.fx / A.n * A.ms); } else await tdWait(120);
+    const p = tdPos(u), cq = (document.getElementById('td-fx') || document.body).clientWidth / 100;
+    tdFxAt(T, { x: p.x + (u.side === 'ta' ? 6 : -6) * cq, y: p.y - 9 * cq }, k);
+    await tdWait(T.fade / T.n * T.ms);
+    const heal = Math.round(u.hoi * U.heal);
+    const before = u.hp; u.hp = Math.min(u.maxHp, u.hp + heal);
+    tdPop(u, '+' + (u.hp - before).toLocaleString('vi-VN'), 'heal');
+    u.buf.def = { v: U.selfDef, t: U.turns };
+    setTimeout(() => tdPop(u, 'Thủ +' + Math.round(U.selfDef * 100) + '%', 'st'), 250);
+    tdSync();
+    await tdWait(400);
+  } else if (U.kind === 'frost') {
+    // Hàn Băng Chưởng (Tả Lãnh Thiền) — kiểu "lan theo mặt đất": đẩy chưởng xuống, hàn khí lướt sát đất tỏa tới từng kẻ địch (lệch nhịp),
+    // tới đâu cột băng trồi lên tới đó, kẻ địch bị đông cứng (nhuộm lam) rồi băng vỡ tung; sát thương lúc băng đâm
+    const foes = tdAlive(tdFoe(u)), A = u.anim && u.anim.chuong, k = tdS && tdS.fast ? 0.5 : 1, T = TD_BANG.tru;
+    if (A) { tdAnimPlay(u, 'chuong'); await tdWait(A.push / A.n * A.ms); } else await tdWait(150);
+    await Promise.all(foes.map((t, j) => new Promise(res => setTimeout(async () => {
+      await tdFrostWave(u, t);
+      if (!tdS) return res();
+      tdGroundFx(t, T);
+      const el = document.getElementById(`td-${t.side}-${t.i}`);
+      setTimeout(() => {
+        if (!t.dead) { const r = tdDmg(u, t, U.pow); tdHurt(u, t, r.d, r.crit); tdSync(); }
+        if (el && !t.dead) el.classList.add('frozen');
+      }, T.hit / T.n * T.ms * k);
+      setTimeout(() => { if (el) el.classList.remove('frozen'); res(); }, T.shatter / T.n * T.ms * k);
+    }, j * 110 * k))));
+    await tdWait(250);
   } else if (U.kind === 'fortify') {
     // Hấp Công Hộ Thể (Hướng Vấn Thiên): thủ thế gồng người, khiên khí tím bừng lên, Thủ bản thân tăng vài hiệp (khiên còn tới khi hết hiệu lực)
     // (người dùng chốt: chỉ khiên bừng lên một lần lúc tung chiêu, sau đó chỉ còn biểu tượng tăng Thủ trên đầu)
@@ -1001,6 +1107,7 @@ function tdStyle() {
   .td-u.ta.hit img { animation: tdHit .32s; }
   @keyframes tdHit { 0%, 100% { filter: none; transform: translateX(-50%) scaleX(-1); } 30% { filter: brightness(2) sepia(1) hue-rotate(-30deg) saturate(4); transform: translateX(calc(-50% - 1.2cqw)) scaleX(-1); } }
   @keyframes tdHitE { 0%, 100% { filter: none; transform: translateX(-50%); } 30% { filter: brightness(2) sepia(1) hue-rotate(-30deg) saturate(4); transform: translateX(calc(-50% + 1.2cqw)); } }
+  .td-u.frozen > img, .td-u.frozen .td-sheet { filter: saturate(.35) brightness(1.2) sepia(.3) hue-rotate(170deg) drop-shadow(0 0 .8cqw #9ddcff); transition: filter .15s; }
   .td-u.dead { opacity: 0; pointer-events: none; }
   .td-u.stun img { filter: grayscale(.6) brightness(.8); }
   .td-hb { position: absolute; left: 10%; right: 10%; top: -12%; height: 1.2cqw; border-radius: 1cqw; background: #000b; border: .2cqw solid #0008; overflow: hidden; }
