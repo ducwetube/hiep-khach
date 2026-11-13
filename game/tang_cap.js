@@ -117,7 +117,8 @@ function tcStyle() {
   .home.tc { padding-bottom: env(safe-area-inset-bottom); }
   .tc-bar { display: flex; align-items: center; gap: 3cqw; padding: 2.5cqw 3cqw; }
   .tc-bar b { font-size: 5.6cqw; font-weight: 800; text-shadow: 0 .3cqw 0 #000, 0 0 1cqw #000; }
-  .tc-grid { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(5, 1fr); gap: 2cqw; align-content: start; padding: 1cqw 4cqw 4cqw; }
+  .tc-grid { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-auto-rows: max-content; gap: 2cqw; align-content: start; padding: 1cqw 4cqw 4cqw; }
+  .tc-grid > .tc-cell, .dn-pk > .tc-cell { flex: none; height: auto; min-height: 16.8cqw; }   /* ô luôn vuông, lưới dài thì cuộn (không bị ép dẹt khi nhiều ô) */
   .tc-cell { position: relative; aspect-ratio: 1; border-radius: 1.4cqw !important; overflow: hidden; background: linear-gradient(#7a4aa8, #3a1e5a) !important; border: .6cqw solid #b88ae0 !important; box-shadow: 0 .4cqw .8cqw #0008; }
   .tc-cell.q-thuong { background: linear-gradient(#4f9a3a, #1f4a14) !important; border-color: #9ad870 !important; }
   .tc-cell.q-hiem { background: linear-gradient(#3a6ac8, #1a3a6a) !important; border-color: #8ab0f0 !important; }
