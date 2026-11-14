@@ -489,7 +489,7 @@ const ENEMY_ART = {
    game/img/quai/<mã>.png (gốc luu_tru/quai/, cắt nền + lật ngang nếu cần). Tự đăng ký vào ENEMY_ART nên mọi chỗ dùng hình
    quái (khung trận, biểu tượng nhỏ cắt phần đầu) đều hiện ảnh. w, h = cỡ ảnh; k = cỡ so với khung (1 = rộng 230);
    head = ô vuông cắt làm biểu tượng [x, y, cạnh] theo tỉ lệ ảnh (0–1). Trúng đòn: không có mặt đau, dùng ánh đỏ (CSS en-hurt). */
-const ENEMY_IMG = {
+const ENEMY_IMG = {   // phai: true = hình gốc quay mặt sang PHẢI (trận đội: đứng phe địch thì lật, phe ta thì giữ; người dùng báo quái quay ngược 2026-11-14)
   soi_xam: { label: 'Sói Xám', w: 600, h: 519, k: 0.9, head: [0, 0, 0.5] },
   ho_ly: { label: 'Hồ Ly', w: 600, h: 553, k: 0.85, head: [0, 0.02, 0.5] },
   son_tru: { label: 'Sơn Trư', w: 600, h: 498, k: 0.95, head: [0, 0.1, 0.5] },
@@ -571,10 +571,10 @@ const ENEMY_IMG = {
   tm_lao_tang: { label: 'Lão Tăng', w: 593, h: 600, k: 1.15, head: [0.38, 0.0, 0.4] },
   tm_an_si: { label: 'Ẩn Sĩ Bịt Mặt', w: 515, h: 600, k: 1.15, head: [0.25, 0.0, 0.45] },
   tm_hong_bao: { label: 'Hồng Bào Khách', w: 575, h: 600, k: 1.15, head: [0.3, 0.03, 0.42] },
-  tm_nu_dao: { label: 'Nữ Đạo Sĩ', w: 600, h: 579, k: 1.15, head: [0.3, 0.03, 0.4] },
+  tm_nu_dao: { phai: true, label: 'Nữ Đạo Sĩ', w: 600, h: 579, k: 1.15, head: [0.3, 0.03, 0.4] },
   // đợt 2 (2026-11-09, luu_tru/quai/thap_4..6.png): đồ phát sáng cắt ngưỡng cao để bỏ bóng đen, con áo tối cắt nhẹ tay (không khoét lỗ tối)
-  tm_kim_tang: { label: 'Kim Y Tăng', w: 600, h: 486, k: 1.15, head: [0.4, 0.0, 0.3] },
-  tm_song_dao: { label: 'Song Thứ Khách', w: 600, h: 549, k: 1.15, head: [0.36, 0.03, 0.28] },
+  tm_kim_tang: { phai: true, label: 'Kim Y Tăng', w: 600, h: 486, k: 1.15, head: [0.4, 0.0, 0.3] },
+  tm_song_dao: { phai: true, label: 'Song Thứ Khách', w: 600, h: 549, k: 1.15, head: [0.36, 0.03, 0.28] },
   tm_nu_kiem_lam: { label: 'Nữ Kiếm Khách', w: 600, h: 443, k: 1.1, head: [0.3, 0.0, 0.24] },
   tm_lao_dao_quan: { label: 'Lão Đạo Trưởng', w: 600, h: 581, k: 1.15, head: [0.33, 0.12, 0.28] },
   tm_hoa_thuong_rau: { label: 'Hòa Thượng Râu Vàng', w: 548, h: 600, k: 1.15, head: [0.28, 0.02, 0.42] },
@@ -593,7 +593,7 @@ const ENEMY_IMG = {
   tm_nu_sa: { label: 'Nữ Hiệp Khăn Voan', w: 600, h: 600, k: 1.15, head: [0.37, 0.05, 0.36] },
   tm_ngan_phat: { label: 'Ngân Phát Đao Khách', w: 600, h: 409, k: 1.15, head: [0.4, 0.05, 0.25] },
   tm_lao_tang_rau: { label: 'Lão Tăng Râu Bạc', w: 600, h: 533, k: 1.15, head: [0.36, 0.05, 0.32] },
-  tm_dao_thai_cuc: { label: 'Thái Cực Đạo Nhân', w: 600, h: 595, k: 1.15, head: [0.35, 0.05, 0.36] },
+  tm_dao_thai_cuc: { phai: true, label: 'Thái Cực Đạo Nhân', w: 600, h: 595, k: 1.15, head: [0.35, 0.05, 0.36] },
   tm_nu_lua: { label: 'Bạch Y Tiên Nữ', w: 600, h: 440, k: 1.15, head: [0.3, 0.06, 0.26] },
   tm_lao_dao_si: { label: 'Lão Đạo Chỉ Pháp', w: 600, h: 478, k: 1.15, head: [0.54, 0.05, 0.29] },
   tm_nu_nhen: { label: 'Chu Cơ', w: 600, h: 466, k: 1.15, head: [0.38, 0.08, 0.28] },

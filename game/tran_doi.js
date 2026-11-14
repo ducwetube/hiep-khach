@@ -133,7 +133,7 @@ function tdSpriteHtml(u) {
   return `<div class="td-u ${u.side} ${u.dead ? 'dead' : ''}" id="td-${u.side}-${u.i}" style="left:${x}%;top:${y}%;z-index:${Math.round(y)}"
       ${u.side === 'dich' ? `onclick="G.tdPick(${u.i})"` : ''}>
     <i class="td-ring"></i><i class="td-shadow"></i>
-    <img class="${u.sprite && !u.spFlip ? 'nf' : ''}" src="${u.sprite || `game/img/quai/${u.img}.png`}" alt="" draggable="false" style="height:${(k * 100).toFixed(0)}%;animation-delay:-${((u.i * 0.53 + (u.side === 'dich' ? 0.3 : 0)) % 2.6).toFixed(2)}s">
+    <img class="${(u.sprite ? !u.spFlip : (ENEMY_IMG[u.img] || {}).phai) ? 'nf' : ''}" src="${u.sprite || `game/img/quai/${u.img}.png`}" alt="" draggable="false" style="height:${(k * 100).toFixed(0)}%;animation-delay:-${((u.i * 0.53 + (u.side === 'dich' ? 0.3 : 0)) % 2.6).toFixed(2)}s">
     <span class="td-hb"><i style="width:${(u.hp / u.maxHp * 100).toFixed(1)}%"></i></span>
     <i class="td-zzz" style="bottom:${(k * 88).toFixed(0)}%"><b>Z</b><b>z</b><b>z</b></i>
   </div>`;
@@ -258,7 +258,8 @@ async function tdCollect(side) {
   const s = tdS; if (!s || !s.ground) return;
   const mine = s.ground.filter(o => o.side === side); if (!mine.length) return;
   s.ground = s.ground.filter(o => o.side !== side);
-  const fast = s.fast;
+  // bay nhanh (người dùng 2026-11-14: chờ từng viên lâu quá): cả đám xuất phát trong vòng 160 ms, bay 260 ms
+  const fast = s.fast, FLY = fast ? 180 : 260, GAP = Math.min(fast ? 20 : 30, (fast ? 110 : 160) / mine.length);
   mine.forEach((o, k) => setTimeout(() => {
     if (o.val != null) { // chiến lợi phẩm: bay lên ô đếm
       const box = document.getElementById('td-l-' + o.kind), root = document.querySelector('.td');
@@ -267,7 +268,7 @@ async function tdCollect(side) {
         o.el.classList.remove('ground'); o.el.classList.add('fly');
         o.el.style.left = (r.left - R.left + r.width * 0.2) + 'px'; o.el.style.top = (r.top - R.top + r.height / 2) + 'px';
       }
-      setTimeout(() => { if (o.el) o.el.remove(); s.loot[o.kind] += o.val; tdSync(); }, fast ? 300 : 520);
+      setTimeout(() => { if (o.el) o.el.remove(); s.loot[o.kind] += o.val; tdSync(); }, FLY);
       return;
     }
     const pool = o.kind === 'blue' ? tdAlive(side).filter(u => u.role !== 'ky_nang') : tdAlive(side);
@@ -280,9 +281,9 @@ async function tdCollect(side) {
       if (o.kind === 'blue') r.no = Math.min(TD.noMax, r.no + TD.orbNo);
       else if (!r.dead && r.hp < r.maxHp) { const h = Math.min(o.hoi, Math.round(r.maxHp - r.hp)); r.hp += h; tdPop(r, '+' + h, 'heal'); }
       tdSync();
-    }, fast ? 300 : 520);
-  }, k * (fast ? 40 : 70)));
-  await tdWait(mine.length * 70 + 650);
+    }, FLY);
+  }, k * GAP));
+  await new Promise(r => setTimeout(r, mine.length * GAP + FLY + 60));
 }
 function tdClearGround() { if (tdS && tdS.ground) { tdS.ground.forEach(o => o.el && o.el.remove()); tdS.ground = []; } }
 function tdLunge(u, tgt, hold) {
@@ -1200,7 +1201,7 @@ function tdStyle() {
   .td-orbf.loot img[src*="khung_"] { object-fit: cover; object-position: 0 50%; border-radius: 50%; }
   .td-orbf.ground { animation: tdOrbG 1.2s ease-in-out infinite alternate; }
   @keyframes tdOrbG { from { transform: translateY(0); } to { transform: translateY(-.8cqw); } }
-  .td-orbf.fly { transition: left .5s cubic-bezier(.3,.1,.4,1), top .5s cubic-bezier(.5,0,.6,1); }
+  .td-orbf.fly { transition: left .24s cubic-bezier(.3,.1,.4,1), top .24s cubic-bezier(.5,0,.6,1); }
   .td-orbf.blue, .td-orbf.red { width: 4.6cqw; height: 4.6cqw; margin: -2.3cqw 0 0 -2.3cqw; border-radius: 0; }
   .td-orbf.blue svg, .td-orbf.red svg { width: 100%; height: 100%; display: block; overflow: visible; }
   .td-orbf.blue { filter: drop-shadow(0 0 1cqw #4cf) drop-shadow(0 .3cqw .3cqw #0008); }
