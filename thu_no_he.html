@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thử Nổ Theo Hệ</title>
+<style>
+  :root { --bg: #14110e; --ink: #f1e6cf; --gold: #e2b85c; --line: #5a4630; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.4 system-ui, sans-serif; }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 12px 16px 24px; }
+  h1 { font-size: 18px; margin: 4px 0 2px; color: var(--gold); }
+  p.sub { margin: 0 0 10px; font-size: 13px; color: #b9a98a; }
+  .san { position: relative; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: #222 center / cover no-repeat; }
+  .u { position: absolute; transform: translate(-50%, -100%); }
+  .u img.hinh { display: block; height: 100%; width: auto; }
+  .u.dich img.hinh { transform: scaleX(-1); }
+  .u.nf.dich img.hinh { transform: none; }
+  .no { position: absolute; overflow: hidden; pointer-events: none; transform: translate(-50%, -50%); z-index: 5; }
+  .no img { position: absolute; left: 0; top: 0; height: 100%; width: auto; max-width: none; }
+  .hp { position: absolute; left: 50%; top: -8px; transform: translateX(-50%); color: #fff; font-weight: 700; font-size: 18px; text-shadow: 0 0 3px #000, 0 0 6px #000; opacity: 0; z-index: 8; white-space: nowrap; }
+  .nut { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 10px; }
+  .nut2 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; }
+  button { font: inherit; font-size: 14px; padding: 9px 4px; border-radius: 8px; border: 1px solid var(--line); background: #2a2218; color: var(--ink); cursor: pointer; }
+  button.on { border-color: var(--gold); color: var(--gold); }
+  button.thuy { color: #8fd2ff; } button.hoa { color: #ffae5c; } button.loi { color: #ffe680; } button.quang { color: #fff3c8; } button.am { color: #d29cff; }
+  .ghi { margin-top: 10px; font-size: 13px; color: #b9a98a; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Thử nổ trúng đòn theo hệ</h1>
+  <p class="sub">5 bộ nổ dùng chung: tướng hệ nào đánh trúng thì địch nổ bằng bộ đó.</p>
+  <div class="san" id="san"></div>
+  <div class="nut">
+    <button class="thuy" data-he="thuy">Thủy</button>
+    <button class="hoa" data-he="hoa">Hỏa</button>
+    <button class="loi" data-he="loi">Lôi</button>
+    <button class="quang" data-he="quang">Quang</button>
+    <button class="am" data-he="am">Ám</button>
+  </div>
+  <div class="nut2">
+    <button id="ca">Cả 3 địch</button>
+    <button id="cham">Chậm</button>
+    <button id="lap">Lần lượt 5 hệ</button>
+  </div>
+  <div class="ghi" id="ghi">Bấm một hệ để xem.</div>
+</div>
+<script>
+  // đường dẫn: chạy trong web/ trên máy thì lùi một thư mục; trên GitHub trang nằm cạnh thư mục game/
+  var ROOT = /\/web\//.test(location.pathname) ? '../' : '';
+  var HE = { thuy: 'Thủy', hoa: 'Hỏa', loi: 'Lôi', quang: 'Quang', am: 'Ám' };
+  var N = 24, HIT = 6;
+  var cham = false, ca = false;
+  var shot = /shot=(\w+)/.exec(location.search);
+  var san = document.getElementById('san');
+  san.style.backgroundImage = 'url(' + ROOT + 'game/img/san_dau/ngay.jpg)';
+  // phe ta (trái) và 3 địch (phải); hình gốc quay phải nên địch lật lại
+  var DS = [
+    { img: 'doan_dien_khanh', x: 22, y: 78, h: 34, ta: true },
+    { img: 'hac_long', x: 70, y: 66, h: 30 },
+    { img: 'tu_la', x: 84, y: 80, h: 30 },
+    { img: 'gioi_vong', x: 66, y: 93, h: 30 }
+  ];
+  var units = DS.map(function (d) {
+    var u = document.createElement('div');
+    u.className = 'u' + (d.ta ? '' : ' dich');
+    u.style.left = d.x + '%'; u.style.top = d.y + '%'; u.style.height = d.h + '%';
+    u.innerHTML = '<img class="hinh" src="' + ROOT + 'game/img/hk/' + d.img + '_sd.png" alt=""><div class="hp"></div>';
+    san.appendChild(u);
+    return u;
+  });
+  var dich = units.slice(1);
+
+  function no(u, he) {
+    var r = u.getBoundingClientRect(), s = san.getBoundingClientRect();
+    var size = r.height * 1.25;
+    var box = document.createElement('div');
+    box.className = 'no';
+    box.style.width = box.style.height = size + 'px';
+    box.style.left = (r.left - s.left + r.width / 2) + 'px';
+    box.style.top = (r.top - s.top + r.height * 0.55) + 'px';
+    var im = document.createElement('img');
+    im.src = ROOT + 'game/img/blender/fx_he_' + he + '.webp';
+    box.appendChild(im);
+    san.appendChild(box);
+    var ms = (cham ? 90 : 42) * N;
+    if (shot) { im.style.transform = 'translateX(-' + (size * 9) + 'px)'; return; }
+    var a = im.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-' + (size * (N - 1)) + 'px)' }],
+      { duration: ms * (N - 1) / N, easing: 'steps(' + (N - 1) + ', jump-none)', fill: 'forwards' });
+    // lúc chạm: địch giật nhẹ + hiện số
+    setTimeout(function () {
+      var hp = u.querySelector('.hp');
+      hp.textContent = '-' + (800 + Math.floor(Math.random() * 600));
+      hp.animate([{ opacity: 1, transform: 'translate(-50%, 0)' }, { opacity: 0, transform: 'translate(-50%, -30px)' }], { duration: 900 });
+      u.animate([{ transform: 'translate(-50%, -100%)' }, { transform: 'translate(calc(-50% + 8px), -100%)' }, { transform: 'translate(-50%, -100%)' }], { duration: 220 });
+    }, ms * HIT / N);
+    if (shot) return;
+    a.onfinish = function () { box.remove(); };
+    setTimeout(function () { box.remove(); }, ms + 500);
+  }
+
+  function choi(he) {
+    document.getElementById('ghi').textContent = 'Hệ ' + HE[he] + (ca ? ' · cả 3 địch' : ' · 1 địch');
+    var ds = ca ? dich : [dich[0]];
+    ds.forEach(function (u, i) { setTimeout(function () { no(u, he); }, i * 120); });
+  }
+
+  // tải trước 5 tấm
+  Object.keys(HE).forEach(function (h) { var i = new Image(); i.src = ROOT + 'game/img/blender/fx_he_' + h + '.webp'; });
+  document.querySelectorAll('[data-he]').forEach(function (b) { b.onclick = function () { choi(b.dataset.he); }; });
+  document.getElementById('ca').onclick = function () { ca = !ca; this.classList.toggle('on', ca); };
+  document.getElementById('cham').onclick = function () { cham = !cham; this.classList.toggle('on', cham); };
+  // ?shot=<hệ>: dừng ở khung 9 để chụp kiểm tra
+  if (shot) { ca = true; setTimeout(function () { choi(shot[1]); setTimeout(function () { document.getAnimations().forEach(function (a) { a.pause(); a.currentTime = 42 * 9; }); }, 150); }, 600); }
+  document.getElementById('lap').onclick = function () {
+    Object.keys(HE).forEach(function (h, i) { setTimeout(function () { choi(h); }, i * 1500 * (cham ? 2 : 1)); });
+  };
+</script>
+</body>
+</html>
