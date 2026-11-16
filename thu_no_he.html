@@ -71,6 +71,9 @@
     return u;
   });
   var dich = units.slice(1);
+  // tâm thân theo bề ngang ảnh gốc (đo phần giữa người, ảnh quay phải); địch bị lật nên lấy 1 - x
+  var THAN = { hac_long: 0.429, tu_la: 0.503, gioi_vong: 0.506, doan_dien_khanh: 0.479 };
+  units.forEach(function (u, i) { u.dataset.than = DS[i].ta ? THAN[DS[i].img] : 1 - THAN[DS[i].img]; });
 
   function no(u, he) {
     var r = u.getBoundingClientRect(), s = san.getBoundingClientRect();
@@ -78,7 +81,7 @@
     var box = document.createElement('div');
     box.className = 'no';
     box.style.width = box.style.height = size + 'px';
-    box.style.left = (r.left - s.left + r.width / 2) + 'px';
+    box.style.left = (r.left - s.left + r.width * (+u.dataset.than || 0.5)) + 'px';
     box.style.top = (r.top - s.top + r.height * 0.55) + 'px';
     var im = document.createElement('img');
     im.src = ROOT + 'game/img/blender/fx_he_' + he + '.webp';
