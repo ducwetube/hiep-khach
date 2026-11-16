@@ -356,8 +356,11 @@ TD_LUC.khoi = { src: 'game/img/blender/fx_bl_khoi_tim.webp', n: 18, ms: 900, siz
 TD_LUC.mat = { src: 'game/img/blender/fx_bl_mat_na.webp', n: 20, ms: 1000, size: 28, hit: 11 };
 // Thủy Long Thổ Tức (Tử Sam Long Vương): rồng nước cuộn xuống mục tiêu, nổ bọt nước (khung 12 = trúng)
 TD_LUC.thuylong = { src: 'game/img/blender/fx_bl_thuy_long.webp', n: 22, ms: 1100, size: 36, hit: 12 };
+// Thiên Giám Thần Công (Lý Thu Thủy): dải lụa đỏ quét qua đội hình địch rồi bùng lửa (tấm 320x200; khung 13 = bùng), phiên Claude khác làm
+const TD_LUA_LUA = { src: 'game/img/blender/fx_bl_lua_lua.webp', n: 24, ms: 1200, ar: 200 / 320, hit: 13 };
 const TD_LUC_SRC = {
   mask: () => [TD_LUC.khoi.src, TD_LUC.mat.src],
+  ribbon: () => [TD_LUA_LUA.src, TD_LUC2.no.src],
   waterdragon: () => [TD_LUC.thuylong.src],
   dogstaff: () => [TD_SLASH.ngoc.src, TD_LOI.set.src, TD_CHOANG.src],
   yinyang: () => [TD_LUC.amduong.src],
@@ -427,6 +430,9 @@ const TD_SHOT = {
   // quả cầu nước xanh (Tử Sam Long Vương), tấm 2:1, đầu ở 80% ngang
   cau_nuoc: { src: 'game/img/blender/fx_bl_cau_nuoc.webp', n: 8, ms: 400, size: 22, ar: 0.5, ax: 0.8, ay: 0.5, fly: 300,
     hit: { src: 'game/img/blender/fx_bl_no_xanh_nho.webp', n: 16, ms: 480, size: 15 } },
+  // chưởng phong lửa (Lý Thu Thủy), cùng khuôn sóng âm
+  chuong_lua: { src: 'game/img/blender/fx_bl_chuong_lua.webp', n: 8, ms: 400, size: 17, ax: 0.2, ay: 0.5, fly: 300,
+    hit: { src: 'game/img/blender/fx_bl_no_cam.webp', n: 16, ms: 480, size: 16 } },
   // nắm phấn tím lấp lánh (A Châu), tấm 2:1, đầu ở 80% ngang
   phan: { src: 'game/img/blender/fx_bl_phan_tim.webp', n: 8, ms: 400, size: 22, ar: 0.5, ax: 0.8, ay: 0.5, fly: 300,
     hit: { src: 'game/img/blender/fx_bl_no_tim_nho.webp', n: 16, ms: 480, size: 15 } },
@@ -658,7 +664,7 @@ function tdDome(u) {
   b.e.appendChild(s.el); setTimeout(() => s.el.remove(), TD_DOME.ms * k + 200);
 }
 // biểu tượng hiệu ứng trên đầu khi còn hiệu lực: tăng Thủ / tăng Công (có lợi), giảm Thủ = sơ hở / giảm Công = suy yếu (bất lợi)
-const TD_BUFF_IC = [['def', 'tang_thu', 1], ['atk', 'tang_cong', 1], ['def', 'so_ho', -1], ['atk', 'suy_yeu', -1], ['hpd', 'phe_hon', -1]];
+const TD_BUFF_IC = [['def', 'tang_thu', 1], ['atk', 'tang_cong', 1], ['phaGiap', 'tang_cong', 1], ['def', 'so_ho', -1], ['atk', 'suy_yeu', -1], ['hpd', 'phe_hon', -1]];
 function tdBuffIcons(u, e) {
   let box = e.querySelector('.td-bf');
   if (!box) { box = document.createElement('i'); box.className = 'td-bf'; e.appendChild(box); }
@@ -744,7 +750,8 @@ const tdFoe = u => u.side === 'ta' ? 'dich' : 'ta';
 function tdAtk(u) { return u.atk * (1 + (u.buf.atk ? u.buf.atk.v : 0)); }
 function tdDef(u) { return u.def * (1 + (u.buf.def ? u.buf.def.v : 0)); }
 function tdDmg(a, t, pow) {
-  const A = tdAtk(a), D = tdDef(t);
+  // Phá Giáp (người dùng duyệt 2026-11-16): Thủ mục tiêu dùng để tính trừ thẳng số Phá Giáp của người đánh, không dưới 0
+  const A = tdAtk(a), D = Math.max(0, tdDef(t) - (a.buf.phaGiap ? a.buf.phaGiap.v : 0));
   const crit = Math.random() < TD.crit;
   const d = A * pow * A / (A + D) * (0.92 + Math.random() * 0.16) * (crit ? TD.critMul : 1);
   return { d: Math.max(1, Math.round(d)), crit };
@@ -1168,6 +1175,26 @@ async function tdUltDo(u) {
       }
       await tdWait(350);
     }
+  } else if (U.kind === 'ribbon') {
+    // Thiên Giám Thần Công (Lý Thu Thủy): vung hai tay áo rồi đẩy chưởng quét ngang, dải lụa lửa quét qua giữa thân đội hình địch rồi bùng;
+    // sát thương toàn địch, rồi Phá Giáp bản thân vài hiệp
+    const foes = tdAlive(tdFoe(u)), A = u.anim && u.anim.giam, k = tdS && tdS.fast ? 0.5 : 1, L = TD_LUA_LUA;
+    if (A) tdAnimPlay(u, 'giam');
+    await tdWait(A ? A.fx / A.n * A.ms * 0.5 : 150);
+    const box = document.getElementById('td-fx');
+    if (box && foes.length) {
+      const cq = box.clientWidth / 100, xs = foes.map(t => tdPos(t).x), cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+      const cy = foes.reduce((s, t) => s + tdPos(t).y, 0) / foes.length - 10 * cq;
+      const w = Math.max(44 * cq, Math.max(...xs) - Math.min(...xs) + 24 * cq), h = w * L.ar;
+      const st = tdStrip(L.src, L.n, L.ms * k, false);
+      Object.assign(st.el.style, { left: cx - w / 2 + 'px', top: cy - h / 2 + 'px', width: w + 'px', height: h + 'px' });
+      box.appendChild(st.el); setTimeout(() => st.el.remove(), L.ms * k + 250);
+    }
+    await tdWait(L.hit / L.n * L.ms);
+    foes.forEach(t => { if (!t.dead) { tdFxAt(TD_LUC2.no, tdPos(t), k); const r = tdDmg(u, t, U.pow); tdHurt(u, t, r.d, r.crit); } });
+    u.buf.phaGiap = { v: U.pha, t: U.turns || 2 }; tdPop(u, 'Phá Giáp +' + U.pha, 'st');
+    tdSync();
+    await tdWait(350);
   } else if (U.kind === 'waterdragon') {
     // Thủy Long Thổ Tức (Tử Sam Long Vương): giơ cầu nước vận khí, vung xuống: rồng nước cuộn từ trên cao xuống mục tiêu, nổ bọt nước;
     // sát thương 1 mục tiêu + giảm Mị mục tiêu vài hiệp

@@ -269,7 +269,7 @@ const HIEP_KHACH = {
       danh: { src: 'game/img/blender/tth_danh.webp', n: 16, ms: 800, fire: 7, shot: 'quan_co' },
       loi: { src: 'game/img/blender/tth_loi.webp', n: 30, ms: 1600, board: 4, strike: 17 } },
     duyen: [   // người dùng chốt 2026-11-13: lấy theo ảnh 10 sao (ảnh 1 sao bị lỗi, thiếu Duyên); tên người theo ảnh 1 sao
-      { name: 'Tiêu Dao', desc: 'Cùng ra trận Công +250% Thủ +350%', with: [{ ten: 'Lý Thu Thủy' }, { ten: 'Vô Nhai Tử' }, { ten: 'Thiên Sơn Đồng Lão' }], eff: { atk: 2.5, def: 3.5 } },
+      { name: 'Tiêu Dao', desc: 'Cùng ra trận Công +250% Thủ +350%', with: ['ly_thu_thuy', { ten: 'Vô Nhai Tử' }, { ten: 'Thiên Sơn Đồng Lão' }], eff: { atk: 2.5, def: 3.5 } },
       { name: 'Kỳ Chức', desc: 'Cùng ra trận Thủ +250%', with: [{ ten: 'Phong Ba Ác' }], eff: { def: 2.5 } },
       { name: 'Tương Khắc', desc: 'Cùng ra trận HP +250%', with: [{ ten: 'Thiên Sơn Đồng Lão' }], eff: { hp: 2.5 } },
       { name: 'Bàn Cờ', desc: 'Sử dụng Bền +30%', with: [{ ten: 'Bàn Cờ', loai: 'bao' }], eff: { ben: 30 } },
@@ -451,7 +451,7 @@ const HIEP_KHACH = {
     ult: { kind: 'waterdragon', pow: 0.85, miDown: 200, turns: 2 },
     duyen: [
       { name: 'Minh Giáo', desc: 'Cùng ra trận Công +130%', with: [{ ten: 'Dương Tiêu' }], eff: { atk: 1.3 } },
-      { name: 'Diễm Lệ', desc: 'Cùng ra trận Công +130%', with: [{ ten: 'Lý Thu Thủy' }], eff: { atk: 1.3 } },
+      { name: 'Diễm Lệ', desc: 'Cùng ra trận Công +130%', with: ['ly_thu_thuy'], eff: { atk: 1.3 } },
       { name: 'Pháp Vương', desc: 'Cùng ra trận Công +300% Thủ +300%', with: [{ ten: 'Thanh Dực Bức Vương' }, { ten: 'Bạch Mi Ưng Vương' }, { ten: 'Kim Mao Sư Vương' }], eff: { atk: 3, def: 3 } },
       { name: 'Vương Bài', desc: 'Sử dụng Công +120%', with: [{ ten: 'Vương Bài', loai: 'bao' }], eff: { atk: 1.2 } },
       { name: 'Kinh Vô Tự', desc: 'Sử dụng Tốc +10%', with: [{ ten: 'Kinh Vô Tự', loai: 'bao' }], eff: { spd: 0.1 } },
@@ -459,6 +459,32 @@ const HIEP_KHACH = {
       { name: 'Phá Thần Cung', desc: 'Sử dụng Công +100%', with: [{ ten: 'Phá Thần Cung', loai: 'bao' }], eff: { atk: 1 } },
       { name: 'Huyền Thiên Giới', desc: 'Sử dụng Bạo +30%', with: [{ ten: 'Huyền Thiên Giới', loai: 'bao' }], eff: { crit: 30 } },
       { name: 'Tiểu Thử', desc: 'Sử dụng Thủ +100%', with: [{ ten: 'Tiểu Thử', loai: 'linh' }], eff: { def: 1 } },
+    ] },
+
+  // Hiệp khách thứ hai mươi: Lý Thu Thủy (2026-11-16, phiên Claude khác làm ảnh + rig tools/blender/ly_thu_thuy.py, phiên này chèn): Công Kích hệ Hỏa, Tư chất 13.
+  // Nộ A Thiên Giám Thần Công cấp 1: toàn địch 75% Công (ảnh ghi 50%, người dùng nâng), Phá Giáp bản thân +300 trong 2 hiệp (kind 'ribbon').
+  ly_thu_thuy: { name: 'Lý Thu Thủy', img: 'tm_nu_mat_na', art: 'game/img/hk/ly_thu_thuy.jpg', face: [0.5, 0.31], sprite: 'game/img/hk/ly_thu_thuy_sd.png', hand: [0.96, 0.29], role: 'cong_kich',
+    // hình động Blender: danh = đẩy chưởng, chưởng phong lửa bay ra (khung fire);
+    // giam = vung hai tay áo lên rồi đẩy chưởng quét ngang (khung 12), dải lụa lửa quét cả đội địch rồi bùng (TD_LUA_LUA khung 13)
+    anim: { iw: 448, ih: 700, box: [-110, -120, 570, 760],
+      idle: { src: 'game/img/blender/ltt_idle.webp', n: 24, ms: 1300 },
+      danh: { src: 'game/img/blender/ltt_danh.webp', n: 16, ms: 800, fire: 7, shot: 'chuong_lua' },
+      giam: { src: 'game/img/blender/ltt_giam.webp', n: 24, ms: 1300, fx: 12 } }, q: 4, lv: 1, star: 1, hanh: 'hoa', tuChat: 13,
+    st: { hp: 872, atk: 504, def: 173, hoi: 181, spd: 43, mi: 100 },
+    grow: { hp: 43.6, atk: 25.2, def: 8.7, hoi: 9.1 },
+    ex: { crit: 15, critDmg: 150, acc: 100, dodge: 2.5, ben: 0 },
+    skill: { grade: 'A', name: 'Thiên Giám Thần Công', desc: 'Tấn công toàn bộ địch 75% Công, tăng 300 Phá Giáp bản thân trong 2 hiệp' },
+    ult: { kind: 'ribbon', pow: 0.75, pha: 300, turns: 2 },   // ảnh ghi 50%; người dùng nâng 75% (2026-11-16)
+    duyen: [   // theo ảnh 10 sao
+      { name: 'Tiền Bối', desc: 'Cùng ra trận Công +250% Thủ +350%', with: ['to_tinh_ha', { ten: 'Vô Nhai Tử' }, { ten: 'Thiên Sơn Đồng Lão' }], eff: { atk: 2.5, def: 3.5 } },
+      { name: 'Diễm Lệ', desc: 'Cùng ra trận Công +130%', with: ['tu_sam'], eff: { atk: 1.3 } },
+      { name: 'Tương Tàn', desc: 'Cùng ra trận HP +250%', with: [{ ten: 'Thiên Sơn Đồng Lão' }], eff: { hp: 2.5 } },
+      { name: 'Tái Sinh Phù', desc: 'Sử dụng Công +120%', with: [{ ten: 'Tái Sinh Phù', loai: 'bao' }], eff: { atk: 1.2 } },
+      { name: 'Thiết Chỉ', desc: 'Sử dụng Bạo +28%', with: [{ ten: 'Thiết Chỉ', loai: 'bao' }], eff: { crit: 28 } },
+      { name: 'Bách Hợp', desc: 'Sử dụng Bạo +30%', with: [{ ten: 'Bách Hợp', loai: 'bao' }], eff: { crit: 30 } },
+      { name: 'Đằng Long Bội', desc: 'Sử dụng Công +100%', with: [{ ten: 'Đằng Long Bội', loai: 'bao' }], eff: { atk: 1 } },
+      { name: 'Tử Vi Kiếm', desc: 'Sử dụng Chuẩn +35%', with: [{ ten: 'Tử Vi Kiếm', loai: 'bao' }], eff: { acc: 35 } },
+      { name: 'Tiểu Lang', desc: 'Sử dụng Công +50%', with: [{ ten: 'Tiểu Lang', loai: 'linh' }], eff: { atk: 0.5 } },
     ] },
 
   // Hiệp khách thứ mười tám: Hoàng Dung (2026-11-16, phiên Claude khác làm ảnh + hình động, phiên này chèn): Công Kích hệ Lôi, Tư chất 13.
@@ -606,7 +632,7 @@ const HK_DOI_MA = { xanh_kim_cuong: 'luc_gioi_vong', xanh_kim_phat: 'luc_gioi_si
   xanh_loi_chuy: 'luc_gioi_san', xanh_hong_bao: 'luc_de_tu_7_tui', xanh_xich_dien: 'luc_de_tu_8_tui', xanh_xich_huyet: 'luc_de_tu_9_tui', xanh_bach_lien: 'luc_tinh_tu',
   xanh_bach_sa: 'luc_tinh_tu', xanh_quang_minh: 'luc_gioi_si' };
 // Nhân vật mới được tặng sẵn (người dùng chốt 2026-11-12: Đoàn Diên Khánh + Nam Hải Ngạc Thần)
-const HK_START = ['doan_dien_khanh', 'nam_hai_ngac_than', 'diep_nhi_nuong', 'doan_du', 'van_trung_hac', 'nham_doanh_doanh', 'nham_nga_hanh', 'lenh_ho_xung', 'dong_phuong', 'huong_van_thien', 'to_tinh_ha', 'mac_dai', 'ta_lanh_thien', 'nhac_bat_quan', 'thien_mon', 'dinh_nhan', 'a_chau', 'hoang_dung', 'tu_sam'];
+const HK_START = ['doan_dien_khanh', 'nam_hai_ngac_than', 'diep_nhi_nuong', 'doan_du', 'van_trung_hac', 'nham_doanh_doanh', 'nham_nga_hanh', 'lenh_ho_xung', 'dong_phuong', 'huong_van_thien', 'to_tinh_ha', 'mac_dai', 'ta_lanh_thien', 'nhac_bat_quan', 'thien_mon', 'dinh_nhan', 'a_chau', 'hoang_dung', 'tu_sam', 'ly_thu_thuy'];
 // Hiệp khách đã có (P.hk[mã] = {lv, star}) + đội ra trận 5 ô (P.doi, null = ô trống). Bản lưu chưa có thì tặng Đoàn Diên Khánh.
 function hkEnsure() {
   if (!P) return;
@@ -716,6 +742,12 @@ function hkEnsure() {
     P.hkTang17 = true;
     if (!P.hk.tu_sam) P.hk.tu_sam = { lv: 1, star: 1 };
     const k = P.doi.indexOf(null); if (k >= 0 && !P.doi.includes('tu_sam')) P.doi[k] = 'tu_sam';
+  }
+  // tặng Lý Thu Thủy (2026-11-16), xếp vào ô trống nếu có
+  if (!P.hkTang18) {
+    P.hkTang18 = true;
+    if (!P.hk.ly_thu_thuy) P.hk.ly_thu_thuy = { lv: 1, star: 1 };
+    const k = P.doi.indexOf(null); if (k >= 0 && !P.doi.includes('ly_thu_thuy')) P.doi[k] = 'ly_thu_thuy';
   }
   // tặng 15 hiệp khách phẩm xanh lá (2026-11-13), không xếp vào đội
   if (!P.hkTang11) {
