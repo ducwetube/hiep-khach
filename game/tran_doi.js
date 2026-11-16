@@ -324,7 +324,10 @@ const TD_SLASH = {
   do: { src: 'game/img/blender/fx_bl_chem_do.webp', n: 12, ms: 420, size: 28 },      // nhát đao đỏ máu (Tu La)
   cheo_do: { src: 'game/img/blender/fx_bl_cheo_do.webp', n: 16, ms: 640, size: 40 }, // chém chéo chữ thập đỏ (Phệ Hồn Đao)
   lua: { src: 'game/img/blender/fx_bl_chem_lua.webp', n: 12, ms: 480, size: 30 },    // vệt gậy / côn lửa (Đệ Tử 8, 9 Túi)
+  ngoc: { src: 'game/img/blender/fx_bl_chem_ngoc.webp', n: 12, ms: 480, size: 30 },  // vệt gậy trúc ngọc xanh (Hoàng Dung)
 };
+// vòng sao choáng trên đỉnh đầu (tấm 192x96, lặp; rộng 16% sân), phiên Claude khác làm (fx_luc_b.py choang)
+const TD_CHOANG = { src: 'game/img/blender/fx_bl_sao_choang.webp', n: 12, ms: 600, ar: 0.5, w: 16 };
 // hiệu ứng nộ 5 tướng Lục do phiên Claude khác làm (tools/blender/fx_luc_b.py)
 const TD_LUC2 = {
   chan: { src: 'game/img/blender/fx_bl_chan_loi.webp', n: 20, ms: 1000, ar: 1, foot: 0.8, size: 32, hit: 3 },     // chấn địa lôi (Giới Sân)
@@ -353,6 +356,7 @@ TD_LUC.khoi = { src: 'game/img/blender/fx_bl_khoi_tim.webp', n: 18, ms: 900, siz
 TD_LUC.mat = { src: 'game/img/blender/fx_bl_mat_na.webp', n: 20, ms: 1000, size: 28, hit: 11 };
 const TD_LUC_SRC = {
   mask: () => [TD_LUC.khoi.src, TD_LUC.mat.src],
+  dogstaff: () => [TD_SLASH.ngoc.src, TD_LOI.set.src, TD_CHOANG.src],
   yinyang: () => [TD_LUC.amduong.src],
   lotus: () => [TD_LUC.sen.src, TD_SLASH.nuoc.src],
   firecurse: () => [TD_SHOT.bua.src, TD_SHOT.bua.hit.src, TD_LUC.hoa.src],
@@ -664,6 +668,15 @@ function tdFxSync(u) {
   const e = document.getElementById(`td-${u.side}-${u.i}`); if (!e) return;
   if (u.anim && !u.dead && !e.querySelector('.td-sheet.body')) tdAnimPlay(u, 'idle');
   tdBuffIcons(u, e);
+  // vòng sao choáng quay trên đỉnh đầu khi còn bị choáng (dùng chung cho mọi choáng)
+  const cs = e.querySelector('.td-choang');
+  if (u.stun > 0 && !u.dead && !cs) {
+    const b = tdBody(u), s = tdStrip(TD_CHOANG.src, TD_CHOANG.n, TD_CHOANG.ms, true), box = e.getBoundingClientRect(), R = document.getElementById('td-fx');
+    const w = TD_CHOANG.w * (R ? R.clientWidth : box.width * 6) / 100, h = w * TD_CHOANG.ar;
+    s.el.classList.add('td-choang');
+    Object.assign(s.el.style, { left: (b ? b.cx : box.width / 2) - w / 2 + 'px', top: (b ? b.y : 0) - h * 0.55 + 'px', width: w + 'px', height: h + 'px', zIndex: 6, pointerEvents: 'none' });
+    e.appendChild(s.el);
+  } else if (cs && (!(u.stun > 0) || u.dead)) cs.remove();
   if (u.ult && u.ult.shield) {
     const want = !u.dead && !!u.buf[u.ult.shieldBuf || 'hp'], has = !!e.querySelector('.td-sheet.shield:not(.out)');
     if (want !== has) tdShield(u, want);
@@ -1121,6 +1134,32 @@ async function tdUltDo(u) {
       tdSync();
       await tdWait(350);
     }
+  } else if (U.kind === 'dogstaff') {
+    // Bát Cẩu Triều Thiên (Hoàng Dung): lướt tới quật gậy liên hồi (vệt ngọc đổi chiều), vung gậy chỉ trời bổ xuống:
+    // sét giáng lên mục tiêu (sát thương) và lên 1 địch ngẫu nhiên khác (choáng `stunTurns` hiệp; chỉ còn mục tiêu thì choáng chính nó)
+    const t = tdTarget(u);
+    if (t) {
+      const others = tdAlive(tdFoe(u)).filter(x => x !== t), o = others.length ? tdRand(others) : t;
+      const A = u.anim && u.anim.bong, fd = A ? A.ms / A.n : 50, hits = A ? A.hits : [5, 8, 11, 14], hit = A ? A.hit : 19;
+      tdLunge(u, t, hit * fd + 300);
+      if (A) tdAnimPlay(u, 'bong');
+      let prev = 0;
+      for (let j = 0; j < hits.length; j++) {
+        const at = hits[j] * fd; await tdWait(at - prev); prev = at;
+        if (!tdS || t.dead) break;
+        tdSlash('ngoc', u, t, j % 2 === 1); tdHitFx(t);
+      }
+      await tdWait(hit * fd - prev);
+      if (tdS) {
+        tdGroundFx(t, TD_LOI.set);
+        setTimeout(() => { if (tdS && !o.dead) tdGroundFx(o, TD_LOI.set); }, 120 * (tdS.fast ? 0.5 : 1));
+        if (!t.dead) { const r = tdDmg(u, t, U.pow); tdHurt(u, t, r.d, r.crit); }
+        await tdWait(140);
+        if (!o.dead) { o.stun = Math.max(o.stun || 0, U.stunTurns || 1); tdHitFx(o); tdPop(o, 'Choáng', 'st'); }
+        tdSync();
+      }
+      await tdWait(350);
+    }
   } else if (U.kind === 'mask') {
     // Bách Diện Thuật (A Châu): đưa mặt nạ lên mặt, khói tím bùng (hóa thân, bóng mờ lướt), vung mặt nạ ra: mặt nạ ma ảnh hiện trên từng kẻ địch,
     // lao sát vào rồi vỡ thành vệt chém chữ thập (sát thương toàn địch); +Nộ 1 đồng đội xử lý chung ở cuối (allyNo)
@@ -1269,8 +1308,14 @@ async function tdAfterAct() {
 }
 function tdPhaseTa() {
   const s = tdS; s.phase = 'ta';
-  s.ta.forEach(u => { u.acted = false; if (u.role === 'ky_nang' && !u.dead) u.no = TD.noMax; });
+  s.ta.forEach(u => {
+    u.acted = false; if (u.role === 'ky_nang' && !u.dead) u.no = TD.noMax;
+    // phe ta bị choáng / ru ngủ (địch là tướng có chiêu khống chế): mất lượt này; stun / sleep = số lượt còn mất
+    if (!u.dead && u.stun > 0) { u.stun--; u.acted = true; tdPop(u, 'Choáng', 'st'); }
+    else if (!u.dead && u.sleep > 0) { u.sleep--; u.acted = true; tdPop(u, 'Đang ngủ', 'st'); }
+  });
   tdSync();
+  if (tdAlive('ta').length && tdAlive('ta').every(u => u.acted)) { setTimeout(() => { if (tdS === s && !s.over) tdAfterAct(); }, 450); return; }
   if (s.auto) tdAutoStep();
 }
 function tdAutoStep() {
@@ -1284,7 +1329,7 @@ async function tdPhaseDich() {
   for (const e of s.dich) {
     if (s.over || tdS !== s) return;
     if (e.dead) continue;
-    if (e.stun) { e.stun = 0; tdPop(e, 'Choáng', 'st'); tdSync(); await tdWait(350); continue; }
+    if (e.stun > 0) { e.stun--; tdPop(e, 'Choáng', 'st'); tdSync(); await tdWait(350); continue; }   // stun = số lượt còn mất (Bát Cẩu Triều Thiên choáng 2 hiệp)
     if (e.sleep > 0) { e.sleep--; tdPop(e, 'Đang ngủ', 'st'); tdSync(); await tdWait(350); continue; }   // ru ngủ: mất lượt
     if (e.no >= TD.noMax) { e.no = 0; await tdUltDo(e); } else await tdNormal(e);
     if (!tdAlive('ta').length) return tdEnd(false);
