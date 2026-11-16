@@ -406,6 +406,28 @@ const HIEP_KHACH = {
       { name: 'Tiểu Hồ', desc: 'Sử dụng Tốc +10%', with: [{ ten: 'Tiểu Hồ', loai: 'linh' }], eff: { spd: 0.1 } },
     ] },
 
+  // Hiệp khách thứ mười bảy: A Châu (2026-11-16, người dùng gửi ảnh mẫu cấp 1 · 1 sao): Kỹ Năng hệ Ám, Tư chất 13.
+  // Chỉ số và Căn Cốt lấy đúng ảnh (Căn Cốt ở đây không đúng 5% như các tướng khác); Bạo 0, Né 2,5 theo ảnh (khác mặc định Kỹ Năng).
+  // Nộ S Bách Diện Thuật cấp 1 (ảnh Thăng cấp kĩ năng): tấn công toàn địch 50% Công + tăng 5 Nộ cho 1 đồng đội ngẫu nhiên
+  // (sao cao: S+, thêm giảm Nộ 1 địch ngẫu nhiên — chưa làm). Chưa có ảnh: tạm dùng hình cao thủ tháp.
+  a_chau: { name: 'A Châu', img: 'tm_nu_mat_na', role: 'ky_nang', q: 4, lv: 1, star: 1, hanh: 'am', tuChat: 13,
+    st: { hp: 1192, atk: 385, def: 250, hoi: 181, spd: 60, mi: 100 },
+    grow: { hp: 56.6, atk: 19.8, def: 12, hoi: 8.6 },
+    ex: { crit: 0, critDmg: 150, acc: 100, dodge: 2.5, ben: 0 },
+    skill: { grade: 'S', name: 'Bách Diện Thuật', desc: 'Tấn công toàn bộ địch 50% Công, tăng 5 Nộ cho 1 đồng đội ngẫu nhiên' },
+    ult: { kind: 'all', pow: 0.5, allyNo: 5 },
+    duyen: [   // theo ảnh mẫu; tên người trong Cô Tô / Tuyệt Kích / Đoạn Tình Claude đoán theo hình (chờ người dùng xác nhận)
+      { name: 'Cô Tô', desc: 'Cùng ra trận Thủ +200%', with: [{ ten: 'Mộ Dung Phục' }], eff: { def: 2 } },
+      { name: 'Tuyệt Kích', desc: 'Cùng ra trận Công +200% Thủ +200%', with: [{ ten: 'Chưa rõ' }, { ten: 'Chưa rõ' }, { ten: 'Chưa rõ' }], eff: { atk: 2, def: 2 } },
+      { name: 'Đoạn Tình', desc: 'Cùng ra trận Công +130%', with: [{ ten: 'Kiều Phong' }], eff: { atk: 1.3 } },
+      { name: 'Lông Điêu', desc: 'Sử dụng Bạo +25%', with: [{ ten: 'Lông Điêu', loai: 'bao' }], eff: { crit: 25 } },
+      { name: 'Cô Tô Bí Kỹ', desc: 'Sử dụng Thủ +100%', with: [{ ten: 'Cô Tô Bí Kỹ', loai: 'bao' }], eff: { def: 1 } },
+      { name: 'Nữ Hiệp Ấn', desc: 'Sử dụng HP +150%', with: [{ ten: 'Nữ Hiệp Ấn', loai: 'bao' }], eff: { hp: 1.5 } },
+      { name: 'Giáng Long Châu', desc: 'Sử dụng Tốc +5%', with: [{ ten: 'Giáng Long Châu', loai: 'bao' }], eff: { spd: 0.05 } },
+      { name: 'Giáng Long Hoàn', desc: 'Sử dụng Bạo +30%', with: [{ ten: 'Giáng Long Hoàn', loai: 'bao' }], eff: { crit: 30 } },
+      { name: 'Thử Tinh', desc: 'Sử dụng Tốc +15%', with: [{ ten: 'Thử Tinh', loai: 'linh' }], eff: { spd: 0.15 } },
+    ] },
+
   hoang_y_nu: { name: 'Hoàng Y Nữ', img: 'tm_hoang_y_kiem_nu', role: 'ho_tro', q: 2, lv: 1, star: 1, hanh: 'hoa', tuChat: 11,
     st: { hp: 2100, atk: 1350, def: 1100, hoi: 500, spd: 55, mi: 90 },
     skill: { grade: 'A', name: 'Phượng Minh Khúc', desc: 'Tăng 20% Công toàn đội 2 hiệp' },
@@ -525,7 +547,7 @@ const HK_DOI_MA = { xanh_kim_cuong: 'luc_gioi_vong', xanh_kim_phat: 'luc_gioi_si
   xanh_loi_chuy: 'luc_gioi_san', xanh_hong_bao: 'luc_de_tu_7_tui', xanh_xich_dien: 'luc_de_tu_8_tui', xanh_xich_huyet: 'luc_de_tu_9_tui', xanh_bach_lien: 'luc_tinh_tu',
   xanh_bach_sa: 'luc_tinh_tu', xanh_quang_minh: 'luc_gioi_si' };
 // Nhân vật mới được tặng sẵn (người dùng chốt 2026-11-12: Đoàn Diên Khánh + Nam Hải Ngạc Thần)
-const HK_START = ['doan_dien_khanh', 'nam_hai_ngac_than', 'diep_nhi_nuong', 'doan_du', 'van_trung_hac', 'nham_doanh_doanh', 'nham_nga_hanh', 'lenh_ho_xung', 'dong_phuong', 'huong_van_thien', 'to_tinh_ha', 'mac_dai', 'ta_lanh_thien', 'nhac_bat_quan', 'thien_mon', 'dinh_nhan'];
+const HK_START = ['doan_dien_khanh', 'nam_hai_ngac_than', 'diep_nhi_nuong', 'doan_du', 'van_trung_hac', 'nham_doanh_doanh', 'nham_nga_hanh', 'lenh_ho_xung', 'dong_phuong', 'huong_van_thien', 'to_tinh_ha', 'mac_dai', 'ta_lanh_thien', 'nhac_bat_quan', 'thien_mon', 'dinh_nhan', 'a_chau'];
 // Hiệp khách đã có (P.hk[mã] = {lv, star}) + đội ra trận 5 ô (P.doi, null = ô trống). Bản lưu chưa có thì tặng Đoàn Diên Khánh.
 function hkEnsure() {
   if (!P) return;
@@ -617,6 +639,12 @@ function hkEnsure() {
     P.hkTang14 = true;
     if (!P.hk.dinh_nhan) P.hk.dinh_nhan = { lv: 1, star: 1 };
     const k = P.doi.indexOf(null); if (k >= 0 && !P.doi.includes('dinh_nhan')) P.doi[k] = 'dinh_nhan';
+  }
+  // tặng A Châu (2026-11-16), xếp vào ô trống nếu có
+  if (!P.hkTang15) {
+    P.hkTang15 = true;
+    if (!P.hk.a_chau) P.hk.a_chau = { lv: 1, star: 1 };
+    const k = P.doi.indexOf(null); if (k >= 0 && !P.doi.includes('a_chau')) P.doi[k] = 'a_chau';
   }
   // tặng 15 hiệp khách phẩm xanh lá (2026-11-13), không xếp vào đội
   if (!P.hkTang11) {

@@ -1219,6 +1219,12 @@ async function tdUltDo(u) {
   } else if (U.kind === 'buff') {
     tdAlive(u.side).forEach(m => { m.buf.atk = { v: U.atk, t: U.turns }; tdPop(m, 'Công +' + Math.round(U.atk * 100) + '%', 'st'); });
   }
+  // tăng Nộ cho 1 đồng đội ngẫu nhiên (Bách Diện Thuật của A Châu); không chọn chính mình, tướng Kỹ Năng (Nộ luôn đầy) cũng không cần
+  if (U.allyNo) {
+    const pool = tdAlive(u.side).filter(m => m !== u && m.role !== 'ky_nang' && m.no < TD.noMax);
+    const m = pool.length ? tdRand(pool) : null;
+    if (m) { m.no = Math.min(TD.noMax, m.no + U.allyNo); tdPop(m, 'Nộ +' + U.allyNo, 'st'); }
+  }
   tdSync();
   await tdWait(520);
 }
