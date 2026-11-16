@@ -8,7 +8,6 @@
    ===================================================================== */
 const AI_CHUONG = [
   { name: 'Chương 1 · Đêm Trăng Máu', img: 'game/img/ai/chuong_1.jpg',
-    mobs: ['son_tac_do', 'thao_khau', 'luu_manh', 'con_do', 'de_tu_that_sat', 'sat_thu'],
     // x, y: % trên tranh (dọc 1072 × 1920), theo 7 địa danh dọc con đường
     ai: [
       { name: 'Thảo Miếu Thôn', x: 78, y: 83, tang: 10, boss: 'son_tac_trai_chu' },
@@ -23,26 +22,22 @@ const AI_CHUONG = [
   // Map 2–5 (2026-11-13, người dùng yêu cầu; tên chương / ải, quái, boss Claude đặt, chờ duyệt; tranh nền mượn tranh bản đồ vùng cũ, chờ ảnh Gemini).
   // Chỉ khai báo tên ải + boss; vị trí ghim tự xếp chữ chi (aiAuto). Map 2, 3: 7 ải; map 4, 5: 9 ải; mỗi ải 10 cửa.
   { name: 'Chương 2 · Sa Mạc Man Hoang', img: 'game/img/ban_do/mh_doc.jpg',
-    mobs: ['sa_tac_mh', 'huyet_no', 'de_tu_truong_sinh', 'huyet_anh_sat_thu', 'truong_sinh_ho_ve', 'huyet_luyen_dao_si'],
     ai: [['Hoàng Sa Cổ Đạo', 'sa_tac_dau_linh'], ['Lưu Sa Hải', 'sa_tac_dau_linh'], ['Ốc Đảo Chết', 'huyet_thi_tuong'], ['Tàn Thành Lâu Lan', 'huyet_thi_tuong'],
       ['Huyết Trì Ngoại Điện', 'truong_sinh_ho_phap'], ['Huyết Trì Nội Điện', 'truong_sinh_ho_phap'], ['Trường Sinh Đường', 'ngoc_duong_tu']] },
   { name: 'Chương 3 · Đầm Lầy Hiệp Xuyên', img: 'game/img/ban_do/hx_doc.jpg',
-    mobs: ['doc_thi', 'de_tu_van_doc', 'doc_nu_van_doc', 'van_doc_ho_ve', 'luyen_co_su', 'huyet_no'],
     ai: [['Chướng Khí Lâm', 'van_doc_huong_chu'], ['Hắc Thủy Đầm', 'van_doc_huong_chu'], ['Bến Thuyền Mục', 'van_doc_huong_chu'], ['Vạn Độc Trại', 'van_doc_ho_phap'],
       ['Luyện Cổ Phòng', 'van_doc_ho_phap'], ['Độc Long Động', 'van_doc_ho_phap'], ['Vạn Độc Môn', 'van_doc_ho_phap']] },
   { name: 'Chương 4 · Thung Lũng Tiêu Dao', img: 'game/img/ban_do/td_doc.jpg',
-    mobs: ['de_tu_hop_hoan', 'cam_nu', 'hop_hoan_thi_ve', 'mi_anh_sat_thu', 'thuy_mi', 'si_tinh'],
     ai: [['Đào Hoa Lâm', 'on_tuyen_thuy_mi'], ['Lạc Anh Kiều', 'on_tuyen_thuy_mi'], ['Ôn Tuyền Cốc', 'on_tuyen_thuy_mi'], ['Mê Hương Viên', 'me_am_huong_chu'], ['Tiêu Dao Lầu', 'me_am_huong_chu'],
       ['Cầm Âm Các', 'me_am_huong_chu'], ['Hợp Hoan Ngoại Điện', 'hop_hoan_ho_phap'], ['Hợp Hoan Nội Điện', 'hop_hoan_ho_phap'], ['Hợp Hoan Phái', 'hop_hoan_thanh_nu']] },
   { name: 'Chương 5 · Hồ Kỳ Sơn', img: 'game/img/ban_do/th_doc.jpg',
-    mobs: ['ks_tu_si', 'ks_ma_tang', 'ks_de_tu_qvt', 'ks_cau_hon_su', 'ks_luyen_hon_su', 'ks_thuy_quy'],
     ai: [['Âm Phong Lĩnh', 'ks_thuy_quy_dau_linh'], ['Vong Hồn Than', 'ks_thuy_quy_dau_linh'], ['Quỷ Khốc Lâm', 'ks_thuy_quy_dau_linh'], ['U Minh Cốc', 'ks_phan_quan'], ['Câu Hồn Điện', 'ks_phan_quan'],
       ['Luyện Hồn Trì', 'ks_phan_quan'], ['Phong Ma Tế Đàn', 'ks_ho_phap'], ['Quỷ Vương Ngoại Điện', 'ks_ho_phap'], ['Quỷ Vương Tông', 'ks_ho_phap']] },
 ];
 // chương khai báo gọn [tên, boss] -> đủ trường; ghim xếp chữ chi từ dưới lên
 AI_CHUONG.forEach(C => { C.ai = C.ai.map((A, i, arr) => Array.isArray(A) ? { name: A[0], boss: A[1], tang: 10, x: i % 2 ? 26 : 72, y: Math.round(84 - i * 72 / (arr.length - 1)) } : A); });
 // sức địch nhân theo chương (Claude đặt, chờ duyệt): mỗi chương gấp 2,5 lần chương trước; bạc gấp đôi
-// Quái thường = 15 hiệp khách phẩm xanh (HK_XANH, mỗi chương một nhóm 2 hệ … trộn); tinh anh / boss = tướng thật (người dùng chốt 2026-11-14).
+// Quái thường = 13 tướng Lục (HK_XANH, người dùng chốt 2026-11-16: bỏ hết tướng xanh cũ); tinh anh / boss = tướng thật (người dùng chốt 2026-11-14).
 // AI_TUONG[c] = nhóm tướng của chương (Claude xếp theo nhóm truyện, chờ duyệt): boss ải a = nhóm[a % n], tinh anh thứ k của ải a = nhóm[(a + k + 1) % n].
 const AI_TUONG = [
   ['doan_dien_khanh', 'nam_hai_ngac_than', 'diep_nhi_nuong', 'van_trung_hac', 'doan_du'],
@@ -167,7 +162,7 @@ function aiList(a) {
   const rows = [];
   for (let t = A.tang - 1; t >= 0; t--) {
     const open = aiTangOpen(c, aiSel, t), st = aiStar(c, aiSel, t), boss = aiIsBoss(c, aiSel, t), tinh = aiIsElite(c, aiSel, t);
-    const face = aiTuong(c, aiSel, t) || aiMobs()[(aiSel * 3 + t) % 15], FH = HIEP_KHACH[face];
+    const face = aiTuong(c, aiSel, t) || aiMobs()[(aiSel * 3 + t) % aiMobs().length], FH = HIEP_KHACH[face];
     const left = aiLeft(c, aiSel, t);
     // bấm cả ô tầng là vào đánh; nút tròn bên phải: chưa qua = Chiến, đã qua = Quét (người dùng chốt 2026-11-13, theo ảnh mẫu)
     const btn = !open ? '<span class="al-lock">Chưa mở</span>'

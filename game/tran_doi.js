@@ -39,11 +39,11 @@ function tdSlot(u) {
   const n = Math.min(5, tdS[u.side].length), [x, y] = (TD_FORM[n] || TD_FORM[5])[u.i] || [50, 80];
   return [u.side === 'ta' ? x : 100 - x, y];
 }
-// Đợt địch thử (Thanh Vân); boss ở đợt 3
+// Đợt địch thử: quái = 13 tướng Lục, boss ở đợt 3
 const TD_TEST = {
   name: 'Trận thử',
-  mobs: ['son_tac_do', 'thao_khau', 'luu_manh', 'con_do', 'de_tu_that_sat', 'sat_thu'],
-  boss: 'that_sat_huong_chu',
+  mobs: HK_XANH.map(x => x[0]),
+  boss: 'doan_dien_khanh',
   mob: { hp: 2400, atk: 1100, def: 900, hoi: 250, spd: 45, mi: 100 },
   waveN: [3, 4, 4],
 };
