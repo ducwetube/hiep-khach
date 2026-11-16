@@ -354,8 +354,11 @@ const TD_LUC = {
 // Bách Diện Thuật (A Châu): khói tím hóa thân quanh người; mặt nạ ma ảnh trên mục tiêu, vỡ thành vệt chém chữ thập (khung 11 = trúng)
 TD_LUC.khoi = { src: 'game/img/blender/fx_bl_khoi_tim.webp', n: 18, ms: 900, size: 34 };
 TD_LUC.mat = { src: 'game/img/blender/fx_bl_mat_na.webp', n: 20, ms: 1000, size: 28, hit: 11 };
+// Thủy Long Thổ Tức (Tử Sam Long Vương): rồng nước cuộn xuống mục tiêu, nổ bọt nước (khung 12 = trúng)
+TD_LUC.thuylong = { src: 'game/img/blender/fx_bl_thuy_long.webp', n: 22, ms: 1100, size: 36, hit: 12 };
 const TD_LUC_SRC = {
   mask: () => [TD_LUC.khoi.src, TD_LUC.mat.src],
+  waterdragon: () => [TD_LUC.thuylong.src],
   dogstaff: () => [TD_SLASH.ngoc.src, TD_LOI.set.src, TD_CHOANG.src],
   yinyang: () => [TD_LUC.amduong.src],
   lotus: () => [TD_LUC.sen.src, TD_SLASH.nuoc.src],
@@ -421,6 +424,9 @@ const TD_SHOT = {
   // phi đao thép có vệt khí tím (Hắc Tam), tấm 2:1, mũi ở 85% ngang
   phi_dao: { src: 'game/img/blender/fx_bl_phi_dao.webp', n: 8, ms: 400, size: 22, ar: 0.5, ax: 0.85, ay: 0.5, fly: 220,
     hit: { src: 'game/img/blender/fx_bl_no_tim_nho.webp', n: 16, ms: 480, size: 14 } },
+  // quả cầu nước xanh (Tử Sam Long Vương), tấm 2:1, đầu ở 80% ngang
+  cau_nuoc: { src: 'game/img/blender/fx_bl_cau_nuoc.webp', n: 8, ms: 400, size: 22, ar: 0.5, ax: 0.8, ay: 0.5, fly: 300,
+    hit: { src: 'game/img/blender/fx_bl_no_xanh_nho.webp', n: 16, ms: 480, size: 15 } },
   // nắm phấn tím lấp lánh (A Châu), tấm 2:1, đầu ở 80% ngang
   phan: { src: 'game/img/blender/fx_bl_phan_tim.webp', n: 8, ms: 400, size: 22, ar: 0.5, ax: 0.8, ay: 0.5, fly: 300,
     hit: { src: 'game/img/blender/fx_bl_no_tim_nho.webp', n: 16, ms: 480, size: 15 } },
@@ -751,8 +757,9 @@ function tdTarget(u) {
     return t;
   }
   const live = tdAlive('ta'); if (!live.length) return null;
-  const top = Math.max(...live.map(x => x.mi));
-  return tdRand(live.filter(x => x.mi === top));
+  const mi = x => x.mi + (x.buf.mi ? x.buf.mi.v : 0);   // Mị bị giảm (Thủy Long Thổ Tức) thì ít bị nhắm hơn
+  const top = Math.max(...live.map(mi));
+  return tdRand(live.filter(x => mi(x) === top));
 }
 function tdHurt(a, t, dmg, crit, noOrb) {
   t.hp = Math.max(0, t.hp - dmg);
@@ -833,6 +840,7 @@ async function tdUltDo(u) {
       tdLunge(u, t); await tdWait(200);
       const r = tdDmg(u, t, U.pow); tdHurt(u, t, r.d, r.crit);
       if (U.stun && !t.dead && Math.random() < U.stun) { t.stun = 1; tdPop(t, 'Choáng', 'st'); }
+      if (U.miDown && !t.dead) { t.buf.mi = { v: -U.miDown, t: U.turns || 2 }; tdPop(t, 'Mị −' + U.miDown, 'st'); }   // giảm Mị mục tiêu (Thủy Long Thổ Tức)
     }
     if (U.selfDef) { u.buf.def = { v: U.selfDef, t: U.turns }; tdPop(u, 'Thủ +' + Math.round(U.selfDef * 100) + '%', 'st'); }
   } else if (U.kind === 'guard') {
@@ -1160,6 +1168,23 @@ async function tdUltDo(u) {
       }
       await tdWait(350);
     }
+  } else if (U.kind === 'waterdragon') {
+    // Thủy Long Thổ Tức (Tử Sam Long Vương): giơ cầu nước vận khí, vung xuống: rồng nước cuộn từ trên cao xuống mục tiêu, nổ bọt nước;
+    // sát thương 1 mục tiêu + giảm Mị mục tiêu vài hiệp
+    const t = tdTarget(u);
+    if (t) {
+      const A = u.anim && u.anim.thuy, k = tdS && tdS.fast ? 0.5 : 1, D = TD_LUC.thuylong;
+      if (A) { tdAnimPlay(u, 'thuy'); await tdWait(A.fx / A.n * A.ms); } else await tdWait(200);
+      const p = tdPos(t), cq = (document.getElementById('td-fx') || document.body).clientWidth / 100;
+      tdFxAt(D, { x: p.x, y: p.y - 6 * cq }, k);
+      await tdWait(D.hit / D.n * D.ms);
+      if (!t.dead) {
+        const r = tdDmg(u, t, U.pow); tdHurt(u, t, r.d, r.crit);
+        if (U.miDown && !t.dead) { t.buf.mi = { v: -U.miDown, t: U.turns || 2 }; setTimeout(() => tdPop(t, 'Mị −' + U.miDown, 'st'), 250); }
+      }
+      tdSync();
+      await tdWait(350);
+    }
   } else if (U.kind === 'mask') {
     // Bách Diện Thuật (A Châu): đưa mặt nạ lên mặt, khói tím bùng (hóa thân, bóng mờ lướt), vung mặt nạ ra: mặt nạ ma ảnh hiện trên từng kẻ địch,
     // lao sát vào rồi vỡ thành vệt chém chữ thập (sát thương toàn địch); +Nộ 1 đồng đội xử lý chung ở cuối (allyNo)
@@ -1281,6 +1306,8 @@ async function tdUltDo(u) {
   } else if (U.kind === 'buff') {
     tdAlive(u.side).forEach(m => { m.buf.atk = { v: U.atk, t: U.turns }; tdPop(m, 'Công +' + Math.round(U.atk * 100) + '%', 'st'); });
   }
+  // giảm Mị mọi kẻ địch còn sống vài hiệp (Thủy Long Thổ Tức của Tử Sam Long Vương; số Mị trừ thẳng, không phải %)
+  if (U.miDown && U.kind !== 'one' && U.kind !== 'waterdragon') tdAlive(tdFoe(u)).forEach(t => { t.buf.mi = { v: -U.miDown, t: U.turns || 2 }; tdPop(t, 'Mị −' + U.miDown, 'st'); });
   // tăng Nộ cho 1 đồng đội ngẫu nhiên (Bách Diện Thuật của A Châu); không chọn chính mình, tướng Kỹ Năng (Nộ luôn đầy) cũng không cần
   if (U.allyNo) {
     const pool = tdAlive(u.side).filter(m => m !== u && m.role !== 'ky_nang' && m.no < TD.noMax);

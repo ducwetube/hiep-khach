@@ -434,6 +434,33 @@ const HIEP_KHACH = {
       { name: 'Thử Tinh', desc: 'Sử dụng Tốc +15%', with: [{ ten: 'Thử Tinh', loai: 'linh' }], eff: { spd: 0.15 } },
     ] },
 
+  // Hiệp khách thứ mười chín: Tử Sam Long Vương (2026-11-16, ảnh mẫu cấp 1 · 1 sao): Hỗ Trợ hệ Thủy, Tư chất 13; chỉ số + Căn Cốt đúng ảnh.
+  // Nộ A Thủy Long Thổ Tức cấp 1 (ảnh: "Công 85% − 200 Mị", game mẫu đánh 1 mục tiêu): người dùng chốt (2026-11-16, đổi lại): đánh 1 mục tiêu
+  // 85% Công, giảm 200 Mị mục tiêu 2 hiệp (miDown trong nhánh 'one' của tdUltDo). Duyên theo ảnh 10 sao. Ảnh Gemini người dùng 2026-11-16.
+  tu_sam: { name: 'Tử Sam Long Vương', img: 'tm_nu_tim', art: 'game/img/hk/tu_sam.jpg', face: [0.5, 0.25], sprite: 'game/img/hk/tu_sam_sd.png', hand: [0.88, 0.14], role: 'ho_tro',
+    // hình động Blender (tools/blender/tu_sam.py, lớp `cau` = bàn tay + cầu nước): danh = đẩy cầu, cầu nước bay (khung fire);
+    // thuy = giơ cầu vận khí rồi vung xuống (khung fx: rồng nước cuộn xuống mục tiêu, trúng ở khung hit của hiệu ứng)
+    anim: { iw: 469, ih: 700, box: [-90, -130, 600, 760],
+      idle: { src: 'game/img/blender/tsl_idle.webp', n: 24, ms: 1300 },
+      danh: { src: 'game/img/blender/tsl_danh.webp', n: 16, ms: 800, fire: 7, shot: 'cau_nuoc' },
+      thuy: { src: 'game/img/blender/tsl_thuy.webp', n: 22, ms: 1300, fx: 10 } }, q: 4, lv: 1, star: 1, hanh: 'thuy', tuChat: 13,
+    st: { hp: 930, atk: 424, def: 206, hoi: 160, spd: 60, mi: 200 },
+    grow: { hp: 46.5, atk: 21.2, def: 10.3, hoi: 8 },
+    ex: { crit: 0, critDmg: 150, acc: 100, dodge: 7.5, ben: 5 },
+    skill: { grade: 'A', name: 'Thủy Long Thổ Tức', desc: 'Tấn công mục tiêu 85% Công, giảm 200 Mị mục tiêu trong 2 hiệp' },
+    ult: { kind: 'waterdragon', pow: 0.85, miDown: 200, turns: 2 },
+    duyen: [
+      { name: 'Minh Giáo', desc: 'Cùng ra trận Công +130%', with: [{ ten: 'Dương Tiêu' }], eff: { atk: 1.3 } },
+      { name: 'Diễm Lệ', desc: 'Cùng ra trận Công +130%', with: [{ ten: 'Lý Thu Thủy' }], eff: { atk: 1.3 } },
+      { name: 'Pháp Vương', desc: 'Cùng ra trận Công +300% Thủ +300%', with: [{ ten: 'Thanh Dực Bức Vương' }, { ten: 'Bạch Mi Ưng Vương' }, { ten: 'Kim Mao Sư Vương' }], eff: { atk: 3, def: 3 } },
+      { name: 'Vương Bài', desc: 'Sử dụng Công +120%', with: [{ ten: 'Vương Bài', loai: 'bao' }], eff: { atk: 1.2 } },
+      { name: 'Kinh Vô Tự', desc: 'Sử dụng Tốc +10%', with: [{ ten: 'Kinh Vô Tự', loai: 'bao' }], eff: { spd: 0.1 } },
+      { name: 'Bách Hợp', desc: 'Sử dụng HP +150%', with: [{ ten: 'Bách Hợp', loai: 'bao' }], eff: { hp: 1.5 } },
+      { name: 'Phá Thần Cung', desc: 'Sử dụng Công +100%', with: [{ ten: 'Phá Thần Cung', loai: 'bao' }], eff: { atk: 1 } },
+      { name: 'Huyền Thiên Giới', desc: 'Sử dụng Bạo +30%', with: [{ ten: 'Huyền Thiên Giới', loai: 'bao' }], eff: { crit: 30 } },
+      { name: 'Tiểu Thử', desc: 'Sử dụng Thủ +100%', with: [{ ten: 'Tiểu Thử', loai: 'linh' }], eff: { def: 1 } },
+    ] },
+
   // Hiệp khách thứ mười tám: Hoàng Dung (2026-11-16, phiên Claude khác làm ảnh + hình động, phiên này chèn): Công Kích hệ Lôi, Tư chất 13.
   // Nộ A Bát Cẩu Triều Thiên cấp 1: mục tiêu 180% Công, choáng ngẫu nhiên 1 địch 2 hiệp (kind 'dogstaff'; choáng nhiều hiệp: stun = số lượt còn mất).
   hoang_dung: { name: 'Hoàng Dung', img: 'tm_nu_lam', art: 'game/img/hk/hoang_dung.jpg', face: [0.5, 0.32], sprite: 'game/img/hk/hoang_dung_sd.png', hand: [0.73, 0.35], role: 'cong_kich',
@@ -579,7 +606,7 @@ const HK_DOI_MA = { xanh_kim_cuong: 'luc_gioi_vong', xanh_kim_phat: 'luc_gioi_si
   xanh_loi_chuy: 'luc_gioi_san', xanh_hong_bao: 'luc_de_tu_7_tui', xanh_xich_dien: 'luc_de_tu_8_tui', xanh_xich_huyet: 'luc_de_tu_9_tui', xanh_bach_lien: 'luc_tinh_tu',
   xanh_bach_sa: 'luc_tinh_tu', xanh_quang_minh: 'luc_gioi_si' };
 // Nhân vật mới được tặng sẵn (người dùng chốt 2026-11-12: Đoàn Diên Khánh + Nam Hải Ngạc Thần)
-const HK_START = ['doan_dien_khanh', 'nam_hai_ngac_than', 'diep_nhi_nuong', 'doan_du', 'van_trung_hac', 'nham_doanh_doanh', 'nham_nga_hanh', 'lenh_ho_xung', 'dong_phuong', 'huong_van_thien', 'to_tinh_ha', 'mac_dai', 'ta_lanh_thien', 'nhac_bat_quan', 'thien_mon', 'dinh_nhan', 'a_chau', 'hoang_dung'];
+const HK_START = ['doan_dien_khanh', 'nam_hai_ngac_than', 'diep_nhi_nuong', 'doan_du', 'van_trung_hac', 'nham_doanh_doanh', 'nham_nga_hanh', 'lenh_ho_xung', 'dong_phuong', 'huong_van_thien', 'to_tinh_ha', 'mac_dai', 'ta_lanh_thien', 'nhac_bat_quan', 'thien_mon', 'dinh_nhan', 'a_chau', 'hoang_dung', 'tu_sam'];
 // Hiệp khách đã có (P.hk[mã] = {lv, star}) + đội ra trận 5 ô (P.doi, null = ô trống). Bản lưu chưa có thì tặng Đoàn Diên Khánh.
 function hkEnsure() {
   if (!P) return;
@@ -683,6 +710,12 @@ function hkEnsure() {
     P.hkTang16 = true;
     if (!P.hk.hoang_dung) P.hk.hoang_dung = { lv: 1, star: 1 };
     const k = P.doi.indexOf(null); if (k >= 0 && !P.doi.includes('hoang_dung')) P.doi[k] = 'hoang_dung';
+  }
+  // tặng Tử Sam Long Vương (2026-11-16), xếp vào ô trống nếu có
+  if (!P.hkTang17) {
+    P.hkTang17 = true;
+    if (!P.hk.tu_sam) P.hk.tu_sam = { lv: 1, star: 1 };
+    const k = P.doi.indexOf(null); if (k >= 0 && !P.doi.includes('tu_sam')) P.doi[k] = 'tu_sam';
   }
   // tặng 15 hiệp khách phẩm xanh lá (2026-11-13), không xếp vào đội
   if (!P.hkTang11) {
