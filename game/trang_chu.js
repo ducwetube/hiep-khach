@@ -449,12 +449,63 @@ const LUC_HK = {
       idle: { src: LUC_BL + 'gs_idle.webp', n: 24, ms: 1300 },
       chem: { src: LUC_BL + 'gs_dam.webp', n: 16, ms: 750, hit: 8, slash: 'loi' },
       quang: { src: LUC_BL + 'gs_quang.webp', n: 22, ms: 1500, fx: 8 } } },
+  // 3 nữ đạo sĩ hệ Thủy (2026-11-16): rig tools/blender/nghi_{thanh,hoa,quang}.py (binh khí dùng trọng số theo đoạn `segw`), hiệu ứng fx_nghi.py
+  nghi_thanh: { art: 'game/img/hk/nghi_thanh_sd.png', sprite: 'game/img/hk/nghi_thanh_sd.png', face: [0.71, 0.26], hand: [0.95, 0.44],
+    skill: { grade: 'C', name: 'Nhị Chuyển Âm Dương', desc: 'Tấn công một mục tiêu 154% Công' }, ult: { kind: 'yinyang', pow: 1.54 },
+    anim: { iw: 555, ih: 700, box: [-110, -120, 680, 760],
+      idle: { src: LUC_BL + 'nth_idle.webp', n: 24, ms: 1300 },
+      chem: { src: LUC_BL + 'nth_chem.webp', n: 16, ms: 750, hit: 8, slash: 'nuoc' },
+      chuyen: { src: LUC_BL + 'nth_chuyen.webp', n: 22, ms: 1300, fx: 6 } } },
+  nghi_hoa: { art: 'game/img/hk/nghi_hoa_sd.png', sprite: 'game/img/hk/nghi_hoa_sd.png', face: [0.70, 0.27], hand: [0.95, 0.44],
+    skill: { grade: 'C', name: 'Thục Nữ Kiếm', desc: 'Tấn công một mục tiêu 154% Công' }, ult: { kind: 'lotus', pow: 1.54 },
+    anim: { iw: 563, ih: 700, box: [-120, -120, 670, 760],
+      idle: { src: LUC_BL + 'nho_idle.webp', n: 24, ms: 1300 },
+      chem: { src: LUC_BL + 'nho_chem.webp', n: 16, ms: 750, hit: 8, slash: 'nuoc' },
+      mua: { src: LUC_BL + 'nho_mua.webp', n: 22, ms: 1300, fx: 6 } } },
+  nghi_quang: { art: 'game/img/hk/nghi_quang_sd.png', sprite: 'game/img/hk/nghi_quang_sd.png', face: [0.64, 0.27], hand: [0.89, 0.43],
+    skill: { grade: 'C', name: 'Liệt Hỏa Chú', desc: 'Tấn công toàn bộ địch 50% Công' }, ult: { kind: 'firecurse', pow: 0.5, shot: 'bua' },
+    anim: { iw: 566, ih: 700, box: [-120, -120, 680, 760],
+      idle: { src: LUC_BL + 'nqg_idle.webp', n: 24, ms: 1300 },
+      danh: { src: LUC_BL + 'nqg_danh.webp', n: 16, ms: 800, fire: 7, shot: 'bua' },
+      chu: { src: LUC_BL + 'nqg_chu.webp', n: 26, ms: 1500, fire: 15 } } },
+  // 5 tướng do phiên Claude khác làm (2026-11-16): rig tools/blender/{gioi_san,de_tu_7_tui,de_tu_8_tui,de_tu_9_tui,tinh_tu}.py, hiệu ứng fx_luc_b.py
+  gioi_san: { art: 'game/img/hk/gioi_san_sd.png', sprite: 'game/img/hk/gioi_san_sd.png', face: [0.50, 0.21], hand: [0.85, 0.34],
+    skill: { grade: 'C', name: 'Thất Tinh Quyết', desc: 'Tấn công một mục tiêu 154% Công' }, ult: { kind: 'quake', pow: 1.54 },
+    anim: { iw: 507, ih: 700, box: [-90, -150, 620, 760],
+      idle: { src: LUC_BL + 'gsn_idle.webp', n: 24, ms: 1300 },
+      chem: { src: LUC_BL + 'gsn_dap.webp', n: 16, ms: 750, hit: 8, slash: 'loi' },
+      chan: { src: LUC_BL + 'gsn_chan.webp', n: 23, ms: 1300, hit: 13 } } },
+  de_tu_7_tui: { art: 'game/img/hk/de_tu_7_tui_sd.png', sprite: 'game/img/hk/de_tu_7_tui_sd.png', face: [0.45, 0.25], hand: [0.92, 0.39],
+    skill: { grade: 'C', name: 'La Hán Quyền', desc: 'Tấn công toàn bộ địch 50% Công' }, ult: { kind: 'fists', pow: 0.5 },
+    anim: { iw: 478, ih: 700, box: [-90, -130, 600, 760],
+      idle: { src: LUC_BL + 'dt7_idle.webp', n: 24, ms: 1300 },
+      danh: { src: LUC_BL + 'dt7_danh.webp', n: 16, ms: 800, fire: 7, shot: 'quyen_lua' },
+      loan: { src: LUC_BL + 'dt7_loan.webp', n: 27, ms: 1350, fires: [5, 9, 13, 17] } } },
+  de_tu_8_tui: { art: 'game/img/hk/de_tu_8_tui_sd.png', sprite: 'game/img/hk/de_tu_8_tui_sd.png', face: [0.42, 0.24], hand: [0.84, 0.46],
+    skill: { grade: 'C', name: 'Vi Đà Trượng Pháp', desc: 'Tấn công một mục tiêu 154% Công' }, ult: { kind: 'pillar', pow: 1.54 },
+    anim: { iw: 473, ih: 700, box: [-200, -160, 720, 780],
+      idle: { src: LUC_BL + 'dt8_idle.webp', n: 24, ms: 1300 },
+      chem: { src: LUC_BL + 'dt8_chem.webp', n: 16, ms: 750, hit: 8, slash: 'lua' },
+      tru: { src: LUC_BL + 'dt8_tru.webp', n: 23, ms: 1300, fire: 12 } } },
+  de_tu_9_tui: { art: 'game/img/hk/de_tu_9_tui_sd.png', sprite: 'game/img/hk/de_tu_9_tui_sd.png', face: [0.46, 0.27], hand: [0.78, 0.59],
+    skill: { grade: 'C', name: 'Phong Ma Côn Pháp', desc: 'Tấn công một mục tiêu 154% Công' }, ult: { kind: 'whirl', pow: 1.54 },
+    anim: { iw: 540, ih: 700, box: [-90, -130, 660, 760],
+      idle: { src: LUC_BL + 'dt9_idle.webp', n: 24, ms: 1300 },
+      chem: { src: LUC_BL + 'dt9_chem.webp', n: 16, ms: 750, hit: 8, slash: 'lua' },
+      xoay: { src: LUC_BL + 'dt9_xoay.webp', n: 29, ms: 1450, hits: [6, 11, 16], boom: 20 } } },
+  tinh_tu: { art: 'game/img/hk/tinh_tu_sd.png', sprite: 'game/img/hk/tinh_tu_sd.png', face: [0.52, 0.27], hand: [0.98, 0.47],
+    skill: { grade: 'C', name: 'Dương Quan Tam Điệp', desc: 'Tấn công toàn bộ địch 50% Công' }, ult: { kind: 'tri', pow: 0.5 },
+    anim: { iw: 480, ih: 700, box: [-90, -110, 590, 760],
+      idle: { src: LUC_BL + 'tts_idle.webp', n: 24, ms: 1300 },
+      danh: { src: LUC_BL + 'tts_danh.webp', n: 16, ms: 800, fire: 7, shot: 'song_vang' },
+      dan: { src: LUC_BL + 'tts_dan.webp', n: 29, ms: 1450, fx: 1, waves: [4, 11, 18] } } },
 };
+// 13 tướng Lục (người dùng chốt 2026-11-16: bỏ hết 15 tướng xanh cũ). Cột: mã, tên, hình dự phòng, hệ, 1 = nộ toàn địch, dữ liệu riêng
 const HK_XANH = [
-  ['xanh_thanh_hu', 'Thanh Hư Đạo Đồng', 'tm_dao_thai_cuc', 'thuy'], ['xanh_bang_tam', 'Băng Tâm Nữ', 'tm_nu_dao', 'thuy'], ['xanh_thuy_anh', 'Thủy Ảnh Đao Khách', 'tm_song_dao', 'thuy', 1],
-  ['xanh_hong_bao', 'Hồng Bào Kiếm Khách', 'tm_hong_bao', 'hoa'], ['xanh_xich_dien', 'Xích Diễm Nữ', 'tm_nu_mat_na', 'hoa'], ['xanh_xich_huyet', 'Xích Huyết Đao', 'tm_xich_mau', 'hoa', 1],
-  ['luc_gioi_vong', 'Giới Vọng', 'tm_kim_tang', 'loi', 1, LUC_HK.gioi_vong], ['luc_gioi_si', 'Giới Si', 'tm_thieu_hiep_vang', 'loi', 0, LUC_HK.gioi_si], ['xanh_loi_chuy', 'Lôi Chùy Lão', 'tm_lao_chuy', 'loi', 1],
-  ['xanh_bach_sa', 'Bạch Sa Tiên Tử', 'tm_nu_sa', 'quang'], ['xanh_bach_lien', 'Bạch Liên Ca Cơ', 'tm_nu_lua', 'quang'], ['xanh_quang_minh', 'Quang Minh Lão Tăng', 'tm_lao_tang_rau', 'quang', 1],
+  ['luc_nghi_thanh', 'Nghi Thanh', 'tm_dao_thai_cuc', 'thuy', 0, LUC_HK.nghi_thanh], ['luc_nghi_hoa', 'Nghi Hòa', 'tm_nu_dao', 'thuy', 0, LUC_HK.nghi_hoa], ['luc_nghi_quang', 'Nghi Quang', 'tm_song_dao', 'thuy', 1, LUC_HK.nghi_quang],
+  ['luc_de_tu_7_tui', 'Đệ Tử 7 Túi', 'tm_hong_bao', 'hoa', 1, LUC_HK.de_tu_7_tui], ['luc_de_tu_8_tui', 'Đệ Tử 8 Túi', 'tm_nu_mat_na', 'hoa', 0, LUC_HK.de_tu_8_tui], ['luc_de_tu_9_tui', 'Đệ Tử 9 Túi', 'tm_xich_mau', 'hoa', 0, LUC_HK.de_tu_9_tui],
+  ['luc_gioi_vong', 'Giới Vọng', 'tm_kim_tang', 'loi', 1, LUC_HK.gioi_vong], ['luc_gioi_si', 'Giới Si', 'tm_thieu_hiep_vang', 'loi', 0, LUC_HK.gioi_si], ['luc_gioi_san', 'Giới Sân', 'tm_lao_chuy', 'loi', 0, LUC_HK.gioi_san],
+  ['luc_tinh_tu', 'Tịnh Tư', 'tm_nu_lua', 'quang', 1, LUC_HK.tinh_tu],
   ['luc_hac_long', 'Hắc Long', 'tm_kiem_tim', 'am', 1, LUC_HK.hac_long], ['luc_hac_tam', 'Hắc Tam', 'tm_hac_bao', 'am', 0, LUC_HK.hac_tam], ['luc_tu_la', 'Tu La', 'tm_nu_nhen', 'am', 0, LUC_HK.tu_la],
 ];
 HK_XANH.forEach(([id, name, img, hanh, all, extra]) => {
@@ -468,7 +519,11 @@ HK_XANH.forEach(([id, name, img, hanh, all, extra]) => {
     duyen: [] }, extra || {});
 });
 // tướng Lục cũ đã được thay bằng tướng mới theo ảnh game mẫu (2026-11-16): bản lưu đổi sang mã mới, giữ cấp / sao / đồ
-const HK_DOI_MA = { xanh_kim_cuong: 'luc_gioi_vong', xanh_kim_phat: 'luc_gioi_si', xanh_tu_kiem: 'luc_hac_long', xanh_hac_bao: 'luc_hac_tam', xanh_tu_chu: 'luc_tu_la' };
+// (2 mã thừa xanh_bach_sa, xanh_quang_minh nhập vào tướng gần hệ; tướng mới đã có thì mã cũ chỉ bị xóa)
+const HK_DOI_MA = { xanh_kim_cuong: 'luc_gioi_vong', xanh_kim_phat: 'luc_gioi_si', xanh_tu_kiem: 'luc_hac_long', xanh_hac_bao: 'luc_hac_tam', xanh_tu_chu: 'luc_tu_la',
+  xanh_thanh_hu: 'luc_nghi_thanh', xanh_bang_tam: 'luc_nghi_hoa', xanh_thuy_anh: 'luc_nghi_quang',
+  xanh_loi_chuy: 'luc_gioi_san', xanh_hong_bao: 'luc_de_tu_7_tui', xanh_xich_dien: 'luc_de_tu_8_tui', xanh_xich_huyet: 'luc_de_tu_9_tui', xanh_bach_lien: 'luc_tinh_tu',
+  xanh_bach_sa: 'luc_tinh_tu', xanh_quang_minh: 'luc_gioi_si' };
 // Nhân vật mới được tặng sẵn (người dùng chốt 2026-11-12: Đoàn Diên Khánh + Nam Hải Ngạc Thần)
 const HK_START = ['doan_dien_khanh', 'nam_hai_ngac_than', 'diep_nhi_nuong', 'doan_du', 'van_trung_hac', 'nham_doanh_doanh', 'nham_nga_hanh', 'lenh_ho_xung', 'dong_phuong', 'huong_van_thien', 'to_tinh_ha', 'mac_dai', 'ta_lanh_thien', 'nhac_bat_quan', 'thien_mon', 'dinh_nhan'];
 // Hiệp khách đã có (P.hk[mã] = {lv, star}) + đội ra trận 5 ô (P.doi, null = ô trống). Bản lưu chưa có thì tặng Đoàn Diên Khánh.

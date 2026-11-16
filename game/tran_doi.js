@@ -323,6 +323,15 @@ const TD_SLASH = {
   tim: { src: 'game/img/blender/fx_bl_chem_tim.webp', n: 12, ms: 480, size: 30 },     // nhát kiếm tím (Hắc Long)
   do: { src: 'game/img/blender/fx_bl_chem_do.webp', n: 12, ms: 420, size: 28 },      // nhát đao đỏ máu (Tu La)
   cheo_do: { src: 'game/img/blender/fx_bl_cheo_do.webp', n: 16, ms: 640, size: 40 }, // chém chéo chữ thập đỏ (Phệ Hồn Đao)
+  lua: { src: 'game/img/blender/fx_bl_chem_lua.webp', n: 12, ms: 480, size: 30 },    // vệt gậy / côn lửa (Đệ Tử 8, 9 Túi)
+};
+// hiệu ứng nộ 5 tướng Lục do phiên Claude khác làm (tools/blender/fx_luc_b.py)
+const TD_LUC2 = {
+  chan: { src: 'game/img/blender/fx_bl_chan_loi.webp', n: 20, ms: 1000, ar: 1, foot: 0.8, size: 32, hit: 3 },     // chấn địa lôi (Giới Sân)
+  cot: { src: 'game/img/blender/fx_bl_cot_lua.webp', n: 20, ms: 1000, ar: 1.5, foot: 0.88, size: 22, hit: 5 },    // cột lửa (Đệ Tử 8 Túi)
+  xoay: { src: 'game/img/blender/fx_bl_con_xoay.webp', n: 24, ms: 1200, size: 34 },                               // côn lửa xoay quanh mục tiêu (Đệ Tử 9 Túi)
+  tam: { src: 'game/img/blender/fx_bl_tam_diep.webp', n: 24, ms: 1200, ar: 0.75, foot: 0.72, size: 30 },          // ba đợt sóng âm trên đất (Tịnh Tư)
+  no: { src: 'game/img/blender/fx_bl_no_cam.webp', n: 16, ms: 520, size: 22 },                                    // nổ lửa cam (Đệ Tử 7 Túi)
 };
 // hiệu ứng nộ các tướng Lục (tools/blender/fx_hac.py, fx_gioi.py)
 const TD_LUC = {
@@ -332,8 +341,22 @@ const TD_LUC = {
   tinh: { src: 'game/img/blender/fx_bl_that_tinh.webp', n: 24, ms: 1300, ar: 200 / 320, flash: 18 },
   // Diệu Quang Kiếm Pháp (Giới Si): tám luồng kiếm quang hội tụ vào mục tiêu, nổ chữ thập (khung 11 = trúng)
   quang: { src: 'game/img/blender/fx_bl_dieu_quang.webp', n: 20, ms: 1000, size: 34, hit: 11 },
+  // Nhị Chuyển Âm Dương (Nghi Thanh): đồ hình âm dương xoay thu vào tâm mục tiêu rồi nổ (khung 12 = trúng)
+  amduong: { src: 'game/img/blender/fx_bl_am_duong.webp', n: 20, ms: 1000, size: 30, hit: 12 },
+  // Thục Nữ Kiếm (Nghi Hòa): đóa sen tám lưỡi kiếm nở trên mục tiêu (khung 10 = trúng)
+  sen: { src: 'game/img/blender/fx_bl_sen_kiem.webp', n: 20, ms: 1000, size: 32, hit: 10 },
+  // Liệt Hỏa Chú (Nghi Quang): cột lửa bùng dưới chân (tấm 200x250, chân ở 85%; khung 5 = lửa bốc)
+  hoa: { src: 'game/img/blender/fx_bl_hoa_tru.webp', n: 20, ms: 1000, ar: 250 / 200, foot: 0.85, size: 22, hit: 5 },
 };
 const TD_LUC_SRC = {
+  yinyang: () => [TD_LUC.amduong.src],
+  lotus: () => [TD_LUC.sen.src, TD_SLASH.nuoc.src],
+  firecurse: () => [TD_SHOT.bua.src, TD_SHOT.bua.hit.src, TD_LUC.hoa.src],
+  quake: () => [TD_LUC2.chan.src],
+  fists: () => [TD_SHOT.quyen_lua.src, TD_SHOT.quyen_lua.hit.src, TD_LUC2.no.src],
+  pillar: () => [TD_LUC2.cot.src],
+  whirl: () => [TD_LUC2.xoay.src],
+  tri: () => [TD_LUC2.tam.src],
   abyss: () => [TD_LUC.vuc.src],
   knives: () => [TD_SHOT.phi_dao.src, TD_SHOT.phi_dao.hit.src, TD_SLASH.chuong.src],
   twin: () => [TD_SLASH.do.src, TD_SLASH.cheo_do.src],
@@ -390,6 +413,15 @@ const TD_SHOT = {
   // phi đao thép có vệt khí tím (Hắc Tam), tấm 2:1, mũi ở 85% ngang
   phi_dao: { src: 'game/img/blender/fx_bl_phi_dao.webp', n: 8, ms: 400, size: 22, ar: 0.5, ax: 0.85, ay: 0.5, fly: 220,
     hit: { src: 'game/img/blender/fx_bl_no_tim_nho.webp', n: 16, ms: 480, size: 14 } },
+  // lá bùa vàng cháy lửa (Nghi Quang), tấm 2:1, đầu bùa ở 85% ngang
+  bua: { src: 'game/img/blender/fx_bl_bua_lua.webp', n: 8, ms: 400, size: 22, ar: 0.5, ax: 0.85, ay: 0.5, fly: 300,
+    hit: { src: 'game/img/blender/fx_bl_no_cam.webp', n: 16, ms: 480, size: 15 } },
+  // quyền lửa (Đệ Tử 7 Túi), tấm 2:1, đầu nắm đấm ở 80% ngang
+  quyen_lua: { src: 'game/img/blender/fx_bl_quyen_lua.webp', n: 8, ms: 400, size: 22, ar: 0.5, ax: 0.8, ay: 0.5, fly: 280,
+    hit: { src: 'game/img/blender/fx_bl_no_cam.webp', n: 16, ms: 480, size: 16 } },
+  // sóng âm vàng (Tịnh Tư)
+  song_vang: { src: 'game/img/blender/fx_bl_song_vang.webp', n: 8, ms: 400, size: 17, ax: 0.2, ay: 0.5, fly: 320,
+    hit: { src: 'game/img/blender/fx_bl_no_vang.webp', n: 16, ms: 480, size: 15 } },
 };
 // điểm bắn: tay (u.hand); có hình động và `tip` thì cộng đầu ngón lúc ra chiêu
 function tdShotFrom(u, tip) {
@@ -1082,6 +1114,106 @@ async function tdUltDo(u) {
       tdSync();
       await tdWait(350);
     }
+  } else if (U.kind === 'yinyang' || U.kind === 'lotus') {
+    // Nhị Chuyển Âm Dương (Nghi Thanh): phất trần vẽ hai vòng, đồ hình âm dương xoay thu vào mục tiêu rồi nổ
+    // Thục Nữ Kiếm (Nghi Hòa): múa kiếm, lướt tới đâm, đóa sen kiếm nở trên mục tiêu (kèm một vệt chém nước)
+    const t = tdTarget(u);
+    if (t) {
+      const lotus = U.kind === 'lotus', key = lotus ? 'mua' : 'chuyen', A = u.anim && u.anim[key], S = lotus ? TD_LUC.sen : TD_LUC.amduong, k = tdS && tdS.fast ? 0.5 : 1;
+      const lead = A ? A.fx / A.n * A.ms : 150;
+      if (lotus) tdLunge(u, t, lead + S.hit / S.n * S.ms + 200);
+      if (A) tdAnimPlay(u, key);
+      await tdWait(lead);
+      const p = tdPos(t), cq = (document.getElementById('td-fx') || document.body).clientWidth / 100;
+      tdFxAt(S, { x: p.x, y: p.y - 4 * cq }, k);
+      if (lotus) setTimeout(() => { if (tdS && !t.dead) tdSlash('nuoc', u, t); }, 250 * k);
+      await tdWait(S.hit / S.n * S.ms);
+      if (!t.dead) { const r = tdDmg(u, t, U.pow); tdHurt(u, t, r.d, r.crit); }
+      tdSync();
+      await tdWait(350);
+    }
+  } else if (U.kind === 'firecurse') {
+    // Liệt Hỏa Chú (Nghi Quang): vung bút vẽ bùa giữa không trung, phóng bùa lửa tới từng kẻ địch, chạm thì cột lửa bùng lên (sát thương toàn địch)
+    const foes = tdAlive(tdFoe(u)), A = u.anim && u.anim.chu, H = TD_LUC.hoa, k = tdS && tdS.fast ? 0.5 : 1;
+    if (A) { tdAnimPlay(u, 'chu'); await tdWait(A.fire / A.n * A.ms); } else await tdWait(250);
+    const from = tdHand(u);
+    await Promise.all(foes.map((t, j) => new Promise(done => setTimeout(() => {
+      if (!tdS || t.dead) return done();
+      tdShoot(u, t, U.shot || 'bua', { x: from.x, y: from.y + (j - (foes.length - 1) / 2) * 10 }).then(() => {
+        if (tdS) tdGroundFx(t, H);
+        setTimeout(() => { if (tdS && !t.dead) { const r = tdDmg(u, t, U.pow); tdHurt(u, t, r.d, r.crit); tdSync(); } done(); }, H.hit / H.n * H.ms * k);
+      });
+    }, j * 90 * k))));
+    await tdWait(350);
+  } else if (U.kind === 'quake') {
+    // Thất Tinh Quyết (Giới Sân): lao tới dậm chân, chấn địa lôi dưới chân mục tiêu
+    const t = tdTarget(u);
+    if (t) {
+      const A = u.anim && u.anim.chan, C = TD_LUC2.chan, hitMs = A ? A.hit / A.n * A.ms : 250;
+      tdLunge(u, t, hitMs + 300);
+      if (A) tdAnimPlay(u, 'chan');
+      await tdWait(hitMs);
+      tdGroundFx(t, C);
+      await tdWait(C.hit / C.n * C.ms);
+      if (!t.dead) { const r = tdDmg(u, t, U.pow); tdHurt(u, t, r.d, r.crit); }
+      tdSync();
+      await tdWait(350);
+    }
+  } else if (U.kind === 'fists') {
+    // La Hán Quyền (Đệ Tử 7 Túi): đấm liên hoàn, mỗi khung `fires` một loạt quyền lửa bay vào mọi kẻ địch, phát cuối nổ lửa + sát thương toàn địch
+    const foes = tdAlive(tdFoe(u)), A = u.anim && u.anim.loan, k = tdS && tdS.fast ? 0.5 : 1, fires = A ? A.fires : [0, 4, 8, 12], jobs = [];
+    if (A) tdAnimPlay(u, 'loan');
+    let prev = 0;
+    for (const f of fires) {
+      const at = A ? f / A.n * A.ms : f * 50;
+      await tdWait(at - prev); prev = at;
+      foes.forEach((t, j) => jobs.push(new Promise(done => setTimeout(() => {
+        if (!tdS || t.dead) return done();
+        tdShoot(u, t, 'quyen_lua').then(() => { tdHitFx(t); done(); });
+      }, j * 60 * k))));
+    }
+    await Promise.all(jobs);
+    foes.forEach(t => { if (!t.dead) { tdFxAt(TD_LUC2.no, tdPos(t), k); const r = tdDmg(u, t, U.pow); tdHurt(u, t, r.d, r.crit); } });
+    tdSync();
+    await tdWait(350);
+  } else if (U.kind === 'pillar') {
+    // Vi Đà Trượng Pháp (Đệ Tử 8 Túi): giơ trượng nện xuống, cột lửa bốc lên dưới chân mục tiêu
+    const t = tdTarget(u);
+    if (t) {
+      const A = u.anim && u.anim.tru, C = TD_LUC2.cot;
+      if (A) { tdAnimPlay(u, 'tru'); await tdWait(A.fire / A.n * A.ms); } else await tdWait(250);
+      tdGroundFx(t, C);
+      await tdWait(C.hit / C.n * C.ms);
+      if (!t.dead) { const r = tdDmg(u, t, U.pow); tdHurt(u, t, r.d, r.crit); }
+      tdSync();
+      await tdWait(350);
+    }
+  } else if (U.kind === 'whirl') {
+    // Phong Ma Côn Pháp (Đệ Tử 9 Túi): lao tới múa côn, côn lửa xoay quanh mục tiêu ba vòng (mỗi vòng một lần trúng nhẹ), rồi nổ (sát thương)
+    const t = tdTarget(u);
+    if (t) {
+      const A = u.anim && u.anim.xoay, k = tdS && tdS.fast ? 0.5 : 1, fd = A ? A.ms / A.n : 50, hits = A ? A.hits : [6, 11, 16], boom = A ? A.boom : 20;
+      tdLunge(u, t, boom * fd + 300);
+      if (A) tdAnimPlay(u, 'xoay');
+      tdFxAt(TD_LUC2.xoay, tdPos(t), k);
+      let prev = 0;
+      for (const h of hits) { const at = h * fd; await tdWait(at - prev); prev = at; if (tdS && !t.dead) tdHitFx(t); }
+      await tdWait(boom * fd - prev);
+      if (tdS && !t.dead) { const r = tdDmg(u, t, U.pow); tdHurt(u, t, r.d, r.crit); }
+      tdSync();
+      await tdWait(350);
+    }
+  } else if (U.kind === 'tri') {
+    // Dương Quan Tam Điệp (Tịnh Tư): gảy đàn, ba đợt sóng âm vàng lan trên đất dưới chân mọi kẻ địch, đợt cuối gây sát thương toàn địch
+    const foes = tdAlive(tdFoe(u)), A = u.anim && u.anim.dan, fd = A ? A.ms / A.n : 50, fx = A ? A.fx : 1, waves = A ? A.waves : [4, 11, 18];
+    if (A) tdAnimPlay(u, 'dan');
+    await tdWait(fx * fd);
+    foes.forEach(t => { if (tdS) tdGroundFx(t, TD_LUC2.tam); });
+    let prev = fx * fd;
+    for (const w of waves) { const at = w * fd; await tdWait(at - prev); prev = at; foes.forEach(t => { if (tdS && !t.dead) tdHitFx(t); }); }
+    foes.forEach(t => { if (!t.dead) { const r = tdDmg(u, t, U.pow); tdHurt(u, t, r.d, r.crit); } });
+    tdSync();
+    await tdWait(350);
   } else if (U.kind === 'heal') {
     tdAlive(u.side).forEach(m => { const h = Math.round(u.hoi * U.hoi + tdAtk(u) * U.atk); m.hp = Math.min(m.maxHp, m.hp + h); tdPop(m, '+' + h, 'heal'); });
   } else if (U.kind === 'buff') {
