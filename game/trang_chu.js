@@ -409,16 +409,22 @@ const HIEP_KHACH = {
   // Hiệp khách thứ mười bảy: A Châu (2026-11-16, người dùng gửi ảnh mẫu cấp 1 · 1 sao): Kỹ Năng hệ Ám, Tư chất 13.
   // Chỉ số và Căn Cốt lấy đúng ảnh (Căn Cốt ở đây không đúng 5% như các tướng khác); Bạo 0, Né 2,5 theo ảnh (khác mặc định Kỹ Năng).
   // Nộ S Bách Diện Thuật cấp 1 (ảnh Thăng cấp kĩ năng): tấn công toàn địch 50% Công + tăng 5 Nộ cho 1 đồng đội ngẫu nhiên
-  // (sao cao: S+, thêm giảm Nộ 1 địch ngẫu nhiên — chưa làm). Chưa có ảnh: tạm dùng hình cao thủ tháp.
-  a_chau: { name: 'A Châu', img: 'tm_nu_mat_na', role: 'ky_nang', q: 4, lv: 1, star: 1, hanh: 'am', tuChat: 13,
+  // (sao cao: S+, thêm giảm Nộ 1 địch ngẫu nhiên — chưa làm). Ảnh Gemini người dùng 2026-11-16 (gốc luu_tru/hiep_khach/a_chau*.png).
+  a_chau: { name: 'A Châu', img: 'tm_nu_mat_na', art: 'game/img/hk/a_chau.jpg', face: [0.5, 0.33], sprite: 'game/img/hk/a_chau_sd.png', hand: [0.9, 0.36], role: 'ky_nang',
+    // hình động Blender (tools/blender/a_chau.py, lớp `matna` = cẳng tay + mặt nạ): danh = vung mặt nạ, phấn tím bay (khung fire);
+    // hoa = đưa mặt nạ lên mặt (khung smoke: khói tím hóa thân + bóng mờ), vung ra (khung fx: mặt nạ ma ảnh hiện trên mọi địch rồi vỡ thành vệt chém)
+    anim: { iw: 519, ih: 700, box: [-90, -110, 640, 760],
+      idle: { src: 'game/img/blender/ach_idle.webp', n: 24, ms: 1300 },
+      danh: { src: 'game/img/blender/ach_danh.webp', n: 16, ms: 800, fire: 7, shot: 'phan' },
+      hoa: { src: 'game/img/blender/ach_hoa.webp', n: 24, ms: 1400, smoke: 8, fx: 14 } }, q: 4, lv: 1, star: 1, hanh: 'am', tuChat: 13,
     st: { hp: 1192, atk: 385, def: 250, hoi: 181, spd: 60, mi: 100 },
     grow: { hp: 56.6, atk: 19.8, def: 12, hoi: 8.6 },
     ex: { crit: 0, critDmg: 150, acc: 100, dodge: 2.5, ben: 0 },
-    skill: { grade: 'S', name: 'Bách Diện Thuật', desc: 'Tấn công toàn bộ địch 50% Công, tăng 5 Nộ cho 1 đồng đội ngẫu nhiên' },
-    ult: { kind: 'all', pow: 0.5, allyNo: 5 },
-    duyen: [   // theo ảnh mẫu; tên người trong Cô Tô / Tuyệt Kích / Đoạn Tình Claude đoán theo hình (chờ người dùng xác nhận)
+    skill: { grade: 'S', name: 'Bách Diện Thuật', desc: 'Tấn công toàn bộ địch 50% Công, tăng 15 Nộ cho 1 đồng đội ngẫu nhiên' },
+    ult: { kind: 'mask', pow: 0.5, allyNo: 15 },   // ảnh mẫu ghi +5 Nộ khí; người dùng chốt tạm 15 (= một cục xanh) vì chưa rõ thang Nộ game gốc
+    duyen: [   // theo ảnh mẫu; tên người người dùng xác nhận 2026-11-16
       { name: 'Cô Tô', desc: 'Cùng ra trận Thủ +200%', with: [{ ten: 'Mộ Dung Phục' }], eff: { def: 2 } },
-      { name: 'Tuyệt Kích', desc: 'Cùng ra trận Công +200% Thủ +200%', with: [{ ten: 'Chưa rõ' }, { ten: 'Chưa rõ' }, { ten: 'Chưa rõ' }], eff: { atk: 2, def: 2 } },
+      { name: 'Tuyệt Kích', desc: 'Cùng ra trận Công +200% Thủ +200%', with: [{ ten: 'Nam Đế' }, 'nhac_bat_quan', { ten: 'Kim Mao Sư Vương' }], eff: { atk: 2, def: 2 } },
       { name: 'Đoạn Tình', desc: 'Cùng ra trận Công +130%', with: [{ ten: 'Kiều Phong' }], eff: { atk: 1.3 } },
       { name: 'Lông Điêu', desc: 'Sử dụng Bạo +25%', with: [{ ten: 'Lông Điêu', loai: 'bao' }], eff: { crit: 25 } },
       { name: 'Cô Tô Bí Kỹ', desc: 'Sử dụng Thủ +100%', with: [{ ten: 'Cô Tô Bí Kỹ', loai: 'bao' }], eff: { def: 1 } },

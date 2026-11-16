@@ -348,7 +348,11 @@ const TD_LUC = {
   // Liệt Hỏa Chú (Nghi Quang): cột lửa bùng dưới chân (tấm 200x250, chân ở 85%; khung 5 = lửa bốc)
   hoa: { src: 'game/img/blender/fx_bl_hoa_tru.webp', n: 20, ms: 1000, ar: 250 / 200, foot: 0.85, size: 22, hit: 5 },
 };
+// Bách Diện Thuật (A Châu): khói tím hóa thân quanh người; mặt nạ ma ảnh trên mục tiêu, vỡ thành vệt chém chữ thập (khung 11 = trúng)
+TD_LUC.khoi = { src: 'game/img/blender/fx_bl_khoi_tim.webp', n: 18, ms: 900, size: 34 };
+TD_LUC.mat = { src: 'game/img/blender/fx_bl_mat_na.webp', n: 20, ms: 1000, size: 28, hit: 11 };
 const TD_LUC_SRC = {
+  mask: () => [TD_LUC.khoi.src, TD_LUC.mat.src],
   yinyang: () => [TD_LUC.amduong.src],
   lotus: () => [TD_LUC.sen.src, TD_SLASH.nuoc.src],
   firecurse: () => [TD_SHOT.bua.src, TD_SHOT.bua.hit.src, TD_LUC.hoa.src],
@@ -413,6 +417,9 @@ const TD_SHOT = {
   // phi đao thép có vệt khí tím (Hắc Tam), tấm 2:1, mũi ở 85% ngang
   phi_dao: { src: 'game/img/blender/fx_bl_phi_dao.webp', n: 8, ms: 400, size: 22, ar: 0.5, ax: 0.85, ay: 0.5, fly: 220,
     hit: { src: 'game/img/blender/fx_bl_no_tim_nho.webp', n: 16, ms: 480, size: 14 } },
+  // nắm phấn tím lấp lánh (A Châu), tấm 2:1, đầu ở 80% ngang
+  phan: { src: 'game/img/blender/fx_bl_phan_tim.webp', n: 8, ms: 400, size: 22, ar: 0.5, ax: 0.8, ay: 0.5, fly: 300,
+    hit: { src: 'game/img/blender/fx_bl_no_tim_nho.webp', n: 16, ms: 480, size: 15 } },
   // lá bùa vàng cháy lửa (Nghi Quang), tấm 2:1, đầu bùa ở 85% ngang
   bua: { src: 'game/img/blender/fx_bl_bua_lua.webp', n: 8, ms: 400, size: 22, ar: 0.5, ax: 0.85, ay: 0.5, fly: 300,
     hit: { src: 'game/img/blender/fx_bl_no_cam.webp', n: 16, ms: 480, size: 15 } },
@@ -1114,6 +1121,22 @@ async function tdUltDo(u) {
       tdSync();
       await tdWait(350);
     }
+  } else if (U.kind === 'mask') {
+    // Bách Diện Thuật (A Châu): đưa mặt nạ lên mặt, khói tím bùng (hóa thân, bóng mờ lướt), vung mặt nạ ra: mặt nạ ma ảnh hiện trên từng kẻ địch,
+    // lao sát vào rồi vỡ thành vệt chém chữ thập (sát thương toàn địch); +Nộ 1 đồng đội xử lý chung ở cuối (allyNo)
+    const foes = tdAlive(tdFoe(u)), A = u.anim && u.anim.hoa, k = tdS && tdS.fast ? 0.5 : 1, M = TD_LUC.mat;
+    const at = f => (A ? f / A.n * A.ms : 0);
+    if (A) tdAnimPlay(u, 'hoa');
+    await tdWait(A ? at(A.smoke) : 150);
+    const cq = (document.getElementById('td-fx') || document.body).clientWidth / 100, me = tdPos(u);
+    tdFxAt(TD_LUC.khoi, { x: me.x, y: me.y - 6 * cq }, k);
+    if (A) tdGhosts(u, 'hoa');
+    await tdWait(A ? at(A.fx) - at(A.smoke) : 500);
+    foes.forEach((t, j) => setTimeout(() => { if (tdS && !t.dead) { const p = tdPos(t); tdFxAt(M, { x: p.x, y: p.y - 6 * cq }, k); } }, j * 80 * k));
+    await tdWait(M.hit / M.n * M.ms + (foes.length - 1) * 80);
+    foes.forEach(t => { if (!t.dead) { const r = tdDmg(u, t, U.pow); tdHurt(u, t, r.d, r.crit); } });
+    tdSync();
+    await tdWait(300);
   } else if (U.kind === 'yinyang' || U.kind === 'lotus') {
     // Nhị Chuyển Âm Dương (Nghi Thanh): phất trần vẽ hai vòng, đồ hình âm dương xoay thu vào mục tiêu rồi nổ
     // Thục Nữ Kiếm (Nghi Hòa): múa kiếm, lướt tới đâm, đóa sen kiếm nở trên mục tiêu (kèm một vệt chém nước)
