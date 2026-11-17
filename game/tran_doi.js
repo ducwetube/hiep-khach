@@ -65,7 +65,7 @@ function tdWave(n) {
     list.push(tdUnit('dich', i, {
       // địch là hiệp khách (người dùng chốt 2026-11-14): 15 tướng xanh làm quái, tinh anh / boss là tướng thật, dùng chiêu nộ của mình khi đầy Nộ.
       // Kỹ Năng phe địch tính như Công Kích (không tự đầy Nộ mỗi lượt, vẫn nhận cục xanh).
-      ...(HK ? { art: HK.art, face: HK.face, sprite: HK.sprite, spFlip: HK.spFlip, hand: HK.hand, ult: HK.ult, anim: HK.anim, spSize: HK.spSize, skill: HK.skill } : {}),
+      ...(HK ? { art: HK.art, face: HK.face, sprite: HK.sprite, spFlip: HK.spFlip, hand: HK.hand, ult: HK.ult, anim: HK.anim, spSize: HK.spSize, skill: HK.skill, hanh: HK.hanh } : {}),
       name: HK ? HK.name : (ENEMY_IMG[k] && ENEMY_IMG[k].label) || k, img: HK ? HK.img : k, role: boss ? 'cong_kich' : null, boss,
       maxHp: Math.round(m.hp * f * (boss ? (T.bossHp || 3) : 1)), atk: Math.round(m.atk * f * (boss ? (T.bossAtk || 1.4) : 1)), def: Math.round(m.def * f),
       hoi: m.hoi, spd: m.spd, mi: m.mi,
@@ -82,7 +82,7 @@ function tdStart(def) {
   tdS = {
     def: def || TD_TEST, wave: 0, round: 1, phase: 'ta', busy: false, target: 0, deaths: 0,
     auto: !!(tdS && tdS.auto), fast: !!(tdS && tdS.fast), loot: { bac: 0, luong: 0, manh: 0, da: 0 }, over: null,
-    ta: team.map(({ h }, i) => tdUnit('ta', i, { name: h.name, img: h.img, art: h.art, face: h.face, sprite: h.sprite, spFlip: h.spFlip, hand: h.hand, ult: h.ult, anim: h.anim, spSize: h.spSize, role: h.role, skill: h.skill,
+    ta: team.map(({ h }, i) => tdUnit('ta', i, { name: h.name, img: h.img, art: h.art, face: h.face, sprite: h.sprite, spFlip: h.spFlip, hand: h.hand, ult: h.ult, anim: h.anim, spSize: h.spSize, role: h.role, skill: h.skill, hanh: h.hanh,
       ...(st => ({ maxHp: st.hp, atk: st.atk, def: st.def, hoi: st.hoi, spd: st.spd, mi: st.mi }))(heroSt(h)) })),
   };
   tdS.ta.forEach(u => { if (u.role === 'ky_nang') u.no = TD.noMax; });
@@ -110,6 +110,7 @@ function tdStart(def) {
     if (u.ult && TD_LUC_SRC[u.ult.kind]) list.push(...TD_LUC_SRC[u.ult.kind]());
     list.forEach(src => { const im = new Image(); im.src = src; });
   });
+  Object.values(TD_HE).forEach(src => { new Image().src = src; });
   const keys = typeof SAN_DAU !== 'undefined' ? Object.keys(SAN_DAU.sets) : [];
   tdS.bg = keys.length ? SAN_DAU.sets[tdRand(keys)].mb : { src: TD.bg };
   tdS.dich = tdWave(0);
@@ -743,6 +744,30 @@ function tdHitFx(u) {
   const e = document.getElementById(`td-${u.side}-${u.i}`); if (!e) return;
   e.classList.remove('hit'); void e.offsetWidth; e.classList.add('hit');
 }
+// nổ trúng đòn theo hệ của người đánh (học game mẫu: hiệu ứng trúng đòn dùng chung theo hệ; tools/blender/fx_he2.py)
+// tấm 24 khung vuông, khung 6 = lúc chạm; nổ hướng sang phải (đòn tới từ trái), phe ta bị đánh thì lật
+const TD_HE = { thuy: 'game/img/blender/fx_he_thuy.webp', hoa: 'game/img/blender/fx_he_hoa.webp', loi: 'game/img/blender/fx_he_loi.webp',
+  quang: 'game/img/blender/fx_he_quang.webp', am: 'game/img/blender/fx_he_am.webp' };
+const TD_HE_MAP = { kim: 'quang', moc: 'thuy', tho: 'hoa' };
+// tâm thân theo bề ngang ảnh gốc (đo phần giữa người 2026-11-17); ảnh không có trong bảng coi là 0,5
+const TD_THAN = { a_chau: .496, de_tu_7_tui: .43, de_tu_8_tui: .433, de_tu_9_tui: .416, diep_nhi_nuong: .458, dinh_nhan: .348, doan_dien_khanh: .479,
+  doan_du: .49, dong_phuong: .493, gioi_san: .47, gioi_si: .551, gioi_vong: .506, hac_long: .429, hac_tam: .469, hoang_dung: .43, huong_van_thien: .468,
+  lenh_ho_xung: .439, ly_thu_thuy: .463, mac_dai: .595, nam_hai_ngac_than: .508, nghi_hoa: .592, nghi_quang: .528, nghi_thanh: .534, nhac_bat_quan: .492,
+  nham_doanh_doanh: .512, nham_nga_hanh: .492, ta_lanh_thien: .442, thien_mon: .508, tinh_tu: .455, to_tinh_ha: .488, tu_la: .503, tu_sam: .499, van_trung_hac: .443 };
+function tdHeBurst(a, t) {
+  const he = a && (TD_HE_MAP[a.hanh] || a.hanh), src = TD_HE[he]; if (!src) return;
+  const b = tdBody(t); if (!b || b.e.querySelector('.td-sheet.he')) return;   // đang nổ dở thì thôi (chiêu nhiều tia)
+  const m = /hk\/(\w+?)_sd\./.exec(t.sprite || ''), th = (m && TD_THAN[m[1]]) || 0.5;
+  const flipImg = (t.side === 'ta') !== b.img.classList.contains('nf');
+  const cx = b.x + (flipImg ? 1 - th : th) * b.w, sz = b.h * 1.25, N = 24;
+  const ms = 42 * N * (tdS && tdS.fast ? 0.6 : 1);
+  const s = tdStrip(src, N, ms, false); s.el.classList.add('he');
+  Object.assign(s.el.style, { left: cx - sz / 2 + 'px', top: b.bot - b.h * 0.45 - sz / 2 + 'px', width: sz + 'px', height: sz + 'px', zIndex: 7,
+    transform: t.side === 'ta' ? 'scaleX(-1)' : '' });
+  if (s.anim) s.anim.currentTime = ms * 5 / N;   // đòn đã chạm: chạy từ ngay trước khung chạm
+  b.e.appendChild(s.el);
+  setTimeout(() => s.el.remove(), ms * (N - 5) / N + 120);
+}
 
 /* ---------- luật trận ---------- */
 const tdAlive = side => tdS[side].filter(u => !u.dead);
@@ -772,6 +797,7 @@ function tdHurt(a, t, dmg, crit, noOrb) {
   t.hp = Math.max(0, t.hp - dmg);
   tdPop(t, (crit ? 'Bạo ' : '') + dmg.toLocaleString('vi-VN'), crit ? 'crit' : '');
   tdHitFx(t);
+  tdHeBurst(a, t);
   // rơi cục xuống đất cạnh kẻ bị đánh (người dùng chốt 2026-11-12): sát thương càng lớn rơi càng nhiều (1–3 cục),
   // nằm đó tới hết lượt của phe người đánh rồi mới bay về ngẫu nhiên một người cùng phe (tdCollect)
   const n = noOrb ? 0 : Math.max(1, Math.min(TD.dropMax, Math.floor(dmg / t.maxHp / TD.dropPct)));
